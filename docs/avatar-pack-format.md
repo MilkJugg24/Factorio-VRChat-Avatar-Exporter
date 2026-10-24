@@ -263,8 +263,9 @@ does):
   packs).
 - **Lights:** shading light from `(-0.70, 0.35, 0.90)` (normalised; west,
   slightly south, above). The ground shadow is a projection onto the ground
-  along `(-1.0, 0.2, 1.0)` (normalised; west, a little south, 44 degrees up),
-  so shadows fall east and a little north, as long as the vanilla engineer's.
+  along `(-1.13, 0.05, 1.0)` (normalised; west, barely south, 41.5 degrees
+  up), so shadows fall east and barely north, as long as the vanilla
+  engineer's (measured on its sprites: about 1.28 times its drawn height).
 - **Size:** the exporter draws every standing character as tall as the vanilla
   engineer, 1.7 tiles. In the flight animations the body is raised 0.42 tiles
   off the ground.

@@ -114,12 +114,13 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Foundation
         }
 
         [Test]
-        public void LightsMatchPythonRenderer()
+        public void ShadowLightMatchesTheEngineers()
         {
-            // render.py: SHADOW_LIGHT = normalize(-1.0, 0.2, 1.0) with y pointing south
+            // normalize(-1.13, 0.05, 1.0) with y pointing south, measured on the vanilla engineer's shadow
             Vec3 l = Conventions.ShadowLight;
-            double n = Math.Sqrt(1.0 + 0.04 + 1.0);
-            Assert.That(l.ApproximatelyEquals(new Vec3(-1.0 / n, -0.2 / n, 1.0 / n), 1e-12));
+            double n = Math.Sqrt(1.13 * 1.13 + 0.05 * 0.05 + 1.0);
+            Assert.That(l.ApproximatelyEquals(new Vec3(-1.13 / n, -0.05 / n, 1.0 / n), 1e-12));
+            Assert.That(Math.Asin(l.Z) * 180 / Math.PI, Is.EqualTo(41.5).Within(0.1), "degrees above the horizon");
             Assert.That(l.X, Is.LessThan(0), "light from the west, shadows fall east");
             Assert.That(l.Y, Is.LessThan(0), "light a little from the south, shadows fall a little north");
         }

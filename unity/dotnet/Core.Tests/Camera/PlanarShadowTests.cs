@@ -45,8 +45,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Camera
         public void ShadowsFallEastAndSlightlyNorth()
         {
             Vec3 shadow = PlanarShadow.Project(new Vec3(0, 0, 1.0));
-            // render.py's SHADOW_LIGHT (-1.0, 0.2, 1.0) with y turned north is (-1, -0.2, 1.0)
-            Assert.That(shadow.ApproximatelyEquals(new Vec3(1.0, 0.2, 0), Eps), shadow.ToString());
+            // the light (-1.13, 0.05, 1.0) with y pointing south is (-1.13, -0.05, 1.0)
+            Assert.That(shadow.ApproximatelyEquals(new Vec3(1.13, 0.05, 0), Eps), shadow.ToString());
         }
 
         [Test]

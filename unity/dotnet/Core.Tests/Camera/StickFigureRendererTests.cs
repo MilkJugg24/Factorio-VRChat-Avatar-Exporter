@@ -164,8 +164,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Camera
                 }
             }
             Assert.That(count, Is.GreaterThan(100));
-            // the shadow of the axis runs from 0.5 to 1.0 tiles of height times x / z = 1 / 1.0
-            Assert.That(sumX / count, Is.EqualTo(0.75 / 1.0).Within(0.03));
+            // the shadow of the axis runs from 0.5 to 1.0 tiles of height times the light's -x / z (1.13)
+            double slope = -Conventions.ShadowLight.X / Conventions.ShadowLight.Z;
+            Assert.That(sumX / count, Is.EqualTo(0.75 * slope).Within(0.03));
             (double footX, double footY) = FactorioCamera.Project(foot.WithZ(0), canvas);
             Assert.That(Pixels.IsShadow(result, (int)(footX * 2), (int)(footY * 2)), Is.False, "no shadow right under the foot");
         }

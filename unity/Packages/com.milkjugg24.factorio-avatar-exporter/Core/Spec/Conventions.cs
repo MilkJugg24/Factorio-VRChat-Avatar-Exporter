@@ -33,10 +33,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         public static readonly Vec3 ShadeLight = PythonWorldToWorld(new Vec3(-0.70, 0.35, 0.90)).Normalized;
 
         /// <summary>
-        /// Direction towards the light that casts the ground shadow, world space: west, a little south,
-        /// 44 degrees up. Shadows fall east and a little north, as long as the vanilla engineer's.
+        /// Direction towards the light that casts the ground shadow, world space: west, barely south, 41.5
+        /// degrees up. Measured on the vanilla engineer's idle sprites: the shadow of the top of his head falls
+        /// about 1.28 times his drawn height to the east and 0.05 of it up the screen, which this gives (a point
+        /// h tiles up is drawn 0.884 h high and its shadow 1.13 h to the east).
         /// </summary>
-        public static readonly Vec3 ShadowLight = PythonWorldToWorld(new Vec3(-1.0, 0.2, 1.0)).Normalized;
+        public static readonly Vec3 ShadowLight = PythonWorldToWorld(new Vec3(-1.13, 0.05, 1.0)).Normalized;
 
         /// <summary>Height of the body above its standing height in the flight animations, tiles.</summary>
         public const double FlyHeight = 0.42;
