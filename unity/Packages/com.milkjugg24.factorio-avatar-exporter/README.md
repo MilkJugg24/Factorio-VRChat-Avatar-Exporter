@@ -5,7 +5,7 @@ Characters** mod. The quick steps, installing in Factorio and playing on a serve
 player's pack) are on the project page: https://github.com/MilkJugg24/Factorio-VRChat-Avatar-Exporter. This guide explains every option
 in the exporter window.
 
-Open it with **Tools ▸ Factorio Avatar Exporter ▸ Exporter**.
+Open it with **Tools ▸ Factorio Avatar Exporter**.
 
 *(Screenshot coming: the whole exporter window, with the sections below labelled. File: `docs/images/exporter-overview.png`)*
 

@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
-Runs the exporter on avatars in a Unity project without opening the Editor: the rendering spike, every
-animation posed (-Mode poses), or a whole avatar pack (-Mode pack). See tests/UNITY-SPIKE.md.
+Runs the exporter on avatars in a Unity project without opening the Editor: a whole avatar pack
+(-Mode pack, the default), or every animation posed (-Mode poses). See tests/UNITY-EXPORT.md.
 
 .DESCRIPTION
 Builds the exporter's .unitypackage from this repository, imports it into the Unity project (it lands in
@@ -10,9 +10,9 @@ mode: a prefab, an object in a scene, or every humanoid avatar at the top level 
 sprites, raw renders and reports, and Unity's logs, end up in -Out. The project must not be open in Unity.
 
 .EXAMPLE
-powershell -ExecutionPolicy Bypass -File tests\run_unity_spike.ps1 -Project "C:\Users\me\VRChat\MyAvatar" -Scene "Assets/Scenes/Avatar.unity"
+powershell -ExecutionPolicy Bypass -File tests\run_unity_export.ps1 -Project "C:\Users\me\VRChat\MyAvatar" -Scene "Assets/Scenes/Avatar.unity"
 .EXAMPLE
-powershell -ExecutionPolicy Bypass -File tests\run_unity_spike.ps1 -Project "C:\Users\me\VRChat\MyAvatar" -Avatar "Assets/Mika/Mika.prefab"
+powershell -ExecutionPolicy Bypass -File tests\run_unity_export.ps1 -Project "C:\Users\me\VRChat\MyAvatar" -Avatar "Assets/Mika/Mika.prefab"
 #>
 param(
     # The Unity project folder (the one holding Assets\ and ProjectSettings\).
@@ -23,13 +23,13 @@ param(
     [string]$Avatar = "",
     # Unity.exe; default: the Unity Hub install of the project's editor version.
     [string]$Unity = "",
-    # Where the results go; default unity-spike\<date-time> in the repository.
+    # Where the results go; default unity-export\<date-time> in the repository (ignored by git).
     [string]$Out = "",
     # Don't import the package (it is already in the project, e.g. imported by hand).
     [switch]$SkipImport,
-    # spike: the T-pose in 8 directions; poses: every animation posed by the exporter, a sheet each;
-    # pack: the avatar pack (mod zip) itself, with report.txt and a preview sheet per animation.
-    [ValidateSet("spike", "poses", "pack")][string]$Mode = "spike"
+    # pack: the avatar pack (mod zip) itself, with report.txt and a preview sheet per animation;
+    # poses: every animation posed by the exporter, a sheet each.
+    [ValidateSet("pack", "poses")][string]$Mode = "pack"
 )
 $ErrorActionPreference = "Stop"
 function Quote([string]$s) { '"' + $s + '"' }
@@ -48,7 +48,7 @@ if (-not $Unity) {
     $Unity = PathOf $env:ProgramFiles "Unity" "Hub" "Editor" $version "Editor" "Unity.exe"
 }
 if (-not (Test-Path $Unity)) { throw "Unity not found at $Unity; pass -Unity <path to Unity.exe>" }
-if (-not $Out) { $Out = PathOf $repo "unity-spike" (Get-Date -Format "yyyy-MM-dd-HHmm") }
+if (-not $Out) { $Out = PathOf $repo "unity-export" (Get-Date -Format "yyyy-MM-dd-HHmm") }
 New-Item -ItemType Directory -Force -Path $Out | Out-Null
 $Out = (Resolve-Path $Out).Path
 
@@ -70,14 +70,10 @@ if (-not $SkipImport) {
 }
 
 Write-Host "== rendering ($Mode; Unity runs without a window; this takes a few minutes)"
-$method = switch ($Mode) {
-    "poses" { "ExporterCommandLine.RenderPoses" }
-    "pack" { "ExporterCommandLine.ExportPacks" }
-    default { "RenderSpike.RenderFromCommandLine" }
-}
-$render = @("-executeMethod", "MilkJugg24.FactorioAvatarExporter.Editor.$method", "-spikeOut", (Quote $Out))
-if ($Scene) { $render += @("-spikeScene", (Quote $Scene)) }
-if ($Avatar) { $render += @("-spikeAvatar", (Quote $Avatar)) }
+$method = if ($Mode -eq "poses") { "ExporterCommandLine.RenderPoses" } else { "ExporterCommandLine.ExportPacks" }
+$render = @("-executeMethod", "MilkJugg24.FactorioAvatarExporter.Editor.$method", "-exportOut", (Quote $Out))
+if ($Scene) { $render += @("-exportScene", (Quote $Scene)) }
+if ($Avatar) { $render += @("-exportAvatar", (Quote $Avatar)) }
 $code = Run-Unity ($render + @("-quit")) (PathOf $Out "unity-render.log")
 $summary = PathOf $Out "summary.txt"
 if (Test-Path $summary) { Get-Content $summary | Write-Host }

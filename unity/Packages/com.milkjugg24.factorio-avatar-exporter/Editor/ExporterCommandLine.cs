@@ -12,14 +12,14 @@ using Debug = UnityEngine.Debug;
 
 namespace MilkJugg24.FactorioAvatarExporter.Editor
 {
-    /// <summary>The exporter in Unity's batch mode, for tests/run_unity_spike.ps1.</summary>
+    /// <summary>The exporter in Unity's batch mode, for tests/run_unity_export.ps1.</summary>
     public static class ExporterCommandLine
     {
         /// <summary>
         /// <c>Unity -batchmode -projectPath &lt;project&gt; -executeMethod
-        /// MilkJugg24.FactorioAvatarExporter.Editor.ExporterCommandLine.RenderPoses [-spikeScene &lt;scene&gt;]
-        /// [-spikeAvatar &lt;prefab or object name&gt;] [-spikeOut &lt;folder&gt;]</c>: for each avatar (as the
-        /// rendering spike picks them), renders every animation posed by Core, a row per direction, into
+        /// MilkJugg24.FactorioAvatarExporter.Editor.ExporterCommandLine.RenderPoses [-exportScene &lt;scene&gt;]
+        /// [-exportAvatar &lt;prefab or object name&gt;] [-exportOut &lt;folder&gt;]</c>: for each avatar (a prefab, a scene object,
+        /// or every avatar at the top of a scene), renders every animation posed by Core, a row per direction, into
         /// &lt;folder&gt;/&lt;avatar&gt;/&lt;animation&gt;.png with report.txt, writes summary.txt and exits Unity
         /// with 1 when anything failed.
         /// </summary>
@@ -29,7 +29,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         /// <c>... -executeMethod MilkJugg24.FactorioAvatarExporter.Editor.ExporterCommandLine.ExportPacks</c>, with the
         /// same arguments as <see cref="RenderPoses"/>: exports each avatar as an avatar pack, the zip, report.txt
         /// and a preview sheet per animation in &lt;folder&gt;/&lt;avatar&gt;/. For testing: the author is
-        /// run_unity_spike.ps1.
+        /// run_unity_export.ps1.
         /// </summary>
         public static void ExportPacks() => ForEachAvatar(ExportPack);
 
@@ -42,12 +42,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 int i = Array.IndexOf(args, name);
                 return i >= 0 && i + 1 < args.Length ? args[i + 1] : null;
             }
-            string output = Arg("-spikeOut") ?? Path.Combine(Path.GetDirectoryName(Application.dataPath), "FactorioAvatarExport");
+            string output = Arg("-exportOut") ?? Path.Combine(Path.GetDirectoryName(Application.dataPath), "FactorioAvatarExport");
             var summary = new StringBuilder();
             int failed = 0;
             try
             {
-                foreach (GameObject source in FindAvatars(Arg("-spikeScene"), Arg("-spikeAvatar")))
+                foreach (GameObject source in FindAvatars(Arg("-exportScene"), Arg("-exportAvatar")))
                 {
                     summary.AppendLine("== " + source.name);
                     try
@@ -88,7 +88,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 {
                     Title = source.name,
                     Id = PackNaming.DeriveId(source.name),
-                    Author = "run_unity_spike.ps1",
+                    Author = "run_unity_export.ps1",
                     ZipPath = Path.Combine(folder, PackNaming.ZipFileName(PackNaming.DeriveId(source.name), PackContent.DefaultVersion)),
                     PreviewFolder = folder,
                 };
@@ -124,7 +124,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             }
             else
             {
-                throw new ArgumentException("pass -spikeScene <scene>, -spikeAvatar <prefab>, or both");
+                throw new ArgumentException("pass -exportScene <scene>, -exportAvatar <prefab>, or both");
             }
             if (sources.Count == 0)
             {

@@ -11,7 +11,7 @@ using AnimationInfo = MilkJugg24.FactorioAvatarExporter.Core.AnimationInfo;
 namespace MilkJugg24.FactorioAvatarExporter.Editor
 {
     /// <summary>
-    /// Tools > Factorio Avatar Exporter > Exporter: loads an avatar, reports on its rig, previews it posed in
+    /// Tools > Factorio Avatar Exporter: loads an avatar, reports on its rig, previews it posed in
     /// every animation, direction and frame of an avatar pack, and exports the pack (Export All).
     /// </summary>
     public sealed class ExporterWindow : EditorWindow
@@ -52,7 +52,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         private PreviewFrame shown;
         private Vector2 scroll;
 
-        [MenuItem("Tools/Factorio Avatar Exporter/Exporter")]
+        [MenuItem("Tools/Factorio Avatar Exporter")]
         public static void Open()
         {
             ExporterWindow window = GetWindow<ExporterWindow>("Factorio Avatar Exporter");

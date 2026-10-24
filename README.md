@@ -41,7 +41,7 @@ You need Unity 2022.3 with your avatar in a project. Your VRChat avatar project 
 
 1. **Install the exporter.** In Unity choose **Assets ▸ Import Package ▸ Custom Package...**, pick the
    `.unitypackage` and click **Import**.
-2. **Open it.** Choose **Tools ▸ Factorio Avatar Exporter ▸ Exporter**.
+2. **Open it.** Choose **Tools ▸ Factorio Avatar Exporter**.
 3. **Load your avatar.** Drag your avatar (the object with the VRChat avatar descriptor, or its prefab)
    into the **Avatar** field and press **Load avatar**. The exporter works on a copy; your avatar and
    scene are not changed.

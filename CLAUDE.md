@@ -15,7 +15,7 @@ The README is for players and avatar makers only. Keep developer and agent mater
 | `docs/images/` | Screenshots for the README. |
 | `tools/avatar_pack/` | The pack format in Python: `check.py` (validator), `make_test_pack.py`, `preview.py` (GIFs). |
 | `tools/validate_sprites.py`, `tools/make_unitypackage.py`, `tools/build_mod.sh` | Pack validation; build the `.unitypackage` and mod zip into `build/`. |
-| `tests/` | Headless Factorio tests, the in-game screenshot checks (`INGAME-CHECKS.md`), the Unity runner (`UNITY-SPIKE.md`), Python tool tests. |
+| `tests/` | Headless Factorio tests, the in-game screenshot checks (`INGAME-CHECKS.md`), the Unity runner (`UNITY-EXPORT.md`, exports or poses avatars in Unity without opening it), Python tool tests. |
 
 ## Checks to run before pushing
 

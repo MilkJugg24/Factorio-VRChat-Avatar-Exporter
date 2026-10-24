@@ -93,7 +93,7 @@ jobs:
           **Installing the exporter:** in Unity 2022.3 (your VRChat project) choose **Assets ▸ Import Package ▸
           Custom Package...**, pick the file and click **Import**. It is installed in
           \`Assets/FactorioAvatarExporter\`; importing a newer version updates it in place. Then open
-          **Tools ▸ Factorio Avatar Exporter ▸ Exporter**.
+          **Tools ▸ Factorio Avatar Exporter**.
           NOTES
           title="Factorio Avatar Exporter $EXPORTER (mod $MOD)"
           if ! gh release view "$TAG" > /dev/null 2>&1; then
