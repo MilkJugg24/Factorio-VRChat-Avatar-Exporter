@@ -40,12 +40,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         // turn before the loose parts follow their bones, the others (on a part of their own) after
         private readonly List<(Transform root, bool left, bool inBody)> wings = new List<(Transform, bool, bool)>();
 
-        // each wing's hinge: of its chains, the base nearest the spine (where the wing-arm joins the body); all chains
-        // of a side turn about it together, so a wing made of several chains (arm, membrane, fingers) moves as one
-        private Transform leftHinge, rightHinge;
-
-        // the angle each wing was saved at, radians above straight out sideways (folded down the back is about -1.4)
-        private double leftRestElevation, rightRestElevation;
+        // the angle each wing root was saved at, radians above straight out sideways (folded down the back is about
+        // -1.4); each root is a whole wing from its shoulder, and its own hinge
+        private readonly Dictionary<Transform, double> restElevation = new Dictionary<Transform, double>();
 
         // the tail's bones (named "tail"), root first
         private readonly List<Transform> tail = new List<Transform>();
@@ -293,44 +290,22 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             }
             // a chain inside another wing chain would turn twice
             wings.RemoveAll(w => wings.Any(o => o.root != w.root && w.root.IsChildOf(o.root)));
-            foreach (bool left in new[] { true, false })
+            foreach ((Transform root, bool left, bool _) in wings)
             {
-                Transform hinge = wings.Where(w => w.left == left)
-                    .OrderBy(w => Math.Abs(Vector3.Dot(Pivot.InverseTransformPoint(w.root.position) - top, restRight)))
-                    .Select(w => w.root).FirstOrDefault();
-                // the saved angle: from the hinge to the middle of the wing's bones, in the body's upright crosswise plane
-                double elevation = 0;
-                if (hinge != null)
+                // the saved angle: from the shoulder to the middle of the wing's bones, in the body's upright crosswise plane
+                Vector3 centre = Vector3.zero;
+                Transform[] chain = root.GetComponentsInChildren<Transform>(true);
+                foreach (Transform t in chain)
                 {
-                    Vector3 centre = Vector3.zero;
-                    int count = 0;
-                    foreach ((Transform root, bool side, bool _) in wings.Where(w => w.left == left))
-                    {
-                        foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
-                        {
-                            centre += Pivot.InverseTransformPoint(t.position);
-                            count++;
-                        }
-                    }
-                    Vector3 along = centre / count - Pivot.InverseTransformPoint(hinge.position);
-                    elevation = Math.Atan2(Vector3.Dot(along, Vector3.up), Vector3.Dot(along, left ? -restRight : restRight));
+                    centre += Pivot.InverseTransformPoint(t.position);
                 }
-                if (left)
-                {
-                    leftHinge = hinge;
-                    leftRestElevation = elevation;
-                }
-                else
-                {
-                    rightHinge = hinge;
-                    rightRestElevation = elevation;
-                }
+                Vector3 along = centre / chain.Length - Pivot.InverseTransformPoint(root.position);
+                restElevation[root] = Math.Atan2(Vector3.Dot(along, Vector3.up), Vector3.Dot(along, left ? -restRight : restRight));
             }
             if (wings.Count > 0)
             {
-                Notes.Add("wing hinges: " + string.Join(", ", new[] { (leftHinge, leftRestElevation), (rightHinge, rightRestElevation) }
-                    .Where(h => h.Item1 != null).Select(h => $"{h.Item1.name} (saved at {h.Item2 * 180 / Math.PI:0} degrees from straight out)")));
-                Notes.Add("wings that flap and stretch: " + string.Join(", ", wings.Select(w => $"{w.root.name} ({(w.left ? "left" : "right")})")));
+                Notes.Add("wings that flap and stretch, from their hinge: " + string.Join(", ", wings.Select(w =>
+                    $"{w.root.name} ({(w.left ? "left" : "right")}, saved at {restElevation[w.root] * 180 / Math.PI:0} degrees from straight out)")));
             }
             else
             {
@@ -410,9 +385,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         }
 
         /// <summary>
-        /// Turns the wing roots (of the body, or the others) about the chest's forward axis through their side's hinge,
-        /// from the angle the wing was saved at towards <see cref="PoseResult.WingElevation"/>, as far as its spread
-        /// says: every chain of a wing by the same angle about the same point.
+        /// Turns each wing root (of the body, or the others), a whole wing from its shoulder, about the chest's forward
+        /// axis through itself, from the angle it was saved at towards <see cref="PoseResult.WingElevation"/>, as far
+        /// as its spread says.
         /// </summary>
         private void PoseWings(PoseResult pose, bool inBody)
         {
@@ -421,15 +396,14 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             foreach ((Transform root, bool left, bool body) in wings)
             {
                 double spread = left ? pose.LeftWingSpread : pose.RightWingSpread;
-                double lift = spread * (pose.WingElevation - (left ? leftRestElevation : rightRestElevation));
+                double lift = spread * (pose.WingElevation - restElevation[root]);
                 if (body != inBody || spread == 0)
                 {
                     continue;
                 }
                 Vector3 outward = chest * (left ? -restRight : restRight);
                 float sign = Vector3.Dot(Quaternion.AngleAxis(1, forward) * outward, up) >= Vector3.Dot(outward, up) ? 1 : -1;
-                Transform hinge = left ? leftHinge : rightHinge;
-                root.RotateAround(hinge != null ? hinge.position : root.position, forward, sign * (float)(lift * 180 / Math.PI));
+                root.RotateAround(root.position, forward, sign * (float)(lift * 180 / Math.PI));
             }
         }
 

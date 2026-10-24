@@ -4,8 +4,8 @@ The exporter's Unity side (rendering with real shaders, posing real rigs, the wi
 checked in Unity. Two ways:
 
 - **By hand:** import the `.unitypackage` from the newest release (**Assets ▸ Import Package ▸ Custom
-  Package...**), open **Tools ▸ Factorio Avatar Exporter**, load the avatar, look at the preview, press
-  **Check fit** and **Export All**.
+  Package...**), open **Tools ▸ Factorio Avatar Exporter**, load the avatar, look at the preview and press
+  **Export Avatar to .zip**.
 - **Unattended:** `tests/run_unity_export.ps1` exports avatars without opening Unity's window.
 
 You need a Unity 2022.3 project with avatars in it (a VRChat avatar project), opened at least once in
@@ -27,7 +27,7 @@ The script builds the `.unitypackage` from this repository (needs Python), impor
 opening a window. It finds Unity through Unity Hub from the project's version, or takes
 `-Unity <Unity.exe>`. Add `-SkipImport` if the package is already in the project.
 
-- `-Mode pack` (the default) exports each avatar as **Export All** does:
+- `-Mode pack` (the default) exports each avatar as **Export Avatar to .zip** does:
   `<avatar>/avatar-pack-<id>_1.0.0.zip` (its README says it is a test export, not for sharing),
   `report.txt` and a preview image per animation.
 - `-Mode poses` renders every animation posed by the exporter, one sheet per animation

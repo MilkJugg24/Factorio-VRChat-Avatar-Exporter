@@ -51,10 +51,10 @@ You need Unity 2022.3 with your avatar in a project. Your VRChat avatar project 
    will move in the game.
 5. **Fill in the pack details.** A **Name** (shown in the game) and an **Author** (any name). Leave
    everything else as it is.
-6. **Export.** Press **Export All** and save the file where you like. Exporting takes a few minutes.
+6. **Export.** Press **Export Avatar to .zip** and save the file where you like. Exporting takes a few minutes.
    Keep the file name as it is.
 
-   *(Screenshot coming: the exporter window with the Export All button. File: `docs/images/exporter-export.png`)*
+   *(Screenshot coming: the exporter window with the Export Avatar to .zip button. File: `docs/images/exporter-export.png`)*
 
 Then install the pack as in [Play with an avatar](#play-with-an-avatar).
 
@@ -103,12 +103,12 @@ installed again.
   with their original names, and enabled under **Mods** in the main menu.
 - **"has no humanoid rig" in Unity:** your model needs **Animation Type: Humanoid** in its import
   settings (Rig tab). VRChat avatars already have it.
-- **Something is cut off, floats, or shouldn't be there** (a fake shadow, an effect): drag that object
-  into **Leave out of the sprites** in the exporter, press **Reload avatar** and export again.
+- **Something is cut off, floats, or shouldn't be there** (a fake shadow, an effect): turn that object
+  off in your avatar (untick it in the Hierarchy), press **Reload avatar** and export again.
 - **Pink or light-blue patches:** a shader is missing. Make sure the avatar looks right in Unity's Scene
   view first.
-- **Export All says an animation is too large:** something reaches far out from the body (a long
-  tail, wide wings, a big accessory). Leave it out of the sprites and export again. Animations that are
+- **The export says an animation is too large:** something reaches far out from the body (a long
+  tail, wide wings, a big accessory). Turn it off in your avatar and export again. Animations that are
   only a little too large are drawn at half resolution automatically; they look the same size, just
   softer.
 

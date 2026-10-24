@@ -12,7 +12,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
 {
     /// <summary>
     /// Tools > Factorio Avatar Exporter: loads an avatar, reports on its rig, previews it posed in
-    /// every animation, direction and frame of an avatar pack, and exports the pack (Export All).
+    /// every animation, direction and frame of an avatar pack, and exports the pack (Export Avatar to .zip).
     /// </summary>
     public sealed class ExporterWindow : EditorWindow
     {
@@ -22,7 +22,6 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         private static readonly Color Anchor = new Color(1f, 0.85f, 0.2f);
 
         [SerializeField] private GameObject source;
-        [SerializeField] private List<GameObject> leaveOut = new List<GameObject>();
         [SerializeField] private int animationIndex;
         [SerializeField] private int row = 4;
         [SerializeField] private int frame;
@@ -38,7 +37,6 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         [SerializeField] private int pixelsPerTile = Conventions.DefaultPixelsPerTile;
         [SerializeField] private string saveFolder;
         private string exported;
-        private List<string> edgeDrawers = new List<string>();
 
         private PosePreview preview;
         private string error;
@@ -47,11 +45,25 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         private Texture2D texture;
         private PreviewFrame shown;
         private Vector2 scroll;
+        [SerializeField] private bool showReport;
 
+        /// <summary>Width of the column of settings on the left; the preview takes the rest.</summary>
+        private const float ControlsWidth = 470;
+
+        /// <summary>The size the window opens at: the settings and a preview of any animation at zoom 2.</summary>
+        private static readonly Vector2 OpenSize = new Vector2(ControlsWidth + 560, 880);
         [MenuItem("Tools/Factorio Avatar Exporter")]
         public static void Open()
         {
             ExporterWindow window = GetWindow<ExporterWindow>("Factorio Avatar Exporter");
+            window.minSize = new Vector2(ControlsWidth + 240, 480);
+            // big enough for everything, without scrolling; a floating window only (a docked one keeps its place)
+            if (!window.docked && (window.position.width < OpenSize.x || window.position.height < OpenSize.y))
+            {
+                Rect main = EditorGUIUtility.GetMainWindowPosition();
+                window.position = new Rect(main.x + Mathf.Max(0, (main.width - OpenSize.x) / 2),
+                    main.y + Mathf.Max(0, (main.height - OpenSize.y) / 2), OpenSize.x, OpenSize.y);
+            }
             if (window.source == null && Selection.activeGameObject != null)
             {
                 window.source = Selection.activeGameObject;
@@ -80,7 +92,6 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         {
             Unload();
             error = null;
-            edgeDrawers.Clear();
             try
             {
                 EditorUtility.DisplayProgressBar("Factorio Avatar Exporter", "Loading " + source.name, 0.5f);
@@ -90,9 +101,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                     packFor = source.name;
                     packTitle = source.name;
                     packId = "";
-                    leaveOut.Clear();
                 }
-                preview = PosePreview.Load(source, leaveOut: LeaveOutPaths());
+                preview = PosePreview.Load(source);
                 preview.SetLighting(lighting);
                 exported = null;
                 Rerender();
@@ -111,7 +121,23 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
 
         private void OnGUI()
         {
-            scroll = EditorGUILayout.BeginScrollView(scroll);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                using (var column = new EditorGUILayout.ScrollViewScope(scroll, GUILayout.Width(ControlsWidth)))
+                {
+                    scroll = column.scrollPosition;
+                    ControlsGUI();
+                }
+                using (new EditorGUILayout.VerticalScope())
+                {
+                    PreviewImageGUI();
+                }
+            }
+        }
+
+        /// <summary>The left column: the avatar, the preview's controls, the lighting and the pack.</summary>
+        private void ControlsGUI()
+        {
             EditorGUILayout.LabelField("Avatar", EditorStyles.boldLabel);
             source = (GameObject)EditorGUILayout.ObjectField("Avatar", source, typeof(GameObject), true);
             using (new EditorGUI.DisabledScope(source == null))
@@ -121,38 +147,24 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                     Load();
                 }
             }
-            LeaveOutGUI();
             if (error != null)
             {
                 EditorGUILayout.HelpBox(error, MessageType.Error);
             }
-            if (edgeDrawers.Count > 0 && source != null &&
-                GUILayout.Button("Leave out " + string.Join(", ", edgeDrawers) + " and reload"))
-            {
-                foreach (string path in edgeDrawers)
-                {
-                    Transform t = source.transform.Find(path);
-                    if (t != null && !leaveOut.Contains(t.gameObject))
-                    {
-                        leaveOut.Add(t.gameObject);
-                    }
-                }
-                edgeDrawers.Clear();
-                Load();
-                GUIUtility.ExitGUI();
-            }
-
             if (preview == null)
             {
                 EditorGUILayout.HelpBox("Pick your avatar (the object with the VRChat avatar descriptor, or its prefab) " +
                     "and press Load avatar. A copy is made in a hidden scene; your scene and avatar are not changed.",
                     MessageType.Info);
-                EditorGUILayout.EndScrollView();
                 return;
             }
-            foreach (string note in preview.Notes)
+            showReport = EditorGUILayout.Foldout(showReport, $"Report ({preview.Notes.Count} lines: rig, loose parts, wings, tail)", true);
+            if (showReport)
             {
-                EditorGUILayout.LabelField(note, EditorStyles.wordWrappedMiniLabel);
+                foreach (string note in preview.Notes)
+                {
+                    EditorGUILayout.LabelField(note, EditorStyles.wordWrappedMiniLabel);
+                }
             }
 
             EditorGUILayout.Space();
@@ -166,38 +178,24 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             frame = EditorGUILayout.IntSlider("Frame", Mathf.Clamp(frame, 0, info.FrameCount - 1), 0, info.FrameCount - 1);
             zoom = EditorGUILayout.IntSlider("Zoom", zoom, 1, 4);
             bool changed = EditorGUI.EndChangeCheck();
-            bool play = GUILayout.Toggle(playing, playing ? "Pause" : "Play", "Button");
-            if (play && !playing)
+            using (new EditorGUILayout.HorizontalScope())
             {
-                playClock = EditorApplication.timeSinceStartup;
+                // rarely needed: the pack is what the game uses
+                if (GUILayout.Button(new GUIContent("Export Selected Animation", "Saves only the animation shown as one " +
+                    "image, in the preview folder, to look at it closely. Not needed for the game.")))
+                {
+                    SaveSheet(info.Name);
+                }
+                bool play = GUILayout.Toggle(playing, playing ? "Pause" : "Play", "Button");
+                if (play && !playing)
+                {
+                    playClock = EditorApplication.timeSinceStartup;
+                }
+                playing = play;
             }
-            playing = play;
             if (changed)
             {
                 Rerender();
-            }
-
-            if (texture != null && shown != null)
-            {
-                Rect rect = GUILayoutUtility.GetRect(texture.width * zoom, texture.height * zoom,
-                    GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
-                EditorGUI.DrawRect(rect, Ground);
-                GUI.DrawTexture(rect, texture, ScaleMode.StretchToFill, true);
-                // the entity position: where the character stands in the game
-                var anchor = new Vector2(rect.x + shown.Canvas.AnchorX * zoom, rect.y + shown.Canvas.AnchorY * zoom);
-                EditorGUI.DrawRect(new Rect(anchor.x - 4, anchor.y, 9, 1), Anchor);
-                EditorGUI.DrawRect(new Rect(anchor.x, anchor.y - 4, 1, 9), Anchor);
-                string check = double.IsNaN(shown.JointErrorPixels)
-                    ? "pose check: not done for this pose"
-                    : $"pose check: bones within {shown.JointErrorPixels:0.0} px of where Core put them" +
-                      (shown.JointErrorPixels > 1 ? " (more than 1 px: please report)" : "");
-                EditorGUILayout.LabelField($"{texture.width} x {texture.height} px; {check}", EditorStyles.wordWrappedMiniLabel);
-                if (preview.Retakes > 0 || preview.PlaceholderLeft > 0 || preview.Growths > 0)
-                {
-                    EditorGUILayout.LabelField($"retaken while shaders compiled: {preview.Retakes}; placeholder pixels " +
-                        $"left: {preview.PlaceholderLeft}; canvas grown to fit: {preview.Growths} times",
-                        EditorStyles.wordWrappedMiniLabel);
-                }
             }
 
             EditorGUILayout.Space();
@@ -205,56 +203,35 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
 
             EditorGUILayout.Space();
             PackGUI();
-
-            // rarely needed: the pack is what the game uses
-            EditorGUILayout.Space(16);
-            if (GUILayout.Button(new GUIContent("Export Selected Animation", "Saves only the animation shown as one " +
-                "image, in the preview folder, to look at it closely. Not needed for the game."), EditorStyles.miniButton))
-            {
-                SaveSheet(info.Name);
-            }
-            EditorGUILayout.EndScrollView();
         }
 
-        /// <summary>
-        /// Objects of the avatar to hide in the sprites, such as a fake ground shadow or a particle effect; they
-        /// apply when the avatar is (re)loaded.
-        /// </summary>
-        private void LeaveOutGUI()
+        /// <summary>The right column: the frame shown, on the ground, with where the character stands.</summary>
+        private void PreviewImageGUI()
         {
-            EditorGUILayout.LabelField(new GUIContent("Leave out of the sprites", "Parts of the avatar the sprites " +
-                "shouldn't show, such as a fake ground shadow (the exporter draws the game's own) or effects. Drag " +
-                "them in from the avatar, then press Reload avatar."), EditorStyles.miniBoldLabel);
-            for (int i = 0; i < leaveOut.Count; i++)
+            if (preview == null || texture == null || shown == null)
             {
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    leaveOut[i] = (GameObject)EditorGUILayout.ObjectField(leaveOut[i], typeof(GameObject), true);
-                    if (GUILayout.Button("Remove", GUILayout.Width(70)))
-                    {
-                        leaveOut.RemoveAt(i);
-                        GUIUtility.ExitGUI();
-                    }
-                }
+                return;
             }
-            var added = (GameObject)EditorGUILayout.ObjectField("Add", null, typeof(GameObject), true);
-            if (added != null && !leaveOut.Contains(added))
+            Rect rect = GUILayoutUtility.GetRect(texture.width * zoom, texture.height * zoom,
+                GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
+            EditorGUI.DrawRect(rect, Ground);
+            GUI.DrawTexture(rect, texture, ScaleMode.StretchToFill, true);
+            // the entity position: where the character stands in the game
+            var anchor = new Vector2(rect.x + shown.Canvas.AnchorX * zoom, rect.y + shown.Canvas.AnchorY * zoom);
+            EditorGUI.DrawRect(new Rect(anchor.x - 4, anchor.y, 9, 1), Anchor);
+            EditorGUI.DrawRect(new Rect(anchor.x, anchor.y - 4, 1, 9), Anchor);
+            string check = double.IsNaN(shown.JointErrorPixels)
+                ? "pose check: not done for this pose"
+                : $"pose check: bones within {shown.JointErrorPixels:0.0} px of where Core put them" +
+                  (shown.JointErrorPixels > 1 ? " (more than 1 px: please report)" : "");
+            EditorGUILayout.LabelField($"{texture.width} x {texture.height} px; {check}", EditorStyles.wordWrappedMiniLabel);
+            if (preview.Retakes > 0 || preview.PlaceholderLeft > 0 || preview.Growths > 0)
             {
-                if (source != null && added.transform.IsChildOf(source.transform) && added != source)
-                {
-                    leaveOut.Add(added);
-                }
-                else
-                {
-                    error = added.name + " isn't part of the avatar: drag in an object from inside it.";
-                }
+                EditorGUILayout.LabelField($"retaken while shaders compiled: {preview.Retakes}; placeholder pixels " +
+                    $"left: {preview.PlaceholderLeft}; canvas grown to fit: {preview.Growths} times",
+                    EditorStyles.wordWrappedMiniLabel);
             }
         }
-
-        private List<string> LeaveOutPaths() => leaveOut
-            .Where(o => o != null && source != null && o.transform.IsChildOf(source.transform) && o != source)
-            .Select(o => AnimationUtility.CalculateTransformPath(o.transform, source.transform))
-            .ToList();
 
         private static readonly string[] LightingModes = { "Factorio style", "Custom" };
 
@@ -315,7 +292,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
 
         private static readonly Color MissingColor = new Color(0.9f, 0.2f, 0.2f);
 
-        /// <summary>A text field that must be filled in before Export All: outlined in red with a note while it's empty.</summary>
+        /// <summary>A text field that must be filled in before exporting: outlined in red with a note while it's empty.</summary>
         private static string RequiredField(GUIContent label, string value)
         {
             string result = EditorGUILayout.TextField(label, value);
@@ -337,7 +314,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             return result;
         }
 
-        /// <summary>The avatar pack's settings and the Export All button.</summary>
+        /// <summary>The avatar pack's settings and the export button.</summary>
         private void PackGUI()
         {
             EditorGUILayout.LabelField("Avatar pack", EditorStyles.boldLabel);
@@ -362,7 +339,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             string problem = options.Problem();
             using (new EditorGUI.DisabledScope(problem != null))
             {
-                if (GUILayout.Button(new GUIContent("Export All", "Asks where to save the avatar pack (a Factorio mod zip), " +
+                if (GUILayout.Button(new GUIContent("Export Avatar to .zip", "Asks where to save the avatar pack (a Factorio mod zip), " +
                     "then renders every animation with its shadow. Takes a few minutes."), GUILayout.Height(28)))
                 {
                     if (ChooseZip(options))
@@ -463,24 +440,23 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             catch (InvalidOperationException e) when (e.Message.Contains("drew outside the bounds"))
             {
                 Debug.LogException(e);
-                string log = ErrorLog.Write("Export All", e, preview, options, lighting, console);
+                string log = ErrorLog.Write("Export Avatar to .zip", e, preview, options, lighting, console);
                 // the failing frame is still set up: find what draws on its edge
-                edgeDrawers = preview.EdgeDrawers() ?? new List<string>();
+                List<string> edgeDrawers = preview.EdgeDrawers() ?? new List<string>();
                 List<string> suspects = edgeDrawers.Count > 0 ? edgeDrawers : preview.DrawnOutsideMeshes();
                 error = "Something on the avatar reaches past the edge of the picture, so it would be cut off, and " +
                     "nothing was saved. " + (edgeDrawers.Count > 0
-                        ? "Found by switching the avatar's parts on one at a time: " + string.Join(", ", edgeDrawers) +
-                          ". Leave them out of the sprites with the button below, then export again."
-                        : (suspects.Count > 0 ? "It may be one of these: " + string.Join("; ", suspects) + ". " : "") +
-                          "Find it in the preview, add it to Leave out of the sprites at the top and press Reload " +
-                          "avatar.") + " (" + e.Message + ")";
+                        ? "Found by switching the avatar's parts on one at a time: " + string.Join(", ", edgeDrawers) + ". "
+                        : (suspects.Count > 0 ? "It may be one of these: " + string.Join("; ", suspects) + ". " : "")) +
+                    "Turn that part off in your avatar (untick it in the Hierarchy), press Reload avatar and export " +
+                    "again. (" + e.Message + ")";
                 error += ErrorLog.Note(log);
                 Debug.LogWarning("Factorio Avatar Exporter: " + error);
             }
             catch (Exception e)
             {
                 Debug.LogException(e);
-                error = e.Message + ErrorLog.Note(ErrorLog.Write("Export All", e, preview, options, lighting, console));
+                error = e.Message + ErrorLog.Note(ErrorLog.Write("Export Avatar to .zip", e, preview, options, lighting, console));
             }
             finally
             {

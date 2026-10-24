@@ -13,7 +13,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
     /// <summary>The version of this package, written into every pack (kept equal to package.json by a test).</summary>
     internal static class ExporterInfo
     {
-        public const string Version = "0.18.0";
+        public const string Version = "0.19.0";
     }
 
     /// <summary>What the user chose for a pack.</summary>
@@ -119,8 +119,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             {
                 throw new InvalidOperationException("Too large for Factorio's sprite sheets, even at half resolution: " +
                     string.Join(", ", tooLarge.Select(f => $"{f.Animation} (frames up to {f.Width} x {f.Height} px)")) +
-                    ". Something reaches far out from the body (a long tail, wide wings, a big accessory): add it to " +
-                    "Leave out of the sprites, press Reload avatar and export again. Nothing was saved.");
+                    ". Something reaches far out from the body (a long tail, wide wings, a big accessory): turn it off " +
+                    "in your avatar (untick it in the Hierarchy), press Reload avatar and export again. Nothing was saved.");
             }
 
             AvatarExporter exporter = null;

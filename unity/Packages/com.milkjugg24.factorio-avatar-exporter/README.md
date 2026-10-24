@@ -13,16 +13,16 @@ Open it with **Tools ▸ Factorio Avatar Exporter**.
 
 - **Avatar:** the object with the VRChat avatar descriptor (from the Hierarchy), or its prefab. Press
   **Load avatar**. The exporter works on a copy in a hidden scene; your scene and avatar are not changed.
-- **Leave out of the sprites:** objects that shouldn't be drawn, such as a fake ground shadow, a glow or
-  an accessory you don't want. Drag them in and press **Reload avatar**. The exporter draws the game's
-  own shadow, so a fake one isn't needed.
-- **Report:** what the exporter found: the avatar's height, the bones it's missing, the scripts it
+- To keep something out of the sprites (a fake ground shadow, a glow, an accessory you don't want), turn
+  it off in your avatar (untick it in the Hierarchy) and press **Reload avatar**. The exporter draws the
+  game's own shadow, so a fake one isn't needed.
+- **Report** (click to open): what the exporter found: the avatar's height, the bones it's missing, the scripts it
   removed from the copy, which loose parts (outfits, accessories) it held on to the body, and which wing
   and tail bones will move.
 
 ## Preview
 
-Pick an animation, a direction and a frame, or press **Play** to see it at the speed the game plays it. The yellow cross is where your character
+The preview is on the right. Pick an animation, a direction and a frame, or press **Play** to see it at the speed the game plays it. The yellow cross is where your character
 stands in the game. **Pose check** under the preview should be 0 or close to it; if it's over 1 px, the
 posing doesn't fit your rig exactly (please report it with `report.txt`).
 
@@ -58,16 +58,16 @@ The ground shadow isn't affected by the lighting: it's always drawn the way the 
 - **Resolution:** 64 pixels per tile is sharp and right for almost everyone. 32 uses a quarter of the
   video memory, for very large servers or old computers.
 
-Export All is only possible once the name, pack id and author are filled in; an empty one is outlined
+Exporting is only possible once the name, pack id and author are filled in; an empty one is outlined
 in red. Every pack includes the
 flight animations (hovering and flying with Space Age's mech armor).
-- **Export All:** first measures every frame (a few seconds) to check that each animation fits
+- **Export Avatar to .zip:** first measures every frame (a few seconds) to check that each animation fits
   Factorio's sprite sheets. An animation too large for full resolution is drawn at half resolution
   instead (the same size in the game, a little softer); if one is too large even then, it stops and
-  says which, before the long render: leave out the part that reaches far out (a long tail, wide
+  says which, before the long render: turn off the part that reaches far out (a long tail, wide
   wings, a big accessory) and export again. Then it renders everything (a few minutes; you can cancel)
   and saves the pack. Keep the file name `avatar-pack-<id>_1.0.0.zip`, as Factorio expects.
-- **Export Selected Animation** (at the bottom): saves only the animation in the preview as one image.
+- **Export Selected Animation** (next to Play): saves only the animation in the preview as one image.
   Not needed for the game.
 
 Every export also writes `FactorioAvatarExport/<avatar>/preview/` next to your project's `Assets`
@@ -111,7 +111,7 @@ you report a problem. It has no images, and your user name is blanked out of the
   **Report** lists every part and what it follows; please report the line of a part that still floats.
 - **"Something reached the edge of the picture and was cut off":** a part is drawn further out than its
   mesh. The exporter already retries with more room; whatever is still cut off is listed in
-  `report.txt`. If it matters, leave that part out and export again.
+  `report.txt`. If it matters, turn that part off in your avatar and export again.
 - **Pink or light-blue patches:** a shader is missing or not compiled yet. Make sure the avatar looks
   right in the Scene view first.
 
