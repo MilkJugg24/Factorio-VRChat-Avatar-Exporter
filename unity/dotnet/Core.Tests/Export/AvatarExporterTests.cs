@@ -295,6 +295,42 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Export
         }
 
         [Test]
+        public void AnimationsTooLargeAreDrawnAtHalfResolution()
+        {
+            // the stick figure's run-gun does not fit 1024 px sheets at 64 pixels per tile (see above), but does at 32
+            var settings = new ExportSettings
+            {
+                PixelsPerTile = 64,
+                Supersampling = 1,
+                Flight = false,
+                MaxSheetSize = 1024,
+                HalveWhenTooLarge = true,
+            };
+            var exporter = new AvatarExporter(GenericRig(), new StickFigureRenderer(), settings);
+            IReadOnlyList<AnimationFit> fits = exporter.CheckFit();
+            Assert.That(fits.Select(f => f.Animation), Is.EqualTo(exporter.Animations.Select(a => a.Name)));
+            Assert.That(fits.All(f => f.Fits));
+            AnimationFit runGun = fits.Single(f => f.Animation == AnimationSpec.RunGun);
+            Assert.That(runGun.PixelsPerTile, Is.EqualTo(32));
+            Assert.That(fits.Single(f => f.Animation == AnimationSpec.Idle).PixelsPerTile, Is.EqualTo(64));
+
+            ExportedArt art = exporter.Render();
+            foreach (AnimationFit fit in fits)
+            {
+                Assert.That(art.PixelsPerTile[fit.Animation], Is.EqualTo(fit.PixelsPerTile), fit.Animation + ": as checked");
+            }
+            var content = new PackContent { Id = "half", Title = "Half", Author = "test", GeneratorVersion = "0" };
+            exporter.Fill(content, art);
+            Assert.That(content.PixelsPerTile, Is.EqualTo(64));
+            Assert.That(content.AnimationPixelsPerTile.Keys, Is.EquivalentTo(fits.Where(f => f.PixelsPerTile == 32).Select(f => f.Animation)));
+            Assert.That(PackDescription.FileText(content), Does.Contain("pixels_per_tile = 32"));
+
+            settings.HalveWhenTooLarge = false;
+            Assert.That(new AvatarExporter(GenericRig(), new StickFigureRenderer(), settings).CheckFit()
+                .Single(f => f.Animation == AnimationSpec.RunGun).Fits, Is.False, "without halving it does not fit");
+        }
+
+        [Test]
         public void RowsTooWideAreSplitByFrames()
         {
             // the grey renderer fills canvases 12 tiles wide: 12 run frames of 384 px are 4608 px, but 8 directions fit

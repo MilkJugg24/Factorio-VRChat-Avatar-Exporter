@@ -1,7 +1,7 @@
 # Avatar pack format (version 1)
 
 An **avatar pack** is a small Factorio mod that adds one look to the Avatar
-Characters mod (`avatar-characters` 0.4.0 or newer). The pack only ships
+Characters mod (`avatar-characters` 0.5.0 or newer). The pack only ships
 sprite sheets and a description of them. `avatar-characters` reads that
 description, creates the character and corpse prototypes, and offers the look
 in its avatar window, where each player picks their own.
@@ -53,7 +53,7 @@ avatar-pack-<id>_<version>/
   "author": "<author>",
   "factorio_version": "2.1",
   "description": "...",
-  "dependencies": ["avatar-characters >= 0.4.0"]
+  "dependencies": ["avatar-characters >= 0.5.0"]
 }
 ```
 
@@ -232,6 +232,11 @@ to the west.
   `(frame centre - anchor) / pixels_per_tile`, where the anchor is the ground
   point under the character.
 - No file may be larger than 4096 px in either direction.
+- An animation may set its own `pixels_per_tile` (64 or 32; avatar-characters
+  0.5.0 or newer) to be drawn at that resolution instead of the pack's: the
+  exporter draws an animation too large for the sheets at 64 at 32, which shows
+  it at the same size, a little softer. Its frames, `width`, `height` and file
+  sizes are then in its own pixels; `shift` stays in tiles.
 - When `direction_count x height` is more than 4096 px, split the sheet by
   rows: use `filenames` instead of `filename` and set
   `lines_per_file = floor(4096 / height)`. File *k* holds rows
@@ -260,18 +265,18 @@ does):
   slightly south, above). The ground shadow is a projection onto the ground
   along `(-1.0, 0.2, 1.0)` (normalised; west, a little south, 44 degrees up),
   so shadows fall east and a little north, as long as the vanilla engineer's.
-- **Size:** the exporter draws a standing character as tall as the vanilla
-  engineer, 1.7 tiles, unless its user picks another size (75% to 130%). In
-  the flight animations the body is raised 0.42 tiles off the ground.
+- **Size:** the exporter draws every standing character as tall as the vanilla
+  engineer, 1.7 tiles. In the flight animations the body is raised 0.42 tiles
+  off the ground.
 
 ## Bundles
 
 An **avatar bundle** is one mod holding several packs, so a server hands its players one file. The
-exporter's Combine Packs for a Server writes them; they need `avatar-characters` 0.3.0 or newer (the exporter now writes 0.4.0).
+exporter's Combine Packs for a Server writes them; they need `avatar-characters` 0.3.0 or newer (the exporter now writes 0.5.0).
 
 | Thing | Name |
 | --- | --- |
-| Mod name | `avatar-bundle-<name>`, with `"dependencies": ["avatar-characters >= 0.4.0"]` |
+| Mod name | `avatar-bundle-<name>`, with `"dependencies": ["avatar-characters >= 0.5.0"]` |
 | Zip file | `avatar-bundle-<name>_<version>.zip` |
 | A character's folder | `characters/<id>/`, holding `avatar-pack.lua` (the pack's description), its graphics, `README.txt` (its source) and `pack.json` (id, title, author and the pack's version) |
 | mod-data, character and corpse prototypes | the same as the pack's: `avatar-pack-<id>`, `avatar-pack-corpse-<id>` |

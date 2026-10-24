@@ -115,7 +115,7 @@ MODS="$WORK/mods"
 new_mods_dir "$MODS"
 PACK_NAMES=()
 if [ "$TEST_PACKS" = true ]; then
-  python3 "$MAKE_PACK" --out "$MODS" --id test --title "Test Avatar" --flight --tint --max-sheet 1024 --frames idle=16 > /dev/null
+  python3 "$MAKE_PACK" --out "$MODS" --id test --title "Test Avatar" --flight --tint --max-sheet 1024 --frames idle=16 --half run > /dev/null
   # a 30-character title of 90 bytes, and default timing scaled to 6 run / 8 mine frames
   # installed as a zip only, like a downloaded pack
   python3 "$MAKE_PACK" --out "$WORK/packs" --id small --title "$(printf '竜%.0s' $(seq 30))" --ppt 32 \

@@ -100,7 +100,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
                 Assert.That(json.GetProperty("version").GetString(), Is.EqualTo("1.0.3"));
                 Assert.That(json.GetProperty("title").GetString(), Is.EqualTo("Avatar bundle: My Server"));
                 Assert.That(json.GetProperty("factorio_version").GetString(), Is.EqualTo(PackFormat.FactorioVersion));
-                Assert.That(json.GetProperty("dependencies").EnumerateArray().Single().GetString(), Is.EqualTo("avatar-characters >= 0.4.0"));
+                Assert.That(json.GetProperty("dependencies").EnumerateArray().Single().GetString(), Is.EqualTo("avatar-characters >= 0.5.0"));
                 StringAssert.Contains("Draco, Mika", json.GetProperty("description").GetString());
             }
             foreach (string id in new[] { "draco", "mika" })

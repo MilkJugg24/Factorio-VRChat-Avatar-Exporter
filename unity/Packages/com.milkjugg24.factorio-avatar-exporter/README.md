@@ -41,11 +41,15 @@ a newer `.unitypackage` the same way.
    - **Version**: start with 1.0.0.
    - **Resolution**: 64 pixels per tile is sharp, and right for almost everyone. 32 uses a quarter of
      the video memory, for very large servers or old computers.
-   - **Size in game**: how tall your avatar is drawn, compared with the engineer (100%), from 75% to
-     130%; the line under it gives the height in tiles. Only the picture changes: your character still
-     takes up the engineer's space and moves as fast, with longer or shorter steps. Every avatar starts
-     at 100%, whatever its height in VRChat, since VRChat avatars come in any size.
+   - Every avatar is drawn as tall as the engineer, whatever its height in VRChat (VRChat avatars come
+     in any size), so all characters look alike in size; the line under Resolution gives the height in
+     tiles.
    - **Flight animations**: on, unless you never fly with mech armor.
+   - **Check fit** (optional): measures every frame, without drawing them, and says whether each
+     animation fits Factorio's sprite sheets (at most 4096 px). An animation too large for full
+     resolution is drawn at half resolution instead, the same size in the game and a little softer; it
+     lists which. If something is too large even then, it says so before the long export: leave out a
+     part that reaches far out (a long tail, wide wings, a big accessory) and check again.
 6. Press **Export All** and choose where to save the pack. Keep its file name,
    `avatar-pack-<id>_<version>.zip`: Factorio expects a mod's zip to be named that way. Then the exporter
    renders every animation, which takes a few minutes; you can cancel from the progress bar.
@@ -133,8 +137,8 @@ using it are deleted together with their items.
 Each character uses video memory on every player's computer; `report.txt` says how much. It's less than
 you might fear, because the game compresses sprites. In a test, a bundle of 12 characters at 64 pixels per
 tile added about 120 MB of video memory and about a second of loading time, and the game ran at a full
-60 frames per second with all 12 on screen. Avatars with big wings or long hair take more, and so does a
-bigger **Size in game** (at 100%, about a quarter more than in that test). From exporter 0.7.0 on, the
+60 frames per second with all 12 on screen. Avatars with big wings or long hair take more, and so does
+the engineer's height every avatar is now drawn at (about a quarter more than in that test). From exporter 0.7.0 on, the
 idle animations last 16 seconds instead of about 2 (48 frames instead of 8), which makes a pack about 70%
 bigger.
 

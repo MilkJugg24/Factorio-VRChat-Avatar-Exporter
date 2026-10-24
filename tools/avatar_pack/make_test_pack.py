@@ -287,10 +287,10 @@ def build(args):
     for sub in ("graphics", "prototypes", os.path.join("locale", "en")):
         os.makedirs(os.path.join(folder, sub))
 
-    painter = Painter(args.ppt, tint)
     animations = {}
     names = list(REQUIRED) + (list(FLIGHT) if flight else [])
     for anim in names:
+        painter = Painter(32 if anim in args.half else args.ppt, tint)
         dirs, frames = DIRECTIONS[anim], args.frames.get(anim, FRAMES[anim])
         cells = [[painter.frame(anim, row, f, frames) for f in range(frames)] for row in range(dirs)]
         layer_index = {"base": 0, "shadow": 2}
@@ -305,6 +305,8 @@ def build(args):
             info["shift"] = painter.body_shift(anim) if i in (0, 1) else painter.shadow_shift(anim)
             layers[layer] = info
         animations[anim] = {"direction_count": dirs, "frame_count": frames, "layers": layers}
+        if anim in args.half and args.ppt != 32:
+            animations[anim]["pixels_per_tile"] = 32
 
     write_icon(os.path.join(folder, "graphics", "icon.png"), args.ppt, tint, args.title)
     thumb = Image.new("RGBA", (144, 144), (40, 40, 48, 255))
@@ -413,6 +415,8 @@ def main(argv=None):
     parser.add_argument("--flight", action="store_true", help="include the flight animations")
     parser.add_argument("--tint", action="store_true", help="tintable, with mask layers")
     parser.add_argument("--ppt", type=int, choices=(64, 32), default=64, help="pixels per tile")
+    parser.add_argument("--half", type=lambda t: set(t.split(",")), default=set(), metavar="ANIM,...",
+                        help="draw these animations at 32 pixels per tile (half resolution, the same size in the game)")
     parser.add_argument("--max-sheet", type=int, default=4096,
                         help="largest sheet size in px; lower it to force split sheets")
     parser.add_argument("--default-timing", action="store_true", help="leave timing out of the pack")

@@ -13,7 +13,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
     /// <summary>The version of this package, written into every pack (kept equal to package.json by a test).</summary>
     internal static class ExporterInfo
     {
-        public const string Version = "0.9.0";
+        public const string Version = "0.10.0";
     }
 
     /// <summary>What the user chose for a pack.</summary>
@@ -95,6 +95,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 PixelsPerTile = options.PixelsPerTile,
                 Supersampling = StageCamera.Supersampling,
                 Flight = options.Flight,
+                // every avatar is drawn at the engineer's height; an animation too large for the sheets at full
+                // resolution is drawn at half instead of stopping the export
+                HalveWhenTooLarge = true,
             };
             AvatarExporter exporter = null;
             ExportedArt art = null;
@@ -120,6 +123,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 }
             }
 
+            List<string> halved = art.PixelsPerTile.Where(r => r.Value < options.PixelsPerTile).Select(r => r.Key).ToList();
+            if (halved.Count > 0)
+            {
+                extra.Add("drawn at half resolution (32 pixels per tile, the same size in the game) because they are too " +
+                    "large for the sprite sheets at full: " + string.Join(", ", halved));
+            }
             if (exporter.CutOff.Count > 0)
             {
                 extra.Add($"cut off at the edge of the picture in {exporter.CutOff.Count} frames (exported anyway), " +

@@ -273,6 +273,9 @@ class Checker:
         if not is_int(meta.get("frame_count"), 1, spec.MAX_FRAMES):
             self.error(f"{where} needs an integer frame_count between 1 and {spec.MAX_FRAMES}")
             return
+        ppt = meta.get("pixels_per_tile")
+        if ppt is not None and (ppt not in (64, 32) or isinstance(ppt, bool)):
+            self.error(f"{where} has pixels_per_tile {ppt}; only 64 and 32 are supported")
         layers = meta.get("layers")
         if not isinstance(layers, dict):
             self.error(f"{where} has no layers")

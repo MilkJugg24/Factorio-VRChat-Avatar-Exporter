@@ -59,24 +59,29 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         public int Retakes => camera.Retakes;
         public int PlaceholderLeft => camera.PlaceholderLeft;
 
-        /// <summary>Draws the avatar <paramref name="tiles"/> tall from now on, in the preview and the export.</summary>
-        public void SetHeight(double tiles)
-        {
-            if (tiles == stage.HeightTiles)
-            {
-                return;
-            }
-            stage.SetHeight(tiles);
-            poses = new HumanoidAnimations(stage.Rig);
-            bounds.Clear();
-            margins.Clear();
-        }
-
-        /// <summary>How big the avatar is drawn, for the window and report.txt.</summary>
+        /// <summary>How big the avatar is drawn (always the engineer's height), for the window and report.txt.</summary>
         public string SizeNote =>
-            $"size in game: {(100 * stage.HeightTiles / Conventions.EngineerHeight).ToString("0", CultureInfo.InvariantCulture)}% " +
-            $"of the engineer's height, {stage.HeightTiles.ToString("0.00", CultureInfo.InvariantCulture)} tiles tall " +
+            $"drawn at the engineer's height, {stage.HeightTiles.ToString("0.00", CultureInfo.InvariantCulture)} tiles tall " +
             $"({stage.MetersPerTile.ToString("0.000", CultureInfo.InvariantCulture)} m per tile)";
+
+        /// <summary>
+        /// Whether each animation fits Factorio's sprite sheets at <paramref name="pixelsPerTile"/>, measured as
+        /// Export All measures it first (<see cref="AvatarExporter.CheckFit"/>), halving those too large.
+        /// </summary>
+        public IReadOnlyList<AnimationFit> CheckFit(int pixelsPerTile, bool flight)
+        {
+            using (var renderer = new StageRenderer(stage, camera))
+            {
+                var settings = new ExportSettings
+                {
+                    PixelsPerTile = pixelsPerTile,
+                    Supersampling = StageCamera.Supersampling,
+                    Flight = flight,
+                    HalveWhenTooLarge = true,
+                };
+                return new AvatarExporter(poses, renderer, settings).CheckFit();
+            }
+        }
 
         /// <summary>Lights the avatar for the preview and the export (<see cref="StageCamera.SetLighting"/>).</summary>
         public void SetLighting(StageLighting lighting) => camera.SetLighting(lighting);

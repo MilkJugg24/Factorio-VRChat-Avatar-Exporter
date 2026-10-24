@@ -78,6 +78,8 @@ if mods["avatar-pack-test"] then
     check(base.lines_per_file == 8 and base.slice == 8, "pack test: run-gun lines_per_file/slice")
     check(base.direction_count == 18 and base.frame_count == 8 and base.line_length == 8, "pack test: run-gun counts")
     check(base.scale == 0.5, "pack test: scale should be 0.5 at 64 pixels per tile")
+    check(anim.running.layers[1].scale == 1 and anim.running.layers[3].scale == 1,
+      "pack test: run, drawn at 32 pixels per tile in a 64 pack, should have scale 1")
     check(run_gun.layers[2].apply_runtime_tint == true, "pack test: mask not tinted")
     check(run_gun.layers[3].draw_as_shadow == true, "pack test: shadow not drawn as shadow")
     check(anim.flipped_shadow_running_with_gun ~= nil, "pack test: no flipped shadow")

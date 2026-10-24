@@ -51,8 +51,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// <summary>Its title in Factorio's mod list.</summary>
         public const string MainModTitle = "Avatar Characters";
 
-        /// <summary>The first avatar-characters version that loads packs of this format (0.4.0 added frames_per_file).</summary>
-        public const string MinMainModVersion = "0.4.0";
+        /// <summary>The first avatar-characters version that loads packs of this format (0.4.0 added frames_per_file, 0.5.0 an animation's own pixels_per_tile).</summary>
+        public const string MinMainModVersion = "0.5.0";
 
         /// <summary>The info.json dependency every pack declares.</summary>
         public const string Dependency = MainMod + " >= " + MinMainModVersion;

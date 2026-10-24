@@ -1,14 +1,15 @@
 -- Builds character animations and corpse pictures from the sprite metadata of
 -- avatar packs:
 --
---   meta = { direction_count, frame_count, layers = { [key] = info } }
+--   meta = { direction_count, frame_count, layers = { [key] = info }, pixels_per_tile = 64 | 32 | nil }
 --   info = { filename = ... | filenames = {...}, lines_per_file = n, width, height, shift }
 --
 -- A "look" tells the builder where the metadata comes from and which layers to draw:
 --
 --   look.get_meta(name)  -> meta, or nil when the look has no such animation
 --   look.layer_list      -> { { key = "base" }, { key = "mask", extra = {...} }, ... } in draw order
---   look.scale           -> sprite scale (0.5 for 64 pixels per tile)
+--   look.scale           -> sprite scale (0.5 for 64 pixels per tile), unless the animation sets its own
+--                           pixels_per_tile (one drawn at half resolution because it was too large)
 --   look.speeds          -> animation name -> animation_speed
 --   look.mine_impact_frame
 --   look.label           -> used in error messages
@@ -38,7 +39,7 @@ local function layer(look, meta, key, extra, rotated)
     width = info.width,
     height = info.height,
     shift = info.shift,
-    scale = look.scale,
+    scale = meta.pixels_per_tile and 32 / meta.pixels_per_tile or look.scale,
     frame_count = meta.frame_count,
     line_length = meta.frame_count,
     usage = "player",

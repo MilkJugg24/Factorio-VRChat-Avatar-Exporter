@@ -35,11 +35,13 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         [SerializeField] private string author = PackContent.DefaultAuthor;
         [SerializeField] private string packVersion = PackContent.DefaultVersion;
         [SerializeField] private int pixelsPerTile = Conventions.DefaultPixelsPerTile;
-        [SerializeField] private int sizePercent = 100;
         [SerializeField] private bool flight = true;
         [SerializeField] private string saveFolder;
         private string exported;
-        private int appliedSize;
+        // the last Check fit's result, for the resolution and flight it was made with
+        private string fitReport;
+        private bool fitTrouble;
+        private (int, bool) fitFor;
         private List<string> edgeDrawers = new List<string>();
 
         private PosePreview preview;
@@ -88,15 +90,14 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 EditorUtility.DisplayProgressBar("Factorio Avatar Exporter", "Loading " + source.name, 0.5f);
                 if (packFor != source.name)
                 {
-                    // another avatar: its own name, id and size
+                    // another avatar: its own name and id
                     packFor = source.name;
                     packTitle = source.name;
                     packId = "";
-                    sizePercent = 100;
                     leaveOut.Clear();
                 }
-                preview = PosePreview.Load(source, HeightTiles(sizePercent), LeaveOutPaths());
-                appliedSize = sizePercent;
+                preview = PosePreview.Load(source, leaveOut: LeaveOutPaths());
+                fitReport = null;
                 preview.SetLighting(lighting);
                 exported = null;
                 Rerender();
@@ -309,12 +310,72 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             }
         }
 
-        private const int MinSizePercent = 75, MaxSizePercent = 130;
-
-        private static double HeightTiles(int percent) => Conventions.EngineerHeight * percent / 100.0;
-
         private static readonly string[] Resolutions = { "64 pixels per tile (sharp)", "32 pixels per tile (a quarter of the memory)" };
         private static readonly int[] ResolutionValues = { 64, 32 };
+
+        /// <summary>
+        /// Check fit: whether every animation fits Factorio's sprite sheets at the chosen resolution, which ones
+        /// will be drawn at half resolution instead, and which do not fit at all, before the long export.
+        /// </summary>
+        private void FitGUI()
+        {
+            if (fitReport != null && fitFor != (pixelsPerTile, flight))
+            {
+                fitReport = null;
+            }
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.PrefixLabel(" ");
+                if (GUILayout.Button(new GUIContent("Check fit", "Poses and measures every frame (without drawing them) " +
+                    "to see whether each animation fits Factorio's sprite sheets. Takes a few seconds."), GUILayout.Width(100)))
+                {
+                    CheckFit();
+                }
+            }
+            if (fitReport != null)
+            {
+                EditorGUILayout.HelpBox(fitReport, fitTrouble ? MessageType.Warning : MessageType.Info);
+            }
+        }
+
+        private void CheckFit()
+        {
+            try
+            {
+                EditorUtility.DisplayProgressBar("Factorio Avatar Exporter", "Measuring every frame", 0.5f);
+                IReadOnlyList<AnimationFit> fits = preview.CheckFit(pixelsPerTile, flight);
+                fitFor = (pixelsPerTile, flight);
+                List<string> half = fits.Where(f => f.Fits && f.PixelsPerTile < pixelsPerTile).Select(f => f.Animation).ToList();
+                List<AnimationFit> no = fits.Where(f => !f.Fits).ToList();
+                var lines = new List<string>();
+                if (no.Count == 0 && half.Count == 0)
+                {
+                    lines.Add("Fits: every animation at full resolution.");
+                }
+                if (half.Count > 0)
+                {
+                    lines.Add("Too large for full resolution, so drawn at half (the same size in the game, a little softer): " +
+                        string.Join(", ", half) + ".");
+                }
+                if (no.Count > 0)
+                {
+                    lines.Add("Too large even at half resolution: " + string.Join(", ", no.Select(f => $"{f.Animation} ({f.Width} x {f.Height} px)")) +
+                        ". Leave out a part that reaches far out (a long tail, wide wings, a big accessory) and check again.");
+                }
+                lines.Add("Parts drawn past their meshes (fur, glows) aren't measured: an animation near the limit may still be halved.");
+                fitReport = string.Join("\n", lines);
+                fitTrouble = no.Count > 0;
+            }
+            catch (Exception e)
+            {
+                fitReport = "The check failed: " + e.Message;
+                fitTrouble = true;
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
+        }
 
         /// <summary>The avatar pack's settings and the Export All button.</summary>
         private void PackGUI()
@@ -330,19 +391,10 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             packVersion = EditorGUILayout.TextField(new GUIContent("Version", "Raise it (1.0.1, 1.1.0, ...) when you export " +
                 "the pack again for a server: every player needs the same version."), packVersion);
             pixelsPerTile = EditorGUILayout.IntPopup("Resolution", pixelsPerTile, Resolutions, ResolutionValues);
-            sizePercent = EditorGUILayout.IntSlider(new GUIContent("Size in game (%)", "How tall your avatar is drawn, " +
-                "compared with the engineer (100%). Only the picture changes: the character still takes up the " +
-                "engineer's space, and moves as fast."), sizePercent, MinSizePercent, MaxSizePercent);
-            // measuring the avatar again and planning its canvas takes a moment, so only once the slider is let go
-            if (sizePercent != appliedSize && GUIUtility.hotControl == 0)
-            {
-                appliedSize = sizePercent;
-                preview.SetHeight(HeightTiles(sizePercent));
-                Rerender();
-            }
             EditorGUILayout.LabelField(" ", preview.SizeNote, EditorStyles.miniLabel);
             flight = EditorGUILayout.Toggle(new GUIContent("Flight animations", "Hovering and flying with Space Age's mech armor. " +
                 "Without them the avatar walks in the air."), flight);
+            FitGUI();
 
             PackOptions options = Options();
             string problem = options.Problem();

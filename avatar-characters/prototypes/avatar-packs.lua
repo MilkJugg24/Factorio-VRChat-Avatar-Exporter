@@ -98,6 +98,9 @@ local function check_animation(pack_name, prefix, name, meta, tintable)
   if not is_int(meta.frame_count, 1, format.MAX_FRAMES) then
     fail(pack_name, where .. " needs an integer frame_count between 1 and " .. format.MAX_FRAMES)
   end
+  if meta.pixels_per_tile ~= nil and meta.pixels_per_tile ~= 64 and meta.pixels_per_tile ~= 32 then
+    fail(pack_name, where .. " has pixels_per_tile " .. tostring(meta.pixels_per_tile) .. "; only 64 and 32 are supported")
+  end
   if type(meta.layers) ~= "table" then
     fail(pack_name, where .. " has no layers")
   end

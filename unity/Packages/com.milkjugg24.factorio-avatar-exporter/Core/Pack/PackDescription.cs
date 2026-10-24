@@ -95,12 +95,17 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                 }
                 // all layers of a valid animation have the same counts
                 SheetSet baseLayer = animation.Value[PackLayers.Base];
-                animations.Add(animation.Key, new Dictionary<string, object>(StringComparer.Ordinal)
+                var table = new Dictionary<string, object>(StringComparer.Ordinal)
                 {
                     ["direction_count"] = baseLayer.DirectionCount,
                     ["frame_count"] = baseLayer.FrameCount,
                     ["layers"] = layers,
-                });
+                };
+                if (content.AnimationPixelsPerTile.TryGetValue(animation.Key, out int ppt) && ppt != content.PixelsPerTile)
+                {
+                    table["pixels_per_tile"] = ppt;
+                }
+                animations.Add(animation.Key, table);
             }
             return animations;
         }

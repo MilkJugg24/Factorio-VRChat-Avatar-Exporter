@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.5.0
+Date: 2026-10-24
+  Features:
+    - An animation of a pack may set its own pixels_per_tile, to be drawn at that resolution: the
+      exporter (0.10.0 on) draws an animation too large for the sprite sheets at half resolution,
+      the same size in the game. Its packs need this version.
+---------------------------------------------------------------------------------------------------
 Version: 0.4.1
 Date: 2026-10-24
   Bugfixes:

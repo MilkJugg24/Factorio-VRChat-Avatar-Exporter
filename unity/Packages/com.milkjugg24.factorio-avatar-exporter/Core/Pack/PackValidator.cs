@@ -75,6 +75,17 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             {
                 errors.Add(Invariant($"pixels per tile is {content.PixelsPerTile}; only 64 and 32 are supported"));
             }
+            foreach (KeyValuePair<string, int> animation in content.AnimationPixelsPerTile)
+            {
+                if (animation.Value != 64 && animation.Value != 32)
+                {
+                    errors.Add(Invariant($"animation \"{animation.Key}\" has pixels per tile {animation.Value}; only 64 and 32 are supported"));
+                }
+                else if (!content.Animations.ContainsKey(animation.Key))
+                {
+                    errors.Add(Invariant($"pixels per tile is set for \"{animation.Key}\", which the pack does not have"));
+                }
+            }
         }
 
         private static void CheckOneLine(string what, string text, List<string> errors)

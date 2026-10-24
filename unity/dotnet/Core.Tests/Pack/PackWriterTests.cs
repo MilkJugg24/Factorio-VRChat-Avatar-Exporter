@@ -111,7 +111,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
                 Assert.That(info.GetProperty("factorio_version").GetString(), Is.EqualTo("2.1"));
                 StringAssert.Contains("Test Model", info.GetProperty("description").GetString());
                 Assert.That(info.GetProperty("dependencies").EnumerateArray().Select(d => d.GetString()),
-                    Is.EqualTo(new[] { "avatar-characters >= 0.4.0" }));
+                    Is.EqualTo(new[] { "avatar-characters >= 0.5.0" }));
             }
             // Factorio refuses a mod without an author ("Key "author" not found in property tree")
             content.Author = null;

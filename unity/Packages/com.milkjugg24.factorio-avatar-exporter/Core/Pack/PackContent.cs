@@ -43,6 +43,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// <summary>64 (sprites drawn at scale 0.5) or 32 (scale 1).</summary>
         public int PixelsPerTile { get; set; } = Conventions.DefaultPixelsPerTile;
 
+        /// <summary>
+        /// Animations drawn at another resolution than <see cref="PixelsPerTile"/> (32 when too large for sheets
+        /// at 64), by name.
+        /// </summary>
+        public Dictionary<string, int> AnimationPixelsPerTile { get; } = new Dictionary<string, int>(StringComparer.Ordinal);
+
         /// <summary>True when the flight animations (<see cref="AnimationInfo.InAir"/>) are included.</summary>
         public bool Flight { get; set; }
 

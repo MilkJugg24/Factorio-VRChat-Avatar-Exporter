@@ -28,6 +28,13 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         public int CanvasMarginPixels { get; set; } = CanvasPlanner.DefaultMarginPixels;
 
         /// <summary>
+        /// Draw an animation whose sheets would not fit at <see cref="PixelsPerTile"/> 64 at 32 instead (half the
+        /// resolution, the same size in the game), rather than stopping the export
+        /// (<see cref="AvatarExporter.CheckFit"/> says which ones will be).
+        /// </summary>
+        public bool HalveWhenTooLarge { get; set; }
+
+        /// <summary>
         /// Let a render that reaches the edge of its canvas through, cut off there, instead of stopping the
         /// export; <see cref="AvatarExporter.CutOff"/> lists those frames.
         /// </summary>
@@ -77,17 +84,47 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
     /// <summary>Everything rendered for a pack: sheets of every animation and layer, the icon and the thumbnail.</summary>
     public sealed class ExportedArt
     {
-        public ExportedArt(Dictionary<string, Dictionary<string, SheetSet>> animations, Image8 icon, Image8 thumbnail)
+        public ExportedArt(Dictionary<string, Dictionary<string, SheetSet>> animations, Image8 icon, Image8 thumbnail,
+            Dictionary<string, int> pixelsPerTile = null)
         {
             Animations = animations;
             Icon = icon;
             Thumbnail = thumbnail;
+            PixelsPerTile = pixelsPerTile ?? new Dictionary<string, int>(StringComparer.Ordinal);
         }
+
+        /// <summary>Pixels per tile each animation was drawn at (<see cref="ExportSettings.HalveWhenTooLarge"/>).</summary>
+        public Dictionary<string, int> PixelsPerTile { get; }
 
         /// <summary>Animation name -> layer name (<see cref="PackLayers"/>) -> sheets.</summary>
         public Dictionary<string, Dictionary<string, SheetSet>> Animations { get; }
         public Image8 Icon { get; }
         public Image8 Thumbnail { get; }
+    }
+
+    /// <summary>Whether an animation fits in sprite sheets (<see cref="AvatarExporter.CheckFit"/>).</summary>
+    public readonly struct AnimationFit
+    {
+        public AnimationFit(string animation, int pixelsPerTile, bool fits, int width, int height)
+        {
+            Animation = animation;
+            PixelsPerTile = pixelsPerTile;
+            Fits = fits;
+            Width = width;
+            Height = height;
+        }
+
+        public string Animation { get; }
+
+        /// <summary>The pixels per tile it will be drawn at.</summary>
+        public int PixelsPerTile { get; }
+
+        /// <summary>False when it does not fit even at that resolution.</summary>
+        public bool Fits { get; }
+
+        /// <summary>The size of its largest canvas at that resolution, px (a frame is at most this).</summary>
+        public int Width { get; }
+        public int Height { get; }
     }
 
     /// <summary>
@@ -139,6 +176,66 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             }
         }
 
+        /// <summary>
+        /// Without rendering: poses and measures every frame of every animation, as the export does first, and
+        /// says the resolution each will be drawn at and whether it fits. Measured bounds can fall short of what a
+        /// renderer really draws (fur, outlines), so an animation close to the limit may still be halved or fail.
+        /// </summary>
+        public IReadOnlyList<AnimationFit> CheckFit(CancellationToken cancel = default)
+        {
+            var fits = new List<AnimationFit>();
+            foreach (AnimationInfo animation in Animations)
+            {
+                cancel.ThrowIfCancellationRequested();
+                var job = new AnimationJob(this, animation);
+                job.Measure();
+                fits.Add(job.Fit());
+            }
+            return fits;
+        }
+
+        /// <summary>
+        /// The pixels per tile an animation is drawn at: <see cref="ExportSettings.PixelsPerTile"/>, or 32 when it
+        /// does not fit at 64 but does at 32 and <see cref="ExportSettings.HalveWhenTooLarge"/> is on. Also whether
+        /// it fits then, and its largest canvas.
+        /// </summary>
+        private AnimationFit Fit(AnimationInfo animation, List<Bounds3> color, List<Bounds3> mirrored)
+        {
+            (bool fits, int width, int height) At(int ppt)
+            {
+                var canvases = new List<CanvasSpec>();
+                try
+                {
+                    canvases.Add(CanvasPlanner.PlanColor(color, ppt, settings.Supersampling, settings.CanvasMarginPixels));
+                    canvases.Add(CanvasPlanner.PlanShadow(color, ppt, settings.Supersampling, settings.CanvasMarginPixels));
+                    if (mirrored.Count > 0)
+                    {
+                        canvases.Add(CanvasPlanner.PlanShadow(mirrored, ppt, settings.Supersampling, settings.CanvasMarginPixels));
+                    }
+                }
+                catch (ArgumentException)
+                {
+                    return (false, CanvasPlanner.MaxCanvasSize, CanvasPlanner.MaxCanvasSize);
+                }
+                int m = settings.MaxSheetSize;
+                // a layer's sheets are split by rows or by frames, never both (SheetBuilder)
+                bool all = canvases.All(c => c.Width <= m && c.Height <= m &&
+                    (animation.FrameCount * c.Width <= m || animation.DirectionCount * c.Height <= m));
+                return (all, canvases.Max(c => c.Width), canvases.Max(c => c.Height));
+            }
+            int preferred = settings.PixelsPerTile;
+            (bool fits, int width, int height) full = At(preferred);
+            if (!full.fits && settings.HalveWhenTooLarge && preferred == 64)
+            {
+                (bool fits, int width, int height) half = At(32);
+                if (half.fits)
+                {
+                    return new AnimationFit(animation.Name, 32, true, half.width, half.height);
+                }
+            }
+            return new AnimationFit(animation.Name, preferred, full.fits, full.width, full.height);
+        }
+
         private static int PassesPerFrame(string animation) =>
             PackLayers.OptionalFor(animation).Contains(PackLayers.ShadowFlipped) ? 3 : 2;
 
@@ -146,6 +243,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         public ExportedArt Render(IProgress<ExportProgress> progress = null, CancellationToken cancel = default)
         {
             var sheets = new Dictionary<string, Dictionary<string, SheetSet>>(StringComparer.Ordinal);
+            var resolutions = new Dictionary<string, int>(StringComparer.Ordinal);
             int total = TotalRenders;
             int done = 0;
             Image8 portrait = null;
@@ -154,6 +252,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             {
                 var job = new AnimationJob(this, animation);
                 sheets[animation.Name] = job.Render(progress, cancel, ref done, total);
+                resolutions[animation.Name] = job.PixelsPerTile;
                 if (animation.Name == AnimationSpec.Idle)
                 {
                     int row = Math.Min(SouthRow, animation.DirectionCount - 1);
@@ -165,7 +264,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             {
                 throw new InvalidOperationException("the idle animation was not rendered");
             }
-            return new ExportedArt(sheets, PackArt.Icon(portrait, iconBottom), PackArt.Thumbnail(portrait));
+            return new ExportedArt(sheets, PackArt.Icon(portrait, iconBottom), PackArt.Thumbnail(portrait), resolutions);
         }
 
         /// <summary>Copies rendered art and the pose source's timing into a pack.</summary>
@@ -185,6 +284,14 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             content.Icon = art.Icon;
             content.Thumbnail = art.Thumbnail;
             content.Animations.Clear();
+            content.AnimationPixelsPerTile.Clear();
+            foreach (KeyValuePair<string, int> resolution in art.PixelsPerTile)
+            {
+                if (resolution.Value != settings.PixelsPerTile)
+                {
+                    content.AnimationPixelsPerTile[resolution.Key] = resolution.Value;
+                }
+            }
             foreach (KeyValuePair<string, Dictionary<string, SheetSet>> animation in art.Animations)
             {
                 foreach (KeyValuePair<string, SheetSet> layer in animation.Value)
@@ -204,6 +311,10 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             private readonly DirectionInfo[] directions;
             private CanvasSpec colorCanvas;
             private Image8[][] baseFrames;
+            private List<Bounds3> colorBounds, mirroredBounds;
+
+            /// <summary>The pixels per tile this animation is drawn at (set by <see cref="Render"/>).</summary>
+            public int PixelsPerTile { get; private set; }
 
             public AnimationJob(AvatarExporter owner, AnimationInfo animation)
             {
@@ -251,12 +362,11 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             /// <summary>The orientation of the mirrored character whose shadow is "shadow-flipped".</summary>
             private static double MirroredOrientation(double orientation) => MathUtil.PositiveModulo(1.0 - orientation, 1.0);
 
-            public Dictionary<string, SheetSet> Render(IProgress<ExportProgress> progress, CancellationToken cancel,
-                ref int done, int total)
+            /// <summary>Measures what every frame draws, for planning its canvases.</summary>
+            public void Measure()
             {
-                ExportSettings s = owner.settings;
-                var colorBounds = new List<Bounds3>();
-                var mirroredBounds = new List<Bounds3>();
+                colorBounds = new List<Bounds3>();
+                mirroredBounds = new List<Bounds3>();
                 for (int d = 0; d < animation.DirectionCount; d++)
                 {
                     for (int f = 0; f < animation.FrameCount; f++)
@@ -269,10 +379,20 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                         }
                     }
                 }
-                colorCanvas = CanvasPlanner.PlanColor(colorBounds, s.PixelsPerTile, s.Supersampling, s.CanvasMarginPixels);
-                CanvasSpec shadowCanvas = CanvasPlanner.PlanShadow(colorBounds, s.PixelsPerTile, s.Supersampling, s.CanvasMarginPixels);
+            }
+
+            public AnimationFit Fit() => owner.Fit(animation, colorBounds, mirroredBounds);
+
+            public Dictionary<string, SheetSet> Render(IProgress<ExportProgress> progress, CancellationToken cancel,
+                ref int done, int total)
+            {
+                ExportSettings s = owner.settings;
+                Measure();
+                int ppt = PixelsPerTile = Fit().PixelsPerTile;
+                colorCanvas = CanvasPlanner.PlanColor(colorBounds, ppt, s.Supersampling, s.CanvasMarginPixels);
+                CanvasSpec shadowCanvas = CanvasPlanner.PlanShadow(colorBounds, ppt, s.Supersampling, s.CanvasMarginPixels);
                 CanvasSpec flippedCanvas = flippedShadow
-                    ? CanvasPlanner.PlanShadow(mirroredBounds, s.PixelsPerTile, s.Supersampling, s.CanvasMarginPixels)
+                    ? CanvasPlanner.PlanShadow(mirroredBounds, ppt, s.Supersampling, s.CanvasMarginPixels)
                     : default;
 
                 baseFrames = NewFrames();
@@ -447,7 +567,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                 catch (InvalidOperationException e)
                 {
                     // SheetBuilder knows neither the animation nor the settings that would make the frames fit
-                    string fixes = (s.PixelsPerTile == 64 ? "export at 32 pixels per tile, " : "")
+                    string fixes = (canvas.PixelsPerTile == 64 ? "export at 32 pixels per tile, " : "")
                         + (s.MaxSheetSize < PackFormat.MaxSheetSize ? Invariant($"raise MaxSheetSize (at most {PackFormat.MaxSheetSize}), ") : "");
                     throw new InvalidOperationException(Invariant(
                         $"the {animation.Name} {layer} frames do not fit in {s.MaxSheetSize} px sprite sheets: {animation.DirectionCount} directions of ") +

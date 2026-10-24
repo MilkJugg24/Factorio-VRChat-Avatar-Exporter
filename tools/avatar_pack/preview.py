@@ -65,7 +65,14 @@ class Pack:
         else:
             sheet = self.sheet(info["filename"])
         img = sheet.crop((column * w, row * h, (column + 1) * w, (row + 1) * h))
+        zoom = self.zoom(meta)
+        if zoom != 1:
+            img = img.resize((round(w * zoom), round(h * zoom)), Image.LANCZOS)
         return img, (info["shift"][0] * self.ppt, info["shift"][1] * self.ppt)
+
+    def zoom(self, meta):
+        """How much larger an animation drawn at its own pixels_per_tile is shown, to match the pack's."""
+        return self.ppt / meta.get("pixels_per_tile", self.ppt)
 
 
 def tinted(mask, color):
@@ -110,10 +117,11 @@ def render_animation(pack, name, zoom, columns):
     right = bottom = -math.inf
     for key, info in meta["layers"].items():
         sx, sy = info["shift"][0] * pack.ppt, info["shift"][1] * pack.ppt
-        left = min(left, sx - info["width"] / 2)
-        right = max(right, sx + info["width"] / 2)
-        top = min(top, sy - info["height"] / 2)
-        bottom = max(bottom, sy + info["height"] / 2)
+        w, h = info["width"] * pack.zoom(meta), info["height"] * pack.zoom(meta)
+        left = min(left, sx - w / 2)
+        right = max(right, sx + w / 2)
+        top = min(top, sy - h / 2)
+        bottom = max(bottom, sy + h / 2)
     cell_w, cell_h = int(math.ceil(right - left)) + 4, int(math.ceil(bottom - top)) + 4
     anchor = (2 - left, 2 - top)
     cols = min(columns, dirs)
