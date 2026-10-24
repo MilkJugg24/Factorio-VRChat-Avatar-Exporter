@@ -22,7 +22,7 @@ Open it with **Tools ▸ Factorio Avatar Exporter**.
 
 ## Preview
 
-Pick an animation, a direction and a frame, or press **Play**. The yellow cross is where your character
+Pick an animation, a direction and a frame, or press **Play** to see it at the speed the game plays it. The yellow cross is where your character
 stands in the game. **Pose check** under the preview should be 0 or close to it; if it's over 1 px, the
 posing doesn't fit your rig exactly (please report it with `report.txt`).
 
@@ -56,17 +56,12 @@ The ground shadow isn't affected by the lighting: it's always drawn the way the 
   video memory, for very large servers or old computers.
 - **Flight animations:** hovering and flying with Space Age's mech armor. Leave it on unless you never
   fly.
-- **Check fit:** measures every frame without drawing it (a few seconds) and tells you:
-  - that every animation fits; or
-  - which animations will be drawn at half resolution because they're too large for Factorio's sprite
-    sheets (they look the same size in the game, a little softer); or
-  - which are too large even then. Leave out the part that reaches far out (a long tail, wide wings, a
-    big accessory) and check again.
-
-  Fur or glows drawn past a mesh aren't measured, so an animation right at the limit may still end up
-  at half resolution.
-- **Export All:** renders everything (a few minutes; you can cancel) and saves the pack. Keep the file
-  name `avatar-pack-<id>_<version>.zip`, as Factorio expects.
+- **Export All:** first measures every frame (a few seconds) to check that each animation fits
+  Factorio's sprite sheets. An animation too large for full resolution is drawn at half resolution
+  instead (the same size in the game, a little softer); if one is too large even then, it stops and
+  says which, before the long render: leave out the part that reaches far out (a long tail, wide
+  wings, a big accessory) and export again. Then it renders everything (a few minutes; you can cancel)
+  and saves the pack. Keep the file name `avatar-pack-<id>_<version>.zip`, as Factorio expects.
 - **Export Selected Animation** (at the bottom): saves only the animation in the preview as one image.
   Not needed for the game.
 
@@ -95,6 +90,10 @@ Every avatar is drawn as tall as the engineer.
   tint the avatar.
 
 ## If something goes wrong
+
+If loading or exporting fails, the exporter writes a log of what happened into **ERROR_LOGS** in its
+folder (`Assets/FactorioAvatarExporter/ERROR_LOGS`) and tells you the file's name. Attach that file when
+you report a problem. It has no images, and your user name is blanked out of the paths in it.
 
 - **"has no humanoid rig":** set **Animation Type: Humanoid** in the model's import settings (Rig tab).
 - **Part of an outfit floats away or stays behind:** outfits added with VRCFury or Modular Avatar are

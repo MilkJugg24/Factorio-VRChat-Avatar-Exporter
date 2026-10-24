@@ -13,7 +13,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
     /// <summary>The version of this package, written into every pack (kept equal to package.json by a test).</summary>
     internal static class ExporterInfo
     {
-        public const string Version = "0.13.0";
+        public const string Version = "0.14.0";
     }
 
     /// <summary>What the user chose for a pack.</summary>
@@ -99,9 +99,23 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 // resolution is drawn at half instead of stopping the export
                 HalveWhenTooLarge = true,
             };
+            var extra = new List<string>();
+
+            // before the long render: measure every frame (seconds) and stop now if an animation can't fit Factorio's
+            // sprite sheets even at half resolution
+            renderer.PaddingTiles = 0.25;
+            progress?.Invoke(new ExportProgress("measuring", 0, 0));
+            List<AnimationFit> tooLarge = new AvatarExporter(poses, renderer, settings).CheckFit(cancel).Where(f => !f.Fits).ToList();
+            if (tooLarge.Count > 0)
+            {
+                throw new InvalidOperationException("Too large for Factorio's sprite sheets, even at half resolution: " +
+                    string.Join(", ", tooLarge.Select(f => $"{f.Animation} (frames up to {f.Width} x {f.Height} px)")) +
+                    ". Something reaches far out from the body (a long tail, wide wings, a big accessory): add it to " +
+                    "Leave out of the sprites, press Reload avatar and export again. Nothing was saved.");
+            }
+
             AvatarExporter exporter = null;
             ExportedArt art = null;
-            var extra = new List<string>();
             // the measured meshes plus some room; if something is still drawn further out (a wide outline, a tuft
             // drawn past its mesh), once more, measuring what each frame actually draws, and cutting off only what
             // that still misses

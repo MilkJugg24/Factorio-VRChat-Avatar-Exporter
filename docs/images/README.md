@@ -8,7 +8,7 @@ capture. Suggested files:
 | `hero.png` | Two avatars and the engineer standing together in a factory. |
 | `avatar-window.png` | The in-game avatar window with a few looks to choose from. |
 | `exporter-loaded.png` | The exporter window with an avatar loaded and the preview showing. |
-| `exporter-check-fit.png` | The exporter window after Check fit, with the Export All button. |
+| `exporter-export.png` | The exporter window with the Export All button. |
 | `exporter-overview.png` | The whole exporter window, for the exporter guide. |
 
 PNG, about 1200 px wide at most. To use one, replace its placeholder line with

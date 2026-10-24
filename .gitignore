@@ -5,3 +5,4 @@ __pycache__/
 unity/dotnet/**/bin/
 unity/dotnet/**/obj/
 .claude/worktrees/
+ERROR_LOGS/

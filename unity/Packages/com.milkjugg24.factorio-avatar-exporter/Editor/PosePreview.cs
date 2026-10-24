@@ -64,24 +64,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             $"drawn at the engineer's height, {stage.HeightTiles.ToString("0.00", CultureInfo.InvariantCulture)} tiles tall " +
             $"({stage.MetersPerTile.ToString("0.000", CultureInfo.InvariantCulture)} m per tile)";
 
-        /// <summary>
-        /// Whether each animation fits Factorio's sprite sheets at <paramref name="pixelsPerTile"/>, measured as
-        /// Export All measures it first (<see cref="AvatarExporter.CheckFit"/>), halving those too large.
-        /// </summary>
-        public IReadOnlyList<AnimationFit> CheckFit(int pixelsPerTile, bool flight)
-        {
-            using (var renderer = new StageRenderer(stage, camera))
-            {
-                var settings = new ExportSettings
-                {
-                    PixelsPerTile = pixelsPerTile,
-                    Supersampling = StageCamera.Supersampling,
-                    Flight = flight,
-                    HalveWhenTooLarge = true,
-                };
-                return new AvatarExporter(poses, renderer, settings).CheckFit();
-            }
-        }
+        /// <summary>The pack timing the poses were made with (the run's distance per frame, for the preview's speed).</summary>
+        public PackTiming Timing => poses.Timing;
 
         /// <summary>Lights the avatar for the preview and the export (<see cref="StageCamera.SetLighting"/>).</summary>
         public void SetLighting(StageLighting lighting) => camera.SetLighting(lighting);

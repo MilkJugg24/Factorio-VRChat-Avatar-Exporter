@@ -16,7 +16,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
     /// </summary>
     public sealed class ExporterWindow : EditorWindow
     {
-        private const double FramesPerSecond = 12;
+        /// <summary>The engineer's running speed, tiles per tick (the game's 0.15).</summary>
+        private const double RunningSpeed = 0.15;
         private static readonly Color Ground = new Color(0.36f, 0.36f, 0.36f);
         private static readonly Color Anchor = new Color(1f, 0.85f, 0.2f);
 
@@ -38,16 +39,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         [SerializeField] private bool flight = true;
         [SerializeField] private string saveFolder;
         private string exported;
-        // the last Check fit's result, for the resolution and flight it was made with
-        private string fitReport;
-        private bool fitTrouble;
-        private (int, bool) fitFor;
         private List<string> edgeDrawers = new List<string>();
 
         private PosePreview preview;
         private string error;
         private bool playing;
-        private double nextFrameAt;
+        private double playClock;
         private Texture2D texture;
         private PreviewFrame shown;
         private Vector2 scroll;
@@ -97,7 +94,6 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                     leaveOut.Clear();
                 }
                 preview = PosePreview.Load(source, leaveOut: LeaveOutPaths());
-                fitReport = null;
                 preview.SetLighting(lighting);
                 exported = null;
                 Rerender();
@@ -105,7 +101,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             catch (Exception e)
             {
                 Debug.LogException(e);
-                error = e.Message;
+                error = e.Message + ErrorLog.Note(ErrorLog.Write("Load avatar (" + source.name + ")", e, preview, null, lighting, null));
                 Unload();
             }
             finally
@@ -171,7 +167,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             frame = EditorGUILayout.IntSlider("Frame", Mathf.Clamp(frame, 0, info.FrameCount - 1), 0, info.FrameCount - 1);
             zoom = EditorGUILayout.IntSlider("Zoom", zoom, 1, 4);
             bool changed = EditorGUI.EndChangeCheck();
-            playing = GUILayout.Toggle(playing, playing ? "Pause" : "Play", "Button");
+            bool play = GUILayout.Toggle(playing, playing ? "Pause" : "Play", "Button");
+            if (play && !playing)
+            {
+                playClock = EditorApplication.timeSinceStartup;
+            }
+            playing = play;
             if (changed)
             {
                 Rerender();
@@ -313,70 +314,6 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         private static readonly string[] Resolutions = { "64 pixels per tile (sharp)", "32 pixels per tile (a quarter of the memory)" };
         private static readonly int[] ResolutionValues = { 64, 32 };
 
-        /// <summary>
-        /// Check fit: whether every animation fits Factorio's sprite sheets at the chosen resolution, which ones
-        /// will be drawn at half resolution instead, and which do not fit at all, before the long export.
-        /// </summary>
-        private void FitGUI()
-        {
-            if (fitReport != null && fitFor != (pixelsPerTile, flight))
-            {
-                fitReport = null;
-            }
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                EditorGUILayout.PrefixLabel(" ");
-                if (GUILayout.Button(new GUIContent("Check fit", "Poses and measures every frame (without drawing them) " +
-                    "to see whether each animation fits Factorio's sprite sheets. Takes a few seconds."), GUILayout.Width(100)))
-                {
-                    CheckFit();
-                }
-            }
-            if (fitReport != null)
-            {
-                EditorGUILayout.HelpBox(fitReport, fitTrouble ? MessageType.Warning : MessageType.Info);
-            }
-        }
-
-        private void CheckFit()
-        {
-            try
-            {
-                EditorUtility.DisplayProgressBar("Factorio Avatar Exporter", "Measuring every frame", 0.5f);
-                IReadOnlyList<AnimationFit> fits = preview.CheckFit(pixelsPerTile, flight);
-                fitFor = (pixelsPerTile, flight);
-                List<string> half = fits.Where(f => f.Fits && f.PixelsPerTile < pixelsPerTile).Select(f => f.Animation).ToList();
-                List<AnimationFit> no = fits.Where(f => !f.Fits).ToList();
-                var lines = new List<string>();
-                if (no.Count == 0 && half.Count == 0)
-                {
-                    lines.Add("Fits: every animation at full resolution.");
-                }
-                if (half.Count > 0)
-                {
-                    lines.Add("Too large for full resolution, so drawn at half (the same size in the game, a little softer): " +
-                        string.Join(", ", half) + ".");
-                }
-                if (no.Count > 0)
-                {
-                    lines.Add("Too large even at half resolution: " + string.Join(", ", no.Select(f => $"{f.Animation} ({f.Width} x {f.Height} px)")) +
-                        ". Leave out a part that reaches far out (a long tail, wide wings, a big accessory) and check again.");
-                }
-                lines.Add("Parts drawn past their meshes (fur, glows) aren't measured: an animation near the limit may still be halved.");
-                fitReport = string.Join("\n", lines);
-                fitTrouble = no.Count > 0;
-            }
-            catch (Exception e)
-            {
-                fitReport = "The check failed: " + e.Message;
-                fitTrouble = true;
-            }
-            finally
-            {
-                EditorUtility.ClearProgressBar();
-            }
-        }
-
         /// <summary>The avatar pack's settings and the Export All button.</summary>
         private void PackGUI()
         {
@@ -394,7 +331,6 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             EditorGUILayout.LabelField(" ", preview.SizeNote, EditorStyles.miniLabel);
             flight = EditorGUILayout.Toggle(new GUIContent("Flight animations", "Hovering and flying with Space Age's mech armor. " +
                 "Without them the avatar walks in the air."), flight);
-            FitGUI();
 
             PackOptions options = Options();
             string problem = options.Problem();
@@ -465,12 +401,21 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             playing = false;
             exported = null;
             var cancel = new CancellationTokenSource();
+            var console = new List<string>();
+            void Listen(string message, string stack, LogType type)
+            {
+                if (type != LogType.Log && console.Count < 200)
+                {
+                    console.Add($"{type}: {message}");
+                }
+            }
+            Application.logMessageReceived += Listen;
             try
             {
                 PackExportResult result = preview.ExportPack(options, p =>
                 {
-                    if (EditorUtility.DisplayCancelableProgressBar("Factorio Avatar Exporter",
-                        $"Rendering {p.Animation} ({p.Done} of {p.Total})", (float)p.Fraction))
+                    string step = p.Total == 0 ? "Measuring every frame, to check that it all fits" : $"Rendering {p.Animation} ({p.Done} of {p.Total})";
+                    if (EditorUtility.DisplayCancelableProgressBar("Factorio Avatar Exporter", step, p.Total == 0 ? 0 : (float)p.Fraction))
                     {
                         cancel.Cancel();
                     }
@@ -493,6 +438,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             catch (InvalidOperationException e) when (e.Message.Contains("drew outside the bounds"))
             {
                 Debug.LogException(e);
+                string log = ErrorLog.Write("Export All", e, preview, options, lighting, console);
                 // the failing frame is still set up: find what draws on its edge
                 edgeDrawers = preview.EdgeDrawers() ?? new List<string>();
                 List<string> suspects = edgeDrawers.Count > 0 ? edgeDrawers : preview.DrawnOutsideMeshes();
@@ -503,28 +449,51 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                         : (suspects.Count > 0 ? "It may be one of these: " + string.Join("; ", suspects) + ". " : "") +
                           "Find it in the preview, add it to Leave out of the sprites at the top and press Reload " +
                           "avatar.") + " (" + e.Message + ")";
+                error += ErrorLog.Note(log);
                 Debug.LogWarning("Factorio Avatar Exporter: " + error);
             }
             catch (Exception e)
             {
                 Debug.LogException(e);
-                error = e.Message;
+                error = e.Message + ErrorLog.Note(ErrorLog.Write("Export All", e, preview, options, lighting, console));
             }
             finally
             {
+                Application.logMessageReceived -= Listen;
                 EditorUtility.ClearProgressBar();
                 cancel.Dispose();
             }
         }
 
+        /// <summary>
+        /// How fast the game plays <paramref name="info"/>: animation_speed frames a tick, 60 ticks a second. Running
+        /// and flying frames go by the distance covered instead (distance_per_frame / animation_speed tiles each), here
+        /// at the engineer's running speed.
+        /// </summary>
+        private double GameFramesPerSecond(AnimationInfo info)
+        {
+            bool moving = info.Name == AnimationSpec.Run || info.Name == AnimationSpec.RunGun ||
+                info.Name == AnimationSpec.Fly || info.Name == AnimationSpec.FlyGun;
+            double perTick = moving ? RunningSpeed * info.DefaultSpeed / preview.Timing.DistancePerFrame : info.DefaultSpeed;
+            return 60 * perTick;
+        }
+
         private void Update()
         {
-            if (!playing || preview == null || EditorApplication.timeSinceStartup < nextFrameAt)
+            if (!playing || preview == null)
             {
                 return;
             }
-            nextFrameAt = EditorApplication.timeSinceStartup + 1 / FramesPerSecond;
-            frame = (frame + 1) % AnimationSpec.All[animationIndex].FrameCount;
+            AnimationInfo info = AnimationSpec.All[animationIndex];
+            double fps = GameFramesPerSecond(info), now = EditorApplication.timeSinceStartup;
+            int steps = (int)((now - playClock) * fps);
+            if (steps <= 0)
+            {
+                return;
+            }
+            // frames the editor was too slow to show are skipped, so the animation keeps the game's pace
+            playClock = now - playClock > 1 ? now : playClock + steps / fps;
+            frame = (frame + steps) % info.FrameCount;
             Rerender();
             Repaint();
         }

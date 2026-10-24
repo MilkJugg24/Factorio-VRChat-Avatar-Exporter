@@ -24,7 +24,7 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PACKAGE = os.path.join(REPO, "unity", "Packages", "com.milkjugg24.factorio-avatar-exporter")
 PACKAGE_NAME = "com.milkjugg24.factorio-avatar-exporter"
 ASSET_ROOT = "Assets/FactorioAvatarExporter"
-SKIP_DIRS = {"bin", "obj"}
+SKIP_DIRS = {"bin", "obj", "ERROR_LOGS"}  # ERROR_LOGS: the exporter's own logs, when used from this folder
 SKIP_FILES = {"package.json"}  # only meaningful to the Package Manager; ignored in Assets
 
 IMPORTERS = {

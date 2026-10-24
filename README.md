@@ -51,11 +51,10 @@ You need Unity 2022.3 with your avatar in a project. Your VRChat avatar project 
    will move in the game.
 5. **Fill in the pack details.** A **Name** (shown in the game) and an **Author** (any name). Leave
    everything else as it is.
-6. **Export.** Press **Check fit** if you like (it takes a few seconds and warns you about anything too
-   large), then **Export All**, and save the file where you like. Exporting takes a few minutes.
+6. **Export.** Press **Export All** and save the file where you like. Exporting takes a few minutes.
    Keep the file name as it is.
 
-   *(Screenshot coming: the exporter window after Check fit, and the Export All button. File: `docs/images/exporter-check-fit.png`)*
+   *(Screenshot coming: the exporter window with the Export All button. File: `docs/images/exporter-export.png`)*
 
 Then install the pack as in [Play with an avatar](#play-with-an-avatar).
 
@@ -107,11 +106,14 @@ installed again.
   into **Leave out of the sprites** in the exporter, press **Reload avatar** and export again.
 - **Pink or light-blue patches:** a shader is missing. Make sure the avatar looks right in Unity's Scene
   view first.
-- **Check fit says an animation is too large:** something reaches far out from the body (a long tail,
-  wide wings, a big accessory). Leave it out of the sprites and check again. Animations that are only a
-  little too large are drawn at half resolution automatically; they look the same size, just softer.
+- **Export All says an animation is too large:** something reaches far out from the body (a long
+  tail, wide wings, a big accessory). Leave it out of the sprites and export again. Animations that are
+  only a little too large are drawn at half resolution automatically; they look the same size, just
+  softer.
 
-Still stuck? [Open an issue](../../issues) and attach the `report.txt` from the export folder.
+Still stuck? [Open an issue](../../issues) and attach the error log the exporter saved in
+`Assets/FactorioAvatarExporter/ERROR_LOGS` (or, if the export worked, the `report.txt` from the export
+folder).
 
 ## Good to know
 
