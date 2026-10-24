@@ -477,7 +477,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 }, cancel.Token);
                 exported = $"Saved {result.ZipPath}. Put it, still zipped, in Factorio's mods folder together with the " +
                     "Avatar Characters mod, start Factorio and choose " + $"\"{options.Title.Trim()}\" in the avatar window " +
-                    "(shortcut bar, or Ctrl + Shift + A). README.md in Assets/FactorioAvatarExporter has every step. " +
+                    "(shortcut bar, or Ctrl + Shift + A). The project page on GitHub has every step. " +
                     $"A report and preview images are in {options.PreviewFolder}." + (result.CutOff.Count > 0
                         ? $" Something reached the edge of the picture in {result.CutOff.Count} frames and was cut off " +
                           $"there (the first: {result.CutOff[0]}); look at the preview images to see whether anything " +

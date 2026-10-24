@@ -1,248 +1,126 @@
-# Factorio Avatar Exporter
+# Factorio Avatar Exporter: the full guide
 
-Play Factorio 2.1 as your own avatar. This Unity tool turns a humanoid avatar (a VRChat avatar, for
-example) into an **avatar pack**: a small Factorio mod with your avatar idling, running, shooting, mining,
-flying with mech armor and lying as a corpse, in every direction, with its shadow. In the game, the
-**Avatar Characters** mod lets every player pick their own look.
+This Unity tool turns your avatar into an **avatar pack**, a small Factorio mod, for the **Avatar
+Characters** mod. The quick steps, installing in Factorio and playing on a server are on the project
+page: https://github.com/MilkJugg24/Factorio-VRChat-Avatar-Exporter. This guide explains every option
+in the exporter window.
 
-Downloads and source: https://github.com/MilkJugg24/Factorio-VRChat-Avatar-Exporter (see **Releases**).
+Open it with **Tools ▸ Factorio Avatar Exporter ▸ Exporter**.
 
-## Step by step
+*(Screenshot coming: the whole exporter window, with the sections below labelled. File: `docs/images/exporter-overview.png`)*
 
-### 1. What you need
+## Avatar
 
-- Unity 2022.3 with a project that has your avatar in it (your VRChat avatar project works).
-- Factorio 2.1. Space Age is optional; it adds flying with mech armor.
-- From the newest release on the Releases page, both downloads:
-  - `FactorioAvatarExporter_<version>.unitypackage` (this tool);
-  - `avatar-characters_<version>.zip` (the Factorio mod every player needs).
+- **Avatar:** the object with the VRChat avatar descriptor (from the Hierarchy), or its prefab. Press
+  **Load avatar**. The exporter works on a copy in a hidden scene; your scene and avatar are not changed.
+- **Leave out of the sprites:** objects that shouldn't be drawn, such as a fake ground shadow, a glow or
+  an accessory you don't want. Drag them in and press **Reload avatar**. The exporter draws the game's
+  own shadow, so a fake one isn't needed.
+- **Report:** what the exporter found: the avatar's height, the bones it's missing, the scripts it
+  removed from the copy, which loose parts (outfits, accessories) it held on to the body, and which wing
+  and tail bones will move.
 
-### 2. Install the exporter
+## Preview
 
-In Unity choose **Assets ▸ Import Package ▸ Custom Package...**, pick the `.unitypackage` and click
-**Import**. It lands in `Assets/FactorioAvatarExporter` (where this README is). To update it later, import
-a newer `.unitypackage` the same way.
-
-### 3. Export your avatar
-
-1. Choose **Tools ▸ Factorio Avatar Exporter ▸ Exporter**.
-2. Drag your avatar into the **Avatar** field: the object with the VRChat avatar descriptor, from the
-   Hierarchy, or its prefab. Press **Load avatar**. The exporter works on a copy in a hidden scene; your
-   scene and your avatar are not changed.
-3. Look it over in the preview: pick an animation, a direction and a frame, or press **Play**. The
-   yellow cross is where your character stands in the game.
-4. Under **Lighting**, keep **Factorio style** (lit like the game's own characters), or choose **Custom**
-   and set the lights yourself while you watch the preview (see [Lighting](#lighting) below).
-5. Under **Avatar pack**, fill in:
-   - **Name**: shown in the game. The **Pack id** is made from it; keep it the same when you export a
-     new version later.
-   - **Author**: the name shown with the pack; it starts as "Anonymous", and any name will do. Factorio
-     needs one for every mod.
-   - **Version**: start with 1.0.0.
-   - **Resolution**: 64 pixels per tile is sharp, and right for almost everyone. 32 uses a quarter of
-     the video memory, for very large servers or old computers.
-   - Every avatar is drawn as tall as the engineer, whatever its height in VRChat (VRChat avatars come
-     in any size), so all characters look alike in size; the line under Resolution gives the height in
-     tiles.
-   - **Flight animations**: on, unless you never fly with mech armor.
-   - **Check fit** (optional): measures every frame, without drawing them, and says whether each
-     animation fits Factorio's sprite sheets (at most 4096 px). An animation too large for full
-     resolution is drawn at half resolution instead, the same size in the game and a little softer; it
-     lists which. If something is too large even then, it says so before the long export: leave out a
-     part that reaches far out (a long tail, wide wings, a big accessory) and check again.
-6. Press **Export All** and choose where to save the pack. Keep its file name,
-   `avatar-pack-<id>_<version>.zip`: Factorio expects a mod's zip to be named that way. Then the exporter
-   renders every animation, which takes a few minutes; you can cancel from the progress bar.
-
-Next to your project's `Assets` folder, `FactorioAvatarExport/<avatar>/preview/` also gets `report.txt`
-(what the exporter found and did, and how much video memory the pack needs) and a preview image of every
-animation.
-
-### 4. Install it in Factorio
-
-Put two files, **still zipped** (don't unzip them), into Factorio's `mods` folder:
-
-- your `avatar-pack-<id>_<version>.zip`;
-- `avatar-characters_<version>.zip` from the release.
-
-The `mods` folder is:
-
-- Windows: `%APPDATA%\Factorio\mods` (paste that into the address bar of a File Explorer window);
-- macOS: `~/Library/Application Support/factorio/mods`;
-- Linux: `~/.factorio/mods`.
-
-### 5. Play as your avatar
-
-Start Factorio (restart it if it was running). New mods are switched on by default; you can check under
-**Mods** in the main menu. In a game, open the avatar window with the button in the shortcut bar, the
-button in the top-left corner, **Ctrl + Shift + A**, or the chat command `/avatar`, and click your avatar.
-Your choice is saved with the game. If you're in a vehicle or crafting, your new look is applied as soon
-as you're done.
+Pick an animation, a direction and a frame, or press **Play**. The yellow cross is where your character
+stands in the game. **Pose check** under the preview should be 0 or close to it; if it's over 1 px, the
+posing doesn't fit your rig exactly (please report it with `report.txt`).
 
 ## Lighting
 
-The exporter lights your avatar in a hidden scene of its own, not with your scene's lights. Every
-animation and direction is lit the same way: the lights stay put relative to the camera while the avatar
-turns, as in the game.
+The avatar is lit in its own hidden scene, the same way for every animation and direction.
 
-- **Factorio style** (the default): the game's light, from the left and a little in front, above; soft light
-  from all around; and a neutral studio, bright above and dark below, for shiny and metallic materials to
-  reflect.
-- **Custom**: set it yourself and watch the preview change.
-  - **Key light from** and **Key light height**: where the main light comes from, in degrees around the
-    avatar as you see it (0 from behind, 90 from the right, 180 from the front, 270 from the left), and how
-    high (90 is straight above). Its **strength** and **colour**.
-  - **Fill light**: a softer light from the opposite side, so the side away from the key light isn't dark.
-  - **Rim light**: a light from behind that draws bright edges around the avatar.
-  - **Ambient light** and its colour: light from every direction, so nothing is pitch black.
-  - **Reflections**: how strongly shiny materials reflect their surroundings, and optionally what they
-    reflect: any cubemap in your project, such as a skybox or an HDRI imported with **Texture Shape: Cube**.
-    Empty means the neutral studio.
-  - **Reset to Factorio style** puts every setting back to the game's, as a starting point.
+- **Factorio style** (the default) matches the game's own characters: light from the upper left, soft
+  light all around, and a neutral studio for shiny materials to reflect.
+- **Custom** lets you set it yourself while you watch the preview:
+  - **Key light from / height / strength / colour:** the main light. Directions are degrees around the
+    avatar as you see it: 0 from behind, 90 from the right, 180 from the front, 270 from the left.
+  - **Fill light:** a softer light from the other side, so the shaded side isn't dark.
+  - **Rim light:** a light from behind that brightens the edges.
+  - **Ambient light:** light from every direction, so nothing is pitch black.
+  - **Reflections:** how much shiny materials reflect, and optionally a cubemap for them to reflect
+    (a skybox or an HDRI imported with **Texture Shape: Cube**).
+  - **Reset to Factorio style** puts everything back.
 
-  An avatar with a lot of specular and reflections often looks best with the key light higher and more in
-  front, some fill and rim light, and reflections of a cubemap that suits it.
+  Very shiny avatars often look best with the key light higher and more in front, a little fill and rim
+  light, and a cubemap that suits them.
 
-The shadow on the ground isn't part of the lighting. The exporter draws it separately, as Factorio wants,
-and it always falls the way the game's shadows do (to the right and a little up), whatever the lights. The
-game draws it under the character and every other shadow alike. `report.txt` notes the lighting a pack was
-exported with.
+The ground shadow isn't affected by the lighting: it's always drawn the way the game draws shadows.
 
-## Playing together
+## Avatar pack
 
-Factorio can't load new pictures while a game runs, so every character is in a mod, and **every player
-needs exactly the same mods as the server**, the same versions too. The game won't let anyone join
-otherwise. The easiest way is one **bundle**: a single mod with everyone's characters.
+- **Name:** shown in the game. The **Pack id** is made from it; keep it the same for later versions.
+- **Author:** shown with the pack. Any name will do; Factorio needs one.
+- **Version:** start at 1.0.0; raise it whenever you export again for a server.
+- **Resolution:** 64 pixels per tile is sharp and right for almost everyone. 32 uses a quarter of the
+  video memory, for very large servers or old computers.
+- **Flight animations:** hovering and flying with Space Age's mech armor. Leave it on unless you never
+  fly.
+- **Check fit:** measures every frame without drawing it (a few seconds) and tells you:
+  - that every animation fits; or
+  - which animations will be drawn at half resolution because they're too large for Factorio's sprite
+    sheets (they look the same size in the game, a little softer); or
+  - which are too large even then. Leave out the part that reaches far out (a long tail, wide wings, a
+    big accessory) and check again.
 
-1. Every player exports their own avatar (steps 1 to 3) and sends their `avatar-pack-<id>_<version>.zip`
-   to whoever runs the server.
-2. The server owner chooses **Tools ▸ Factorio Avatar Exporter ▸ Combine Packs for a Server**, adds the
-   packs (**Add a Pack or Bundle...**, or **Add a Folder of Packs...**), gives the bundle a name (your
-   server's), and presses **Combine...** to save `avatar-bundle-<name>_<version>.zip`.
-3. The server owner shares that zip and the Avatar Characters zip. Every player, and the server, puts
-   both, still zipped, into Factorio's `mods` folder.
-4. In the game, everyone picks their own character in the avatar window, and everyone sees everyone else
-   as the character they picked.
+  Fur or glows drawn past a mesh aren't measured, so an animation right at the limit may still end up
+  at half resolution.
+- **Export All:** renders everything (a few minutes; you can cancel) and saves the pack. Keep the file
+  name `avatar-pack-<id>_<version>.zip`, as Factorio expects.
+- **Export Selected Animation** (at the bottom): saves only the animation in the preview as one image.
+  Not needed for the game.
 
-When someone new joins, or someone updates their avatar: add the **previous bundle** and the new packs to
-Combine Packs, and save a new version (the window raises it for you). A newer version of a character
-replaces the older one. Everyone replaces the old bundle zip with the new one. Characters keep their
-names, so the save keeps everyone's character and items, also when a server switches from separate packs
-to a bundle.
+Every export also writes `FactorioAvatarExport/<avatar>/preview/` next to your project's `Assets`
+folder: a preview image of every animation and `report.txt`, which says what the exporter did, which
+animations were drawn at half resolution, and how much video memory the pack needs.
 
-To leave a character out of a new bundle, untick it in Combine Packs. Before the server loads that
-bundle, run `/avatar-revert-all <id>` in the game for it (see the section on removing below), or the characters
-using it are deleted together with their items.
+## How your avatar moves
 
-Each character uses video memory on every player's computer; `report.txt` says how much. It's less than
-you might fear, because the game compresses sprites. In a test, a bundle of 12 characters at 64 pixels per
-tile added about 120 MB of video memory and about a second of loading time, and the game ran at a full
-60 frames per second with all 12 on screen. Avatars with big wings or long hair take more, and so does
-the engineer's height every avatar is now drawn at (about a quarter more than in that test). From exporter 0.7.0 on, the
-idle animations last 16 seconds instead of about 2 (48 frames instead of 8), which makes a pack about 70%
-bigger.
+Every avatar is drawn as tall as the engineer.
 
-## Updating your avatar
+- **Standing:** breathes, shifts its weight and looks around. Every 8 seconds one wing stretches out,
+  left then right.
+- **Running:** a light jog, leaning into it. Shooting while running looks the same, a little calmer, so
+  the gun stays on target.
+- **Mining:** the engineer's own swing: the pickaxe raised over the right shoulder, brought down fast,
+  the other arm out for balance.
+- **Flying** (mech armor): wings flap; hovering, they beat slowly. Take-off and landing are
+  empty-handed.
+- **Wings** move when their bones have "wing" in their names (any case). If no bone does, the bones of
+  an object named "wing" (like "Wings") are used.
+- **Tails** sway when the avatar's own bones below the hips have "tail" in their names. A tail that's
+  part of the body mesh works too, as long as it has its own bones. Anything attached to a tail bone,
+  like a tuft, moves with it.
+- Not yet: fingers don't close around the gun or pickaxe, ears stay still, and the player colour doesn't
+  tint the avatar.
 
-Raise the **Version** (1.0.1, 1.1.0, ...), keep the **Pack id**, press **Export All**, and replace the old
-zip in the `mods` folder with the new one (delete the old file). On a server, everyone needs the new
-version.
+## Combine Packs for a Server
 
-## Removing a pack, a bundle's character, or Avatar Characters from a save
+**Tools ▸ Factorio Avatar Exporter ▸ Combine Packs for a Server** puts several packs into one
+**bundle**, so a server needs only one zip for everyone's avatars.
 
-When a pack is removed, or a new bundle leaves a character out, Factorio deletes the characters and
-corpses that use it **together with the items they carry**. Before that, an admin types
-`/avatar-revert-all <id>` in the chat (`<id>` is the pack id), which turns everyone using it back into
-the engineer. Before removing a whole bundle, do it for each of its characters. Before removing Avatar Characters itself,
-type `/avatar-revert-all`. Everyone should be online, alive and out of vehicles; the command reports
-anything it couldn't change. Then save, and remove the mod.
+1. **Add a Pack or Bundle...** or **Add a Folder of Packs...**
+2. Name the bundle (your server's name) and press **Combine...**
+
+To update it, add the **previous bundle** plus the new or updated packs and combine again; the version
+goes up by itself, and a newer version of a character replaces the older one. To drop a character,
+untick it, but first run `/avatar-revert-all <id>` for it in the game, or the characters using it are
+deleted with their items.
 
 ## If something goes wrong
 
-- **"has no humanoid rig":** the avatar's model needs **Animation Type: Humanoid** in its import
-  settings (Rig tab), as VRChat avatars have.
-- **Part of the outfit floats away or stays behind:** outfits added with VRCFury's Armature Link or Modular
-  Avatar's Merge Armature, and objects held on by constraints, are joined to the body only in Play mode,
-  so the exporter holds them on itself:
-  - an object a parent constraint held follows the bone it was held to;
-  - a part's bones follow the body's bones of the same name, also with a prefix or suffix
-    (`Chest_Hoodie` follows `Chest`);
-  - anything else follows the nearest bone of the trunk (hips, spine, chest, head).
+- **"has no humanoid rig":** set **Animation Type: Humanoid** in the model's import settings (Rig tab).
+- **Part of an outfit floats away or stays behind:** outfits added with VRCFury or Modular Avatar are
+  only joined to the body in Play mode, so the exporter holds them on itself: by the constraint that held
+  them, by bone names (`Chest_Hoodie` follows `Chest`), or else by the nearest bone of the body. The
+  **Report** lists every part and what it follows; please report the line of a part that still floats.
+- **"Something reached the edge of the picture and was cut off":** a part is drawn further out than its
+  mesh. The exporter already retries with more room; whatever is still cut off is listed in
+  `report.txt`. If it matters, leave that part out and export again.
+- **Pink or light-blue patches:** a shader is missing or not compiled yet. Make sure the avatar looks
+  right in the Scene view first.
 
-  The report lists every part and what it follows; please report the line of a part that still floats.
-- **Pose check over 1 px** (shown under the preview): the posing doesn't fit your rig exactly; please
-  report it with `report.txt`.
-- **"Something reached the edge of the picture ... and was cut off"** after exporting: a part of the avatar
-  draws further out than its meshes, like a tuft drawn past its mesh, a faint glow, or a very wide outline.
-  When something reaches the edge, the exporter renders again, this time measuring what each frame
-  actually draws (up to 3 tiles past the meshes), so such parts fit; only what reaches even further is cut
-  off, and `report.txt` lists those frames. Look at the preview images: if
-  something visible is clipped, or you don't want a part in the sprites at all (a fake ground shadow, an
-  effect), drag it into **Leave out of the sprites** under the Avatar field, press **Reload avatar** and
-  export again. The exporter draws the game's own shadow, so a fake shadow on the avatar isn't needed.
-- **Pink or light-blue patches:** a shader is missing or wasn't compiled yet. Make sure the avatar looks
-  right in the Scene view first, and try again.
-- **The pack doesn't show up in Factorio:** check that both zips are in the `mods` folder, still zipped,
-  with their original names, and that both mods are enabled under **Mods** in the main menu.
-- **"Your active mods don't match the server's" when joining:** your bundle (or Avatar Characters) isn't
-  the server's version. **Synchronize** can't help: it only downloads mods from the official mod
-  portal, and these aren't there. Get the current zips from whoever runs the server, replace the old
-  ones in the `mods` folder, and join again.
+## Installing without the .unitypackage
 
-## What it doesn't do yet
-
-- Fingers don't close around the gun (a simple stand-in rod) or the pickaxe.
-- Ears stay in their rest pose. Wings move only when their bones have "wing" in their names, and the
-  tail only when its bones have "tail" in their names (see below).
-- The player colour doesn't tint the avatar.
-
-## How it moves
-
-- **Idle:** the avatar breathes, shifts its weight from foot to foot and looks around. Every 8 seconds one
-  wing stretches out, the left and then the right, and the head turns towards it.
-- **Running:** a light jog, leaning into it, with short quick steps. The hips rise and fall with each step,
-  tilt and turn with the legs, and the chest and arms swing against them, elbows bent. The shooting versions (which the game shows from your first shot on)
-  move the same way, more gently, so the gun stays on target.
-- **Mining:** the engineer's own swing, 26 frames striking on frame 19 like the game's: the pick (a wooden
-  handle and a curved, pointed steel head) held up over the right shoulder, brought down fast into a
-  deep crouch, the left arm out for balance, then pulled out and up again.
-- **Flying** (mech armor): the wings flap; hovering, they beat slowly. Taking off (and landing, the same
-  played backwards) is empty-handed, since the game uses one take-off for armed and unarmed alike.
-- **Wings:** bones whose names contain "wing" (any letter case), on any mesh. The first such bone of
-  each chain turns, so the whole wing follows; its side comes from where the wing lies. If no bone is
-  named that way, the bones of a mesh whose object is named "wing" (like "Wings") are used instead.
-- **Tail:** the avatar's own bones below the hips whose names contain "tail", a chain from the root to
-  the tip. It sways in a wave from root to tip and lifts while running and flying; a long tail of many
-  bones sways no further than a short one. A tail that is part
-  of the body mesh works too, as long as it has its own bones. Anything held on a tail bone (a tuft, for
-  example) moves with it.
-
-The **Report** lists the wing and tail bones it found.
-
-## More about the exporter window
-
-- **Report** (under the Avatar field): height, leg style (plantigrade or
-  digitigrade), optional bones it lacks, scripts removed from the copy, warnings about the rig, and which
-  loose parts it held on to the body.
-- **Pose check:** how far the avatar's bones ended up from where the exporter meant to put them, in
-  pixels.
-- **Export Selected Animation** (at the bottom; not needed for the game): saves only the animation shown as one image (a row per direction, a
-  column per frame) in `FactorioAvatarExport/<avatar>/preview/`.
-
-## The rendering spike
-
-**Tools ▸ Factorio Avatar Exporter ▸ Spike: Render Selected Avatar** is the first test of whether avatars
-render cleanly for sprites: the selected avatar, as it stands, from Factorio's camera in 8 directions, into
-`FactorioAvatarSpike/<avatar>/` next to `Assets`. `strip-on-grey.png` shows all 8 directions;
-`report.txt` has sizes, colour space and the removed scripts. In the repository,
-`tests/run_unity_spike.ps1` runs the spike, the poses or a whole pack export without opening the Editor
-(see `tests/UNITY-SPIKE.md` there).
-
-## For developers
-
-- `Core/`: everything that decides what to draw and writes the pack. It has no Unity references and is
-  developed and tested outside Unity (`unity/dotnet/` in the repository).
-- `Editor/`: the Unity side: the window, the stage the avatar is posed on, the camera and the renderer.
-- Instead of the `.unitypackage`, **Window ▸ Package Manager ▸ + ▸ Add package from disk...** on this
-  folder's `package.json` works too. Use one way or the other, not both, or Unity reports the assemblies
-  twice.
+**Window ▸ Package Manager ▸ + ▸ Add package from disk...** on this folder's `package.json` works too.
+Use one way or the other, not both.
