@@ -114,20 +114,30 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
         [Test]
         public void InfoTitleFitsFactoriosByteLimit()
         {
-            Assert.That(PackNaming.InfoTitle("Mika"), Is.EqualTo("Avatar pack: Mika"));
-            // 13 bytes of prefix + 87 = exactly 100
-            string fits = new string('x', 87);
-            Assert.That(PackNaming.InfoTitle(fits), Is.EqualTo("Avatar pack: " + fits));
-            string cut = PackNaming.InfoTitle(new string('x', 88));
-            Assert.That(cut, Is.EqualTo("Avatar pack: " + new string('x', 84) + "…"));
+            Assert.That(PackNaming.InfoTitle("Mika"), Is.EqualTo("VRC Avatar: Mika"));
+            Assert.That(PackNaming.InfoTitle("Mika", " Kat "), Is.EqualTo("VRC Avatar: Mika by Kat"));
+            Assert.That(PackNaming.InfoTitle("Mika", " "), Is.EqualTo("VRC Avatar: Mika"), "no author, no by");
+            // 12 bytes of prefix + 88 = exactly 100
+            string fits = new string('x', 88);
+            Assert.That(PackNaming.InfoTitle(fits), Is.EqualTo("VRC Avatar: " + fits));
+            string cut = PackNaming.InfoTitle(new string('x', 89));
+            Assert.That(cut, Is.EqualTo("VRC Avatar: " + new string('x', 85) + "…"));
             Assert.That(Encoding.UTF8.GetByteCount(cut), Is.EqualTo(100));
-            // 3-byte characters: 84 bytes after the prefix hold 28 of them
+            // the title is shortened, the author kept
+            string withAuthor = PackNaming.InfoTitle(new string('x', 100), "Kat");
+            Assert.That(withAuthor, Is.EqualTo("VRC Avatar: " + new string('x', 78) + "… by Kat"));
+            Assert.That(Encoding.UTF8.GetByteCount(withAuthor), Is.EqualTo(100));
+            // 3-byte characters: 85 bytes after the prefix and ellipsis hold 28 of them
             string japanese = PackNaming.InfoTitle(new string('ミ', 40));
-            Assert.That(japanese, Is.EqualTo("Avatar pack: " + new string('ミ', 28) + "…"));
-            // one ASCII character shifts the cut into the middle of a character, which is dropped
+            Assert.That(japanese, Is.EqualTo("VRC Avatar: " + new string('ミ', 28) + "…"));
+            // one ASCII character first: still 28 whole characters, the cut falls between them
             string mixed = PackNaming.InfoTitle("a" + new string('ミ', 40));
-            Assert.That(mixed, Is.EqualTo("Avatar pack: a" + new string('ミ', 27) + "…"));
-            Assert.That(Encoding.UTF8.GetByteCount(mixed), Is.EqualTo(98));
+            Assert.That(mixed, Is.EqualTo("VRC Avatar: a" + new string('ミ', 28) + "…"));
+            Assert.That(Encoding.UTF8.GetByteCount(mixed), Is.EqualTo(100));
+            // an author too long to keep: the whole text is cut
+            string longAuthor = PackNaming.InfoTitle("Mika", new string('k', 120));
+            Assert.That(Encoding.UTF8.GetByteCount(longAuthor), Is.LessThanOrEqualTo(100));
+            Assert.That(longAuthor, Does.StartWith("VRC Avatar: Mika by k").And.EndWith("…"));
             Assert.Throws<ArgumentNullException>(() => PackNaming.InfoTitle(null));
         }
 

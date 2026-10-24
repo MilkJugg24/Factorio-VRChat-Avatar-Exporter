@@ -1,7 +1,7 @@
 # Avatar pack format (version 1)
 
-An **avatar pack** is a small Factorio mod that adds one look to the Avatar
-Characters mod (`avatar-characters` 0.5.0 or newer). The pack only ships
+An **avatar pack** is a small Factorio mod that adds one look to the VRC
+Avatars mod (internal name `avatar-characters`, 0.5.0 or newer). The pack only ships
 sprite sheets and a description of them. `avatar-characters` reads that
 description, creates the character and corpse prototypes, and offers the look
 in its avatar window, where each player picks their own.
@@ -274,7 +274,7 @@ does):
 
 An **avatar bundle** is one mod holding several packs. Exporters 0.3.0 to 0.10.0 could write them with
 Combine Packs for a Server; from 0.11.0 on the exporter no longer does, since servers simply install
-every player's pack. Avatar Characters still loads bundles (0.3.0 or newer), so existing ones keep
+every player's pack. VRC Avatars still loads bundles (0.3.0 or newer), so existing ones keep
 working.
 
 | Thing | Name |

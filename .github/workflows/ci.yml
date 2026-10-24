@@ -1,5 +1,5 @@
 # Checks every push and pull request: the exporter Core's tests, the Python tools' tests, and the
-# Avatar Characters mod in a headless Factorio (base game and Space Age, with avatar packs).
+# VRC Avatars mod in a headless Factorio (base game and Space Age, with avatar packs).
 # The mod zip and the exporter's .unitypackage are kept as build artifacts of each run.
 name: CI
 

@@ -11,7 +11,7 @@ local avatar_packs = require("prototypes.avatar-packs")
 local vanilla_character = data.raw["character"]["character"]
 local vanilla_corpse = data.raw["character-corpse"]["character-corpse"]
 if not vanilla_character then
-  error("Avatar Characters: the vanilla \"character\" prototype is missing")
+  error("VRC Avatars: the vanilla \"character\" prototype is missing")
 end
 
 -- Flight animations are only needed (and their sprites only loaded) when some

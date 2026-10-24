@@ -1,5 +1,5 @@
 # Publishes one GitHub release with both downloads: the Unity exporter (.unitypackage) and the
-# Avatar Characters mod (zip). The release is named after the exporter's version.
+# VRC Avatars mod (zip). The release is named after the exporter's version.
 #
 # Runs by itself after CI passes on main, so bumping a version is all a release takes:
 # - a new exporter version (package.json) publishes a new release with both files;
@@ -83,7 +83,7 @@ jobs:
 
           The **Source code** links under them are added to every release by GitHub. Players don't need them.
 
-          **Installing the mod (Avatar Characters $MOD):** Factorio's \`mods\` folder is
+          **Installing the mod (VRC Avatars $MOD):** Factorio's \`mods\` folder is
           \`%APPDATA%\\Factorio\\mods\` on Windows, \`~/.factorio/mods\` on Linux and
           \`~/Library/Application Support/factorio/mods\` on macOS. Factorio 2.1; Space Age is optional. In
           multiplayer, everyone needs the same mods and packs as the server, from whoever runs it: the game's

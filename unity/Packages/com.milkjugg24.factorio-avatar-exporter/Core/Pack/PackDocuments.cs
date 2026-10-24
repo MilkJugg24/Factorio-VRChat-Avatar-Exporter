@@ -27,7 +27,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             json.Append("{\n");
             AppendJsonField(json, "name", PackNaming.ModName(content.Id));
             AppendJsonField(json, "version", content.Version);
-            AppendJsonField(json, "title", PackNaming.InfoTitle(content.Title));
+            AppendJsonField(json, "title", PackNaming.InfoTitle(content.Title, content.Author));
             AppendJsonField(json, "author", AuthorOrDefault(content.Author));
             AppendJsonField(json, "factorio_version", PackFormat.FactorioVersion);
             AppendJsonField(json, "description", ModDescription(content));
@@ -42,7 +42,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         {
             CheckContent(content);
             string modName = PackNaming.ModName(content.Id);
-            return "[mod-name]\n" + modName + "=" + PackNaming.InfoTitle(content.Title) + "\n\n" +
+            return "[mod-name]\n" + modName + "=" + PackNaming.InfoTitle(content.Title, content.Author) + "\n\n" +
                 "[mod-description]\n" + modName + "=" + ModDescription(content) + "\n";
         }
 

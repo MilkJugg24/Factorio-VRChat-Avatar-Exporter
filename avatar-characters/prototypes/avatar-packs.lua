@@ -9,7 +9,7 @@ local format = require("scripts.pack-format")
 local avatar_packs = {}
 
 local function fail(pack_name, message)
-  error("Avatar Characters: avatar pack \"" .. tostring(pack_name) .. "\" " .. message
+  error("VRC Avatars: avatar pack \"" .. tostring(pack_name) .. "\" " .. message
     .. ". Update or remove that mod.", 0)
 end
 
@@ -202,8 +202,8 @@ local function validate(mod_data)
   end
   if d.format_version > format.SUPPORTED_VERSION then
     fail(pack_name, "uses avatar pack format " .. d.format_version
-      .. ", but this version of Avatar Characters only supports up to " .. format.SUPPORTED_VERSION
-      .. " (update Avatar Characters)")
+      .. ", but this version of VRC Avatars only supports up to " .. format.SUPPORTED_VERSION
+      .. " (update VRC Avatars)")
   end
   local id = d.id
   if not format.valid_id(id) then

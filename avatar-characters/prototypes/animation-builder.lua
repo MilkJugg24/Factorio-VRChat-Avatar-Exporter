@@ -28,7 +28,7 @@ local FLIGHT_FALLBACK = {
 local function required_meta(look, name)
   local meta = look.get_meta(name)
   if not meta then
-    error("Avatar Characters: missing sprite data for " .. look.label .. "/" .. name)
+    error("VRC Avatars: missing sprite data for " .. look.label .. "/" .. name)
   end
   return meta
 end

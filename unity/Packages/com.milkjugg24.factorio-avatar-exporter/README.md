@@ -1,7 +1,7 @@
 # Factorio Avatar Exporter: the full guide
 
-This Unity tool turns your avatar into an **avatar pack**, a small Factorio mod, for the **Avatar
-Characters** mod. The quick steps, installing in Factorio and playing on a server (every player installs every
+This Unity tool turns your avatar into an **avatar pack**, a small Factorio mod, for the **VRC
+Avatars** mod. The quick steps, installing in Factorio and playing on a server (every player installs every
 player's pack) are on the project page: https://github.com/MilkJugg24/Factorio-VRChat-Avatar-Exporter. This guide explains every option
 in the exporter window.
 
@@ -51,13 +51,15 @@ The ground shadow isn't affected by the lighting: it's always drawn the way the 
 
 - **Name:** shown in the game. The **Pack id** is made from it; keep both the same when you export
   again, so the new pack replaces the old one.
-- **Author:** shown with the pack. Any name will do; Factorio needs one.
+- **Author:** your name as you'd like it shown. The pack appears in Factorio's mod list as "VRC Avatar:
+  <name> by <author>". Any name will do; Factorio needs one.
 - **Version:** always 1.0.0, so a new export of your avatar has the same file name and simply replaces
   the old one, for you and everyone on your server.
 - **Resolution:** 64 pixels per tile is sharp and right for almost everyone. 32 uses a quarter of the
   video memory, for very large servers or old computers.
 
-Export All is only possible once the name, pack id and author are filled in. Every pack includes the
+Export All is only possible once the name, pack id and author are filled in; an empty one is outlined
+in red. Every pack includes the
 flight animations (hovering and flying with Space Age's mech armor).
 - **Export All:** first measures every frame (a few seconds) to check that each animation fits
   Factorio's sprite sheets. An animation too large for full resolution is drawn at half resolution

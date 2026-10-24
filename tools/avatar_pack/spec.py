@@ -75,14 +75,23 @@ def bundle_data_lua(bundle_id, ids):
             'end\n')
 
 
-def info_title(title):
-    """The info.json title for a pack title, shortened to Factorio's limit if needed."""
-    text = f"Avatar pack: {title}"
-    if len(text.encode("utf-8")) <= INFO_TITLE_MAX_BYTES:
+def _cut(text, max_bytes):
+    return text.encode("utf-8")[:max_bytes].decode("utf-8", "ignore")
+
+
+def info_title(title, author=None):
+    """The info.json title for a pack: "VRC Avatar: <title> by <author>", the title shortened (the author
+    kept) to Factorio's limit if needed, as the exporter's PackNaming.InfoTitle does."""
+    prefix, ellipsis = "VRC Avatar: ", "\u2026"
+    by = f" by {author.strip()}" if author and author.strip() else ""
+    text = prefix + title + by
+    size = lambda s: len(s.encode("utf-8"))  # noqa: E731
+    if size(text) <= INFO_TITLE_MAX_BYTES:
         return text
-    ellipsis = "\u2026"
-    cut = text.encode("utf-8")[:INFO_TITLE_MAX_BYTES - len(ellipsis.encode("utf-8"))]
-    return cut.decode("utf-8", "ignore") + ellipsis
+    room = INFO_TITLE_MAX_BYTES - size(prefix + ellipsis + by)
+    if room >= 8:
+        return prefix + _cut(title, room) + ellipsis + by
+    return _cut(text, INFO_TITLE_MAX_BYTES - size(ellipsis)) + ellipsis
 
 
 def valid_id(pack_id):

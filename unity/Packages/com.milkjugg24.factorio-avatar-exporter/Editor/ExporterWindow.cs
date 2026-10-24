@@ -33,7 +33,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         [SerializeField] private string packFor;
         [SerializeField] private string packTitle;
         [SerializeField] private string packId;
-        [SerializeField] private string author = PackContent.DefaultAuthor;
+        // starts empty: the user types the name to show (never filled in from their account)
+        [SerializeField] private string author = "";
         [SerializeField] private int pixelsPerTile = Conventions.DefaultPixelsPerTile;
         [SerializeField] private string saveFolder;
         private string exported;
@@ -312,18 +313,42 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         private static readonly string[] Resolutions = { "64 pixels per tile (sharp)", "32 pixels per tile (a quarter of the memory)" };
         private static readonly int[] ResolutionValues = { 64, 32 };
 
+        private static readonly Color MissingColor = new Color(0.9f, 0.2f, 0.2f);
+
+        /// <summary>A text field that must be filled in before Export All: outlined in red with a note while it's empty.</summary>
+        private static string RequiredField(GUIContent label, string value)
+        {
+            string result = EditorGUILayout.TextField(label, value);
+            if (string.IsNullOrWhiteSpace(result))
+            {
+                Rect box = GUILayoutUtility.GetLastRect();
+                box.xMin += EditorGUIUtility.labelWidth + 2;
+                foreach (Rect edge in new[]
+                {
+                    new Rect(box.x, box.y, box.width, 2), new Rect(box.x, box.yMax - 2, box.width, 2),
+                    new Rect(box.x, box.y, 2, box.height), new Rect(box.xMax - 2, box.y, 2, box.height),
+                })
+                {
+                    EditorGUI.DrawRect(edge, MissingColor);
+                }
+                var note = new GUIStyle(EditorStyles.miniLabel) { normal = { textColor = MissingColor } };
+                EditorGUILayout.LabelField(" ", "Required: fill this in to export.", note);
+            }
+            return result;
+        }
+
         /// <summary>The avatar pack's settings and the Export All button.</summary>
         private void PackGUI()
         {
             EditorGUILayout.LabelField("Avatar pack", EditorStyles.boldLabel);
-            packTitle = EditorGUILayout.TextField(new GUIContent("Name", "Shown in the game's avatar window."), packTitle);
+            packTitle = RequiredField(new GUIContent("Name", "Shown in the game's avatar window and mod list."), packTitle);
             string derived = PackNaming.DeriveId(packTitle ?? "");
-            string id = EditorGUILayout.TextField(new GUIContent("Pack id", "Lowercase letters, digits and -. The mod is " +
+            string id = RequiredField(new GUIContent("Pack id", "Lowercase letters, digits and -. The mod is " +
                 "called avatar-pack-<id>; keep it the same when you export again, so the new pack replaces the old one."),
                 string.IsNullOrEmpty(packId) ? derived : packId);
             packId = id == derived ? "" : id;
-            author = EditorGUILayout.TextField(new GUIContent("Author", "The name shown with the pack. Factorio needs " +
-                "one for every mod; any name will do."), author);
+            author = RequiredField(new GUIContent("Author", "Your name as you'd like it shown with the pack (\"VRC Avatar: " +
+                "<name> by <author>\"). Factorio needs one for every mod; any name will do."), author);
             // always 1.0.0: a new export of the same avatar simply replaces the old zip, for everyone
             using (new EditorGUI.DisabledScope(true))
             {
@@ -421,7 +446,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                     }
                 }, cancel.Token);
                 exported = $"Saved {result.ZipPath}. Put it, still zipped, in Factorio's mods folder together with the " +
-                    "Avatar Characters mod, start Factorio and choose " + $"\"{options.Title.Trim()}\" in the avatar window " +
+                    "VRC Avatars mod, start Factorio and choose " + $"\"{options.Title.Trim()}\" in the avatar window " +
                     "(shortcut bar, or Ctrl + Shift + A). The project page on GitHub has every step. " +
                     $"A report and preview images are in {options.PreviewFolder}." + (result.CutOff.Count > 0
                         ? $" Something reached the edge of the picture in {result.CutOff.Count} frames and was cut off " +

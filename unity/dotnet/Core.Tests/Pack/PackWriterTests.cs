@@ -105,7 +105,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
                 }));
                 Assert.That(info.GetProperty("name").GetString(), Is.EqualTo("avatar-pack-test-avatar"));
                 Assert.That(info.GetProperty("version").GetString(), Is.EqualTo("2.3.4"));
-                Assert.That(info.GetProperty("title").GetString(), Is.EqualTo(PackNaming.InfoTitle(content.Title)));
+                Assert.That(info.GetProperty("title").GetString(), Is.EqualTo(PackNaming.InfoTitle(content.Title, content.Author)));
                 Assert.That(Encoding.UTF8.GetByteCount(info.GetProperty("title").GetString()), Is.LessThanOrEqualTo(100));
                 Assert.That(info.GetProperty("author").GetString(), Is.EqualTo("Tester"));
                 Assert.That(info.GetProperty("factorio_version").GetString(), Is.EqualTo("2.1"));
@@ -232,7 +232,7 @@ print(json.dumps(lua_table.loads(sys.stdin.read())))
             MemoryPackOutput output = Write(content);
             string locale = output.Text(PackFiles.Locale);
             Assert.That(locale, Is.EqualTo(
-                "[mod-name]\navatar-pack-test-avatar=Avatar pack: Test Avatar\n\n" +
+                "[mod-name]\navatar-pack-test-avatar=VRC Avatar: Test Avatar by Tester\n\n" +
                 "[mod-description]\navatar-pack-test-avatar=" + PackDocuments.ModDescription(content) + "\n"));
             string readme = output.Text(PackFiles.Readme);
             Assert.That(readme, Does.StartWith("Test Avatar\n"));

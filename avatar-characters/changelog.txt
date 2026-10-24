@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.6.0
+Date: 2026-10-24
+  Changes:
+    - Renamed to VRC Avatars. Its internal name stays avatar-characters, so saves and avatar packs
+      keep working.
+---------------------------------------------------------------------------------------------------
 Version: 0.5.2
 Date: 2026-10-24
   Bugfixes:

@@ -51,7 +51,10 @@ release, marked latest, with two files: `FactorioAvatarExporter_<v>.unitypackage
 ## Conventions
 
 - Never hard-code or auto-fill personal data (names, e-mail addresses, Unity account details). The
-  default author is "Anonymous".
+  exporter's Author field starts empty and must be filled in (packs are titled "VRC Avatar: <name> by
+  <author>").
+- The mod is shown as "VRC Avatars"; its internal name stays `avatar-characters` (packs depend on it,
+  saves and zip names use it).
 - In-game screenshots and exported packs of real avatars are private: don't commit them. The repository
   is public. README screenshots are added by the owner.
 - Keep the README plain-English and task-based (play, make an avatar, run a server, remove safely,

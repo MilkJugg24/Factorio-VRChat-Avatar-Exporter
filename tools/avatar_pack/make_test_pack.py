@@ -364,18 +364,18 @@ def build(args):
     info = {
         "name": mod_name,
         "version": args.version,
-        "title": info_title(args.title),
+        "title": info_title(args.title, args.author),
         "author": args.author,
         "factorio_version": FACTORIO_VERSION,
-        "description": "Synthetic avatar pack for testing Avatar Characters.",
+        "description": "Synthetic avatar pack for testing VRC Avatars.",
         "dependencies": ["avatar-characters >= 0.1.0"],
     }
     with open(os.path.join(folder, "info.json"), "w", newline="\n") as fh:
         json.dump(info, fh, indent=2)
         fh.write("\n")
     with open(os.path.join(folder, "locale", "en", "locale.cfg"), "w", newline="\n") as fh:
-        fh.write(f"[mod-name]\n{mod_name}=Avatar pack: {args.title}\n\n"
-                 f"[mod-description]\n{mod_name}=Synthetic avatar pack for testing Avatar Characters.\n")
+        fh.write(f"[mod-name]\n{mod_name}={info_title(args.title, args.author)}\n\n"
+                 f"[mod-description]\n{mod_name}=Synthetic avatar pack for testing VRC Avatars.\n")
     with open(os.path.join(folder, "README.txt"), "w", newline="\n") as fh:
         fh.write("Synthetic avatar pack written by tools/avatar_pack/make_test_pack.py.\n"
                  "It is not made from a real avatar and may be shared freely.\n")

@@ -1,4 +1,4 @@
-# Avatar Characters: notes for other mod authors
+# VRC Avatars: notes for other mod authors
 
 ## Prototypes
 
@@ -6,7 +6,7 @@
 - Each pack (and each character of a legacy bundle) adds an `avatar-pack-<id>` character and an
   `avatar-pack-corpse-<id>` corpse. They are copied from `character` and `character-corpse` in
   `data-final-fixes`, so they inherit changes other mods make to those.
-- If another mod temporarily swaps a player's character (a jetpack, for example), Avatar Characters
+- If another mod temporarily swaps a player's character (a jetpack, for example), VRC Avatars
   leaves it alone and reapplies the player's look once they're back to a normal character.
 
 ## Remote interface `avatar-characters`

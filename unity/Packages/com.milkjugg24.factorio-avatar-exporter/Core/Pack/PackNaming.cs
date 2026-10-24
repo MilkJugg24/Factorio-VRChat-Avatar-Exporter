@@ -11,7 +11,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
     {
         private const string FallbackId = "avatar";
         private const string CorpsePrefix = "corpse-";
-        private const string InfoTitlePrefix = "Avatar pack: ";
+        private const string InfoTitlePrefix = "VRC Avatar: ";
         private const string Ellipsis = "…";
 
         /// <summary>
@@ -156,29 +156,46 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         }
 
         /// <summary>
-        /// The info.json title for a pack title (spec.info_title): "Avatar pack: " + title,
-        /// cut at a character boundary and ended with "…" when it is longer than
-        /// <see cref="PackFormat.InfoTitleMaxBytes"/> bytes of UTF-8.
+        /// The info.json title for a pack (spec.info_title): "VRC Avatar: " + title + " by " + author (without the
+        /// " by" part when there is no author). Longer than <see cref="PackFormat.InfoTitleMaxBytes"/> bytes of UTF-8,
+        /// the title is cut at a character boundary and ended with "…", keeping the author; when even that can't
+        /// fit, the whole text is cut.
         /// </summary>
-        public static string InfoTitle(string title)
+        public static string InfoTitle(string title, string author = null)
         {
             if (title == null)
             {
                 throw new ArgumentNullException(nameof(title));
             }
-            string text = InfoTitlePrefix + title;
-            byte[] bytes = Encoding.UTF8.GetBytes(text);
-            if (bytes.Length <= PackFormat.InfoTitleMaxBytes)
+            string by = string.IsNullOrWhiteSpace(author) ? "" : " by " + author.Trim();
+            string text = InfoTitlePrefix + title + by;
+            if (Encoding.UTF8.GetByteCount(text) <= PackFormat.InfoTitleMaxBytes)
             {
                 return text;
             }
-            int cut = PackFormat.InfoTitleMaxBytes - Encoding.UTF8.GetByteCount(Ellipsis);
+            int room = PackFormat.InfoTitleMaxBytes - Encoding.UTF8.GetByteCount(InfoTitlePrefix + Ellipsis + by);
+            if (room >= 8)
+            {
+                return InfoTitlePrefix + Cut(title, room) + Ellipsis + by;
+            }
+            return Cut(text, PackFormat.InfoTitleMaxBytes - Encoding.UTF8.GetByteCount(Ellipsis)) + Ellipsis;
+        }
+
+        /// <summary>The longest start of <paramref name="text"/> of at most <paramref name="maxBytes"/> UTF-8 bytes, whole characters only.</summary>
+        private static string Cut(string text, int maxBytes)
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(text);
+            if (bytes.Length <= maxBytes)
+            {
+                return text;
+            }
+            int cut = maxBytes;
             // drop a character whose UTF-8 bytes would be cut apart: back up to its first byte
             while (cut > 0 && (bytes[cut] & 0xC0) == 0x80)
             {
                 cut--;
             }
-            return Encoding.UTF8.GetString(bytes, 0, cut) + Ellipsis;
+            return Encoding.UTF8.GetString(bytes, 0, cut);
         }
     }
 

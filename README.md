@@ -1,4 +1,4 @@
-# Avatar Characters for Factorio
+# VRC Avatars for Factorio
 
 Play Factorio as your own avatar. Turn your VRChat avatar (or any humanoid model in Unity) into a
 Factorio character that idles, runs, shoots, mines and flies, and pick it in the game with one click.
