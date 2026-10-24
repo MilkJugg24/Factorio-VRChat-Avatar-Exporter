@@ -13,7 +13,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
     /// <summary>The version of this package, written into every pack (kept equal to package.json by a test).</summary>
     internal static class ExporterInfo
     {
-        public const string Version = "0.14.0";
+        public const string Version = "0.15.0";
     }
 
     /// <summary>What the user chose for a pack.</summary>
@@ -41,10 +41,19 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         /// <summary>What is wrong with these options, or null when the pack can be exported.</summary>
         public string Problem()
         {
-            int length = PackNaming.TitleLength(Title ?? "");
-            if (length == 0 || length > 80 || (Title ?? "").IndexOfAny(new[] { '\n', '\r' }) >= 0)
+            string title = (Title ?? "").Trim();
+            int length = PackNaming.TitleLength(title);
+            if (length == 0)
             {
-                return "The name must be 1 to 80 characters on one line.";
+                return "Enter a name: it's shown in the game's avatar window.";
+            }
+            if (length > 80 || title.IndexOfAny(new[] { '\n', '\r' }) >= 0)
+            {
+                return "The name must be at most 80 characters on one line.";
+            }
+            if (string.IsNullOrWhiteSpace(Id))
+            {
+                return "Enter a pack id (lowercase letters, digits and -).";
             }
             if (!PackNaming.IsValidId(Id))
             {

@@ -49,19 +49,22 @@ The ground shadow isn't affected by the lighting: it's always drawn the way the 
 
 ## Avatar pack
 
-- **Name:** shown in the game. The **Pack id** is made from it; keep it the same for later versions.
+- **Name:** shown in the game. The **Pack id** is made from it; keep both the same when you export
+  again, so the new pack replaces the old one.
 - **Author:** shown with the pack. Any name will do; Factorio needs one.
-- **Version:** start at 1.0.0; raise it whenever you export again for a server.
+- **Version:** always 1.0.0, so a new export of your avatar has the same file name and simply replaces
+  the old one, for you and everyone on your server.
 - **Resolution:** 64 pixels per tile is sharp and right for almost everyone. 32 uses a quarter of the
   video memory, for very large servers or old computers.
-- **Flight animations:** hovering and flying with Space Age's mech armor. Leave it on unless you never
-  fly.
+
+Export All is only possible once the name, pack id and author are filled in. Every pack includes the
+flight animations (hovering and flying with Space Age's mech armor).
 - **Export All:** first measures every frame (a few seconds) to check that each animation fits
   Factorio's sprite sheets. An animation too large for full resolution is drawn at half resolution
   instead (the same size in the game, a little softer); if one is too large even then, it stops and
   says which, before the long render: leave out the part that reaches far out (a long tail, wide
   wings, a big accessory) and export again. Then it renders everything (a few minutes; you can cancel)
-  and saves the pack. Keep the file name `avatar-pack-<id>_<version>.zip`, as Factorio expects.
+  and saves the pack. Keep the file name `avatar-pack-<id>_1.0.0.zip`, as Factorio expects.
 - **Export Selected Animation** (at the bottom): saves only the animation in the preview as one image.
   Not needed for the game.
 

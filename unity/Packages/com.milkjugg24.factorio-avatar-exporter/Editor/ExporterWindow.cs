@@ -34,9 +34,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         [SerializeField] private string packTitle;
         [SerializeField] private string packId;
         [SerializeField] private string author = PackContent.DefaultAuthor;
-        [SerializeField] private string packVersion = PackContent.DefaultVersion;
         [SerializeField] private int pixelsPerTile = Conventions.DefaultPixelsPerTile;
-        [SerializeField] private bool flight = true;
         [SerializeField] private string saveFolder;
         private string exported;
         private List<string> edgeDrawers = new List<string>();
@@ -321,16 +319,19 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             packTitle = EditorGUILayout.TextField(new GUIContent("Name", "Shown in the game's avatar window."), packTitle);
             string derived = PackNaming.DeriveId(packTitle ?? "");
             string id = EditorGUILayout.TextField(new GUIContent("Pack id", "Lowercase letters, digits and -. The mod is " +
-                "called avatar-pack-<id>; keep it the same when you export a new version."), string.IsNullOrEmpty(packId) ? derived : packId);
+                "called avatar-pack-<id>; keep it the same when you export again, so the new pack replaces the old one."),
+                string.IsNullOrEmpty(packId) ? derived : packId);
             packId = id == derived ? "" : id;
             author = EditorGUILayout.TextField(new GUIContent("Author", "The name shown with the pack. Factorio needs " +
                 "one for every mod; any name will do."), author);
-            packVersion = EditorGUILayout.TextField(new GUIContent("Version", "Raise it (1.0.1, 1.1.0, ...) when you export " +
-                "the pack again for a server: every player needs the same version."), packVersion);
+            // always 1.0.0: a new export of the same avatar simply replaces the old zip, for everyone
+            using (new EditorGUI.DisabledScope(true))
+            {
+                EditorGUILayout.TextField(new GUIContent("Version", "Always " + PackContent.DefaultVersion + ", so a new export " +
+                    "of your avatar has the same file name and simply replaces the old one."), PackContent.DefaultVersion);
+            }
             pixelsPerTile = EditorGUILayout.IntPopup("Resolution", pixelsPerTile, Resolutions, ResolutionValues);
             EditorGUILayout.LabelField(" ", preview.SizeNote, EditorStyles.miniLabel);
-            flight = EditorGUILayout.Toggle(new GUIContent("Flight animations", "Hovering and flying with Space Age's mech armor. " +
-                "Without them the avatar walks in the air."), flight);
 
             PackOptions options = Options();
             string problem = options.Problem();
@@ -390,9 +391,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             Title = packTitle,
             Id = string.IsNullOrEmpty(packId) ? PackNaming.DeriveId(packTitle ?? "") : packId,
             Author = author,
-            Version = packVersion,
+            Version = PackContent.DefaultVersion,
             PixelsPerTile = pixelsPerTile,
-            Flight = flight,
             PreviewFolder = PreviewFolder,
         };
 

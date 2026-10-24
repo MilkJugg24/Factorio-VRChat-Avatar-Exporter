@@ -21,7 +21,7 @@ You need Factorio 2.1. Space Age is optional; with it, avatars fly with mech arm
 
 1. Put these zips into Factorio's `mods` folder, **still zipped**:
    - `avatar-characters_<version>.zip`;
-   - one or more avatar packs (`avatar-pack-<name>_<version>.zip`), as many as you like.
+   - one or more avatar packs (`avatar-pack-<name>_1.0.0.zip`), as many as you like.
 
    The `mods` folder is:
    - Windows: `%APPDATA%\Factorio\mods` (paste that into the address bar of File Explorer);
@@ -58,8 +58,8 @@ You need Unity 2022.3 with your avatar in a project. Your VRChat avatar project 
 
 Then install the pack as in [Play with an avatar](#play-with-an-avatar).
 
-**Updating your avatar later:** raise the **Version** (1.0.1, 1.1.0, ...), keep the same **Name**,
-export again, and replace the old zip in the `mods` folder with the new one.
+**Updating your avatar later:** export again with the same **Name** and replace the old zip in the
+`mods` folder with the new one (it has the same file name).
 
 ## Play together on a server
 
@@ -73,11 +73,12 @@ server**, same versions too. Each avatar is its own zip, and you can install as 
 3. Every player puts that same set into their own `mods` folder.
 4. In the game, everyone picks their own look and sees everyone else's.
 
-**When someone joins later or updates their avatar:** the server owner adds the new zip (or replaces the
-old version of it) and shares it; everyone does the same. Nobody loses their character or items.
+**When someone joins later or updates their avatar:** the server owner adds the new zip (an updated
+avatar has the same file name, so it replaces the old one) and shares it; everyone does the same.
+Nobody loses their character or items.
 
-**If you can't join** ("your active mods don't match the server's"): your zips aren't the server's
-versions. The game's **Synchronize** button can't fetch these mods; get the current zips from the
+**If you can't join** ("your active mods don't match the server's"): some of your zips aren't the same
+as the server's (an avatar may have been updated). The game's **Synchronize** button can't fetch these mods; get the current zips from the
 server owner.
 
 ## Removing an avatar or the mod safely
