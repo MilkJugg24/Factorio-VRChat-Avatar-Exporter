@@ -211,10 +211,13 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             }
             List<Transform> roots = skin.Where(t => Named(t, "wing") && !(ParentBone(t) is Transform p && Named(p, "wing")))
                 .OrderBy(t => t.name, StringComparer.Ordinal).ToList();
+            // copies of the body's bones in a part's own armature (a wing prefab's Hips, Spine, Chest), held on the
+            // body by name: never wings themselves
+            var copies = new HashSet<Transform>(links.Select(l => l.part));
             if (roots.Count == 0)
             {
-                // no bone is named "wing": the bones of the meshes that are, apart from the body's humanoid bones and
-                // what holds them, from the first of each chain
+                // no bone is named "wing": the bones of the meshes that are, apart from the body's humanoid bones,
+                // what holds them and their copies, from the first of each chain
                 var humanoid = new HashSet<Transform>();
                 foreach (Transform bone in bones.Values)
                 {
@@ -225,7 +228,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 }
                 var wingBones = new HashSet<Transform>(Avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true)
                     .Where(r => Named(r.transform, "wing"))
-                    .SelectMany(r => r.bones).Where(b => b != null && !humanoid.Contains(b)));
+                    .SelectMany(r => r.bones).Where(b => b != null && !humanoid.Contains(b) && !copies.Contains(b)));
                 roots = wingBones.Where(t => !(ParentBone(t) is Transform p && wingBones.Contains(p)))
                     .OrderBy(t => t.name, StringComparer.Ordinal).ToList();
                 if (roots.Count > 0)
@@ -236,8 +239,11 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             var followers = new HashSet<Transform>(links.Where(l => roots.Contains(l.bone)).Select(l => l.part));
             Vector3 top = Pivot.InverseTransformPoint(bones[TopOfTrunk()].position);
             var unsided = new List<string>();
-            foreach (Transform root in roots.Where(r => !followers.Contains(r)))
+            // a root in the middle (one bone holding both wings) hands on to its child bones, a few levels down
+            var queue = new Queue<(Transform bone, int depth)>(roots.Where(r => !followers.Contains(r)).Select(r => (r, 0)));
+            while (queue.Count > 0)
             {
+                (Transform root, int depth) = queue.Dequeue();
                 Vector3 centre = Vector3.zero;
                 Transform[] chain = root.GetComponentsInChildren<Transform>(true);
                 foreach (Transform t in chain)
@@ -245,12 +251,23 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                     centre += Pivot.InverseTransformPoint(t.position);
                 }
                 float side = Vector3.Dot(centre / chain.Length - top, restRight);
-                if (Math.Abs(side) < 0.01f)
+                if (Math.Abs(side) >= 0.01f)
                 {
-                    unsided.Add(root.name);
+                    wings.Add((root, side < 0, InBody(root)));
                     continue;
                 }
-                wings.Add((root, side < 0, InBody(root)));
+                List<Transform> children = root.Cast<Transform>().Where(c => skin.Contains(c) && !copies.Contains(c)).ToList();
+                if (depth < 3 && children.Count > 0)
+                {
+                    foreach (Transform child in children)
+                    {
+                        queue.Enqueue((child, depth + 1));
+                    }
+                }
+                else
+                {
+                    unsided.Add(root.name);
+                }
             }
             if (wings.Count > 0)
             {
@@ -474,7 +491,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 float length = s < 0 ? (float)StickFigure.PickHeadPoint : (float)StickFigure.PickHeadBack;
                 float x = s * length;
                 centers.Add(new Vector3(x, -0.35f * x * x, 0));
-                radii.Add(Mathf.Lerp(0.034f, 0.003f, Mathf.Pow(Mathf.Abs(s), 0.8f)));
+                radii.Add(Mathf.Lerp(0.055f, 0.006f, Mathf.Pow(Mathf.Abs(s), 0.8f)));
             }
             return Tube("Pick head", centers, radii, Vector3.forward);
         }

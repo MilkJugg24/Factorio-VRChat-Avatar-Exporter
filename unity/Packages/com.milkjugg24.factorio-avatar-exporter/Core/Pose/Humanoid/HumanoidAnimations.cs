@@ -334,7 +334,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
 
         /// <summary>
         /// The free left arm, balancing the swing: reaching forward at chest height while the pick is raised
-        /// (<paramref name="strike"/> 0), down in front towards the knee as the body bends into the blow (1).
+        /// (<paramref name="strike"/> 0), and out to the side and back as the body bends into the blow (1), well
+        /// away from the handle, so it never looks like a second hand on it.
         /// </summary>
         private void BalancingArm(HumanoidPoseBuilder b, Quat chest, double strike)
         {
@@ -342,7 +343,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             Vec3 side = Vec3.Cross(forward, Vec3.UnitZ).Normalized;
             Vec3 s = Shoulder(b, -1);
             Vec3 raised = forward * 0.72 + Vec3.UnitZ * 0.12 - side * 0.12;
-            Vec3 down = chest.Forward * 0.55 - chest.Up * 0.55 - side * 0.08;
+            Vec3 down = -side * 0.6 - chest.Up * 0.5 - chest.Forward * 0.15;
             Vec3 hand = s + Vec3.Lerp(raised, down, strike) * rig.ArmLength;
             b.SetArm(-1, hand, -side * 0.6 - Vec3.UnitZ * 0.6 - forward * 0.2, null, 0.5);
         }
@@ -412,7 +413,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             double ph = MathUtil.Tau * t;
             // lowest just after each landing, highest in the air between steps
             double bounce = -Math.Cos(2 * ph - 0.4);
-            double lean = (gun ? 0.12 : 0.27) + 0.02 * bounce;
+            double lean = (gun ? 0.12 : 0.35) + 0.02 * bounce;
             double hipTwist = (gun ? 0.08 : 0.11) * Math.Sin(ph);
             double twist = (gun ? 0.04 : 0.09) * Math.Sin(ph);
             double hipRoll = 0.05 * Math.Sin(ph);
@@ -554,7 +555,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         }
 
         /// <summary>The wings while hovering at phase <paramref name="ph"/>: slow, gentle beats.</summary>
-        private static double HoverWings(double ph) => 0.25 + 0.3 * Math.Sin(ph);
+        private static double HoverWings(double ph) => 0.3 + 0.45 * Math.Sin(ph);
 
         /// <summary>anims.fly: leaning into the flight, legs trailing in the flight direction.</summary>
         private PoseResult Fly(double t, bool gun, double move)

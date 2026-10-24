@@ -145,6 +145,8 @@ local function merged_timing(pack_name, timing, animations)
   for name, speed in pairs(defaults.animation_speed) do
     result.animation_speed[name] = speed
   end
+  -- a swing takes the same time however many frames it has: the default is for 12 frames
+  result.animation_speed["mine"] = defaults.animation_speed["mine"] * animations["mine"].frame_count / 12
   if timing == nil then
     timing = {}
   elseif type(timing) ~= "table" then

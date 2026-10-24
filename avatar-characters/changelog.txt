@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.5.2
+Date: 2026-10-24
+  Bugfixes:
+    - Mining swings at the engineer's pace. A pack that doesn't set its own mining speed was played
+      at the speed meant for a 12-frame swing, so the exporter's 26-frame swing took more than twice
+      as long; the default now scales with the number of frames.
+---------------------------------------------------------------------------------------------------
 Version: 0.5.1
 Date: 2026-10-24
   Changes:

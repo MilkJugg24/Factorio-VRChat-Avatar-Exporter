@@ -281,6 +281,13 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             content.PixelsPerTile = settings.PixelsPerTile;
             content.Flight = settings.Flight;
             content.Timing = poses.Timing;
+            // every animation's own speed, so the game plays it as long as it was posed (the mod's defaults are
+            // for other frame counts)
+            content.AnimationSpeeds.Clear();
+            foreach (AnimationInfo animation in Animations)
+            {
+                content.AnimationSpeeds[animation.Name] = animation.DefaultSpeed;
+            }
             content.Icon = art.Icon;
             content.Thumbnail = art.Thumbnail;
             content.Animations.Clear();

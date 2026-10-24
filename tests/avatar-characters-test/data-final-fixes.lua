@@ -94,7 +94,8 @@ if mods["avatar-pack-test"] then
       "pack test: idle-gun filename")
     check(anim.idle.layers[1].animation_speed == 0.08, "pack test: idle speed override")
     check(anim.running.layers[1].animation_speed == 0.5, "pack test: run speed override")
-    check(anim.mining_with_tool.layers[1].animation_speed == 0.415, "pack test: default mine speed")
+    check(math.abs(anim.mining_with_tool.layers[1].animation_speed - 0.415 * 10 / 12) < 1e-9,
+      "pack test: default mine speed, scaled to its 10 frames")
     check(c.distance_per_frame == 0.15, "pack test: distance_per_frame")
     check(c.mining_with_tool_particles_animation_positions[1] == 6, "pack test: mine impact frame")
     check(diff({ 1, 5 }, c.running_sound_animation_positions, "") == nil

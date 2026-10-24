@@ -145,7 +145,7 @@ return {
 | `idle-gun` | 8 | 0.06 | standing with a gun |
 | `run` | 8 | 0.6 | running |
 | `run-gun` | 18 | 0.6 | running with a gun (see below) |
-| `mine` | 8 | 0.415 | mining with a pickaxe |
+| `mine` | 8 | 0.415 x frames / 12 | mining with a pickaxe (the default keeps a swing's length, whatever the frame count) |
 | `corpse` | 1 | 1 | the corpse (1 frame recommended) |
 | `hover` | 8 | 0.27 | flying in place (mech armor) |
 | `hover-gun` | 8 | 0.27 | flying in place with a gun |

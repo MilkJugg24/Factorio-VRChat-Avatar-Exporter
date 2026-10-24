@@ -42,6 +42,8 @@ class Pack:
         self.prefix = f"__{spec.MOD_PREFIX}{self.data['id']}__/"
         self.ppt = self.data.get("pixels_per_tile", 64)
         self.speeds = dict(DEFAULT_SPEEDS)
+        # as avatar-characters does: the default mine speed is for a 12-frame swing
+        self.speeds["mine"] *= self.data["animations"]["mine"]["frame_count"] / 12
         self.speeds.update((self.data.get("timing") or {}).get("animation_speed") or {})
         self._sheets = {}
 
