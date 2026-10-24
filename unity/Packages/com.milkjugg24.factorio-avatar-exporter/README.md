@@ -187,7 +187,7 @@ anything it couldn't change. Then save, and remove the mod.
 
 ## What it doesn't do yet
 
-- Fingers don't close around the gun and pickaxe, which are simple stand-in shapes.
+- Fingers don't close around the gun (a simple stand-in rod) or the pickaxe.
 - Ears stay in their rest pose. Wings move only when their bones have "wing" in their names, and the
   tail only when its bones have "tail" in their names (see below).
 - The player colour doesn't tint the avatar.
@@ -196,9 +196,12 @@ anything it couldn't change. Then save, and remove the mod.
 
 - **Idle:** the avatar breathes, shifts its weight from foot to foot and looks around. Every 8 seconds one
   wing stretches out, the left and then the right, and the head turns towards it.
-- **Running:** a light jog, nearly upright, with short quick steps. The hips rise and fall with each step,
+- **Running:** a light jog, leaning into it, with short quick steps. The hips rise and fall with each step,
   tilt and turn with the legs, and the chest and arms swing against them, elbows bent. The shooting versions (which the game shows from your first shot on)
   move the same way, more gently, so the gun stays on target.
+- **Mining:** the engineer's own swing, 26 frames striking on frame 19 like the game's: the pick (a wooden
+  handle and a curved, pointed steel head) held up over the right shoulder, brought down fast into a
+  deep crouch, the left arm out for balance, then pulled out and up again.
 - **Flying** (mech armor): the wings flap; hovering, they beat slowly. Taking off (and landing, the same
   played backwards) is empty-handed, since the game uses one take-off for armed and unarmed alike.
 - **Wings:** bones whose names contain "wing" (any letter case), on any mesh. The first such bone of

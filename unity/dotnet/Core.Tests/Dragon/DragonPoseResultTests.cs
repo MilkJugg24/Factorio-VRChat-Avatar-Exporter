@@ -154,7 +154,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Dragon
             Assert.That(r.Joints, Is.EquivalentTo(expected.Joints));
             Assert.That(r.Prop.Tip, Is.EqualTo(expected.Prop.Tip));
             Assert.That(source.Timing.DistancePerFrame, Is.EqualTo(0.238));
-            Assert.That(source.Timing.MineImpactFrame, Is.EqualTo(AnimationSpec.MineImpactFrame));
+            Assert.That(source.Timing.MineImpactFrame, Is.EqualTo(DragonAnimations.MineImpactFrame));
             Assert.That(source.Timing.LeftFootFrames, Is.EqualTo(new[] { 1 }));
             Assert.That(source.Timing.RightFootFrames, Is.EqualTo(new[] { 7 }));
             Assert.Throws<ArgumentException>(() => source.Pose("walk", 0, 0));

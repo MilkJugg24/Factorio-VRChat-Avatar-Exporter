@@ -167,7 +167,7 @@ print(json.dumps(lua_table.loads(sys.stdin.read())))
 
                 JsonElement timing = d.GetProperty("timing");
                 Assert.That(timing.GetProperty("distance_per_frame").GetDouble(), Is.EqualTo(0.15));
-                Assert.That(timing.GetProperty("mine_impact_frame").GetInt32(), Is.EqualTo(9));
+                Assert.That(timing.GetProperty("mine_impact_frame").GetInt32(), Is.EqualTo(19));
                 Assert.That(timing.GetProperty("left_foot_frames").EnumerateArray().Select(f => f.GetInt32()), Is.EqualTo(new[] { 1 }));
                 Assert.That(timing.GetProperty("right_foot_frames").EnumerateArray().Select(f => f.GetInt32()), Is.EqualTo(new[] { 7 }));
                 Assert.That(timing.GetProperty("animation_speed").GetProperty("idle").GetDouble(), Is.EqualTo(0.08));

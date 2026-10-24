@@ -368,8 +368,10 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             pickaxe = new GameObject("Factorio pickaxe");
             SceneManager.MoveGameObjectToScene(pickaxe, Scene);
             pickaxe.transform.SetParent(Avatar.transform, false);
-            pickHandle = Cylinder("Handle", pickaxe.transform, wood);
-            pickHead = Cylinder("Head", pickaxe.transform, steel);
+            // the engineer's pick: a wooden handle, thicker at the hand, and a curved steel head pointed at both
+            // ends, the front point longer
+            pickHandle = Shape("Handle", pickaxe.transform, wood, HandleMesh());
+            pickHead = Shape("Head", pickaxe.transform, steel, HeadMesh());
             gun.SetActive(false);
             pickaxe.SetActive(false);
         }
@@ -382,6 +384,99 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             material.SetFloat("_Glossiness", smoothness);
             temporary.Add(material);
             return material;
+        }
+
+        private Transform Shape(string name, Transform parent, Material material, Mesh mesh)
+        {
+            var shape = new GameObject(name);
+            SceneManager.MoveGameObjectToScene(shape, Scene);
+            shape.transform.SetParent(parent, false);
+            shape.AddComponent<MeshFilter>().sharedMesh = mesh;
+            shape.AddComponent<MeshRenderer>().sharedMaterial = material;
+            temporary.Add(mesh);
+            return shape.transform;
+        }
+
+        /// <summary>
+        /// A tube along <paramref name="centers"/> with a ring of <paramref name="radii"/> round each (a point where
+        /// the radius is 0), its rings square to the path and turned by <paramref name="across"/>, ends closed.
+        /// </summary>
+        private static Mesh Tube(string name, IList<Vector3> centers, IList<float> radii, Vector3 across, int sides = 12)
+        {
+            var vertices = new List<Vector3>();
+            var triangles = new List<int>();
+            for (int i = 0; i < centers.Count; i++)
+            {
+                Vector3 along = (centers[Math.Min(i + 1, centers.Count - 1)] - centers[Math.Max(i - 1, 0)]).normalized;
+                Vector3 u = Vector3.Cross(along, across).normalized, v = Vector3.Cross(u, along);
+                for (int k = 0; k < sides; k++)
+                {
+                    float angle = 2 * Mathf.PI * k / sides;
+                    vertices.Add(centers[i] + (u * Mathf.Cos(angle) + v * Mathf.Sin(angle)) * radii[i]);
+                }
+            }
+            for (int i = 0; i + 1 < centers.Count; i++)
+            {
+                for (int k = 0; k < sides; k++)
+                {
+                    int a = i * sides + k, b = i * sides + (k + 1) % sides;
+                    triangles.AddRange(new[] { a, a + sides, b, b, a + sides, b + sides });
+                }
+            }
+            foreach ((int ring, bool first) in new[] { (0, true), (centers.Count - 1, false) })
+            {
+                int centre = vertices.Count;
+                vertices.Add(centers[ring]);
+                for (int k = 0; k < sides; k++)
+                {
+                    int a = ring * sides + k, b = ring * sides + (k + 1) % sides;
+                    // facing out: back along the path at the first end, on along it at the last
+                    triangles.AddRange(first ? new[] { centre, a, b } : new[] { centre, b, a });
+                }
+            }
+            var mesh = new Mesh { name = name, hideFlags = HideFlags.HideAndDontSave };
+            mesh.SetVertices(vertices);
+            mesh.SetTriangles(triangles, 0);
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
+        /// <summary>
+        /// The handle in the unit primitive cylinder's place (2 tall along y, radius 0.5) for <see cref="Span"/>:
+        /// swelling a little towards the hand end (-y), with a knob at it.
+        /// </summary>
+        private static Mesh HandleMesh()
+        {
+            var centers = new List<Vector3>();
+            var radii = new List<float>();
+            foreach ((float y, float r) in new[] { (-1f, 0.62f), (-0.96f, 0.68f), (-0.9f, 0.56f), (-0.5f, 0.52f), (0.5f, 0.46f), (1f, 0.44f) })
+            {
+                centers.Add(new Vector3(0, y, 0));
+                radii.Add(r);
+            }
+            return Tube("Pick handle", centers, radii, Vector3.forward);
+        }
+
+        /// <summary>
+        /// The head, in units of the handle's length, the eye at the origin round the handle (+y): the back end
+        /// along +x (<see cref="StickFigure.PickHeadBack"/>), the point along -x (<see cref="StickFigure.PickHeadPoint"/>),
+        /// both curving down towards the hand and tapering to points; thickest at the eye.
+        /// </summary>
+        private static Mesh HeadMesh()
+        {
+            var centers = new List<Vector3>();
+            var radii = new List<float>();
+            const int steps = 14;
+            for (int i = 0; i <= steps; i++)
+            {
+                float s = -1 + 2f * i / steps;
+                float length = s < 0 ? (float)StickFigure.PickHeadPoint : (float)StickFigure.PickHeadBack;
+                float x = s * length;
+                centers.Add(new Vector3(x, -0.35f * x * x, 0));
+                radii.Add(Mathf.Lerp(0.034f, 0.003f, Mathf.Pow(Mathf.Abs(s), 0.8f)));
+            }
+            return Tube("Pick head", centers, radii, Vector3.forward);
         }
 
         private Transform Cylinder(string name, Transform parent, Material material)
@@ -424,10 +519,15 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 return;
             }
             Span(pickHandle, prop.Base, prop.Tip, StickFigure.HandleRadius * height);
-            double handle = Vec3.Distance(prop.Base, prop.Tip);
-            Vec3 up = prop.Up.Normalized;
-            Span(pickHead, prop.Tip + up * (StickFigure.PickHeadBack * handle), prop.Tip - up * (StickFigure.PickHeadPoint * handle),
-                StickFigure.PickHeadRadius * height);
+            // the head's mesh is in handle lengths: x along the pick's Up, y along the handle
+            Vector3 tip = Pivot.TransformPoint(ToUnity(prop.Tip, MetersPerTile));
+            Vector3 along = Pivot.TransformPoint(ToUnity(prop.Base, MetersPerTile));
+            along = tip - along;
+            Vector3 up = Pivot.TransformDirection(ToUnity(prop.Up.Normalized, 1));
+            pickHead.SetPositionAndRotation(tip, Quaternion.LookRotation(Vector3.Cross(up, along), along));
+            Vector3 parentScale = pickHead.parent.lossyScale;
+            float length = along.magnitude;
+            pickHead.localScale = new Vector3(length / parentScale.x, length / parentScale.y, length / parentScale.z);
         }
 
         /// <summary>Stretches a unit primitive cylinder (2 tall, 1 wide, along y) from a to b (model tiles), radius r tiles.</summary>

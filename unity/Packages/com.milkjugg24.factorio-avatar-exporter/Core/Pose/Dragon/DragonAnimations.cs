@@ -29,6 +29,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// <summary><c>MINE_FRAMES</c>: frames of one swing (12, as <see cref="AnimationSpec.Mine"/> renders).</summary>
         public static int MineFrames => MineAlpha.Count;
 
+        /// <summary>1-based frame of the dragon's 12-frame swing in which the pick hits the ground.</summary>
+        public const int MineImpactFrame = 9;
+
         /// <summary>
         /// <c>_relaxed_arms(p, body, swing=0.0, spread=0.0)</c>: both arms hanging slightly forward and
         /// out, the hands about 0.4 below the shoulders. <paramref name="swing"/> moves the right hand

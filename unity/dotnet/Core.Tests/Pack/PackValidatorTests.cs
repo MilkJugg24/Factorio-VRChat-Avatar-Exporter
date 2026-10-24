@@ -83,8 +83,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
             yield return Case("MissingTiming", p => p.Timing = null, "the timing is missing");
             yield return Case("BadDistance", p => p.Timing.DistancePerFrame = 0, "timing: the distance per frame must be above 0 and at most 2 tiles, not 0");
             yield return Case("NaNDistance", p => p.Timing.DistancePerFrame = double.NaN, "timing: the distance per frame must be above 0");
-            yield return Case("BadImpactFrame", p => p.Timing.MineImpactFrame = 13,
-                "timing: the mine impact frame 13 is not a frame of the mine animation (1 to 12)");
+            yield return Case("BadImpactFrame", p => p.Timing.MineImpactFrame = 27,
+                "timing: the mine impact frame 27 is not a frame of the mine animation (1 to 26)");
             yield return Case("BadFootFrame", p => p.Timing.RightFootFrames = new[] { 7, 0 },
                 "timing: right foot frame 0 is not a frame of the run animation (1 to 12)");
             yield return Case("NoFootFrames", p => p.Timing.LeftFootFrames = new int[0], "timing: the left foot frames are missing");

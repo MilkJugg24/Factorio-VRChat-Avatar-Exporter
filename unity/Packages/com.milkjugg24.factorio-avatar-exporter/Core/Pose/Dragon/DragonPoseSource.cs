@@ -20,7 +20,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
 
         public BodyShape Body { get; }
 
-        public PackTiming Timing { get; } = new PackTiming();
+        public PackTiming Timing { get; } = new PackTiming { MineImpactFrame = DragonAnimations.MineImpactFrame };
 
         public PoseResult Pose(string animation, double t, double move)
         {

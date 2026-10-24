@@ -74,7 +74,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         public const string TakeOff = "take-off";
 
         /// <summary>1-based frame of the mine animation in which the pick hits the ground.</summary>
-        public const int MineImpactFrame = 9;
+        public const int MineImpactFrame = 19;
 
         /// <summary>1-based frames of the run cycle in which each foot lands.</summary>
         public static readonly IReadOnlyList<int> LeftFootFrames = new[] { 1 };
@@ -88,7 +88,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             new AnimationInfo(IdleGun, 8, 48, true, 0.05, false, true, true),
             new AnimationInfo(Run, 8, 12, true, 0.6, false, false, true),
             new AnimationInfo(RunGun, 18, 12, true, 0.6, false, true, true),
-            new AnimationInfo(Mine, 8, 12, true, 0.415, false, false, true),
+            // the engineer's own: 26 frames at 0.9, the pick hitting on frame 19
+            new AnimationInfo(Mine, 8, 26, true, 0.9, false, false, true),
             new AnimationInfo(Corpse, 1, 1, true, 1.0, false, false, true),
             new AnimationInfo(Hover, 8, 8, true, 0.27, true, false, false),
             new AnimationInfo(HoverGun, 8, 8, true, 0.27, true, true, false),

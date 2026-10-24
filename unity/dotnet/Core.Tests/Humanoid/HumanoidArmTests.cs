@@ -83,11 +83,11 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Humanoid
                 {
                     continue;
                 }
-                // both hands round the pick's handle; the support hand round the gun, just under its axis (the
-                // trigger hand holds the gun's grip, below it, like a pistol's)
+                // the right hand round the pick's handle (swung one-handed, as the engineer does); the support hand
+                // round the gun, just under its axis (the trigger hand holds the gun's grip, below it, like a pistol's)
                 Vec3 axis = (prop.Tip - prop.Base).Normalized;
                 Vec3 under = prop.Kind == PropKind.Gun ? prop.Up * (0.02 * size) : Vec3.Zero;
-                foreach (int side in prop.Kind == PropKind.Gun ? new[] { -1 } : TestMath.Sides)
+                foreach (int side in prop.Kind == PropKind.Gun ? new[] { -1 } : new[] { 1 })
                 {
                     string what = $"{animation} row {row + 1} frame {frame + 1}, {(side > 0 ? "right" : "left")} hand";
                     Assert.That(side > 0 ? pose.RightGrip : pose.LeftGrip, Is.EqualTo(1), what);

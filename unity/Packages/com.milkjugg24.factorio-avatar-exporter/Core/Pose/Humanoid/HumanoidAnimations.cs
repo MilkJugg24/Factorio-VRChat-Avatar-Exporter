@@ -282,33 +282,21 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             b.SetProp(new PropPose(PropKind.Gun, stock, stock + aim * (0.52 * sizeScale), up));
         }
 
-        /// <summary>
-        /// How much of the hands' reach behind the head goes over it instead when the pick is raised all the way
-        /// (they also rise by 0.12 arm lengths times this).
-        /// </summary>
-        private const double PickWindUp = 0.6;
 
-        /// <summary>How far the hands hold the pick from between the shoulders, arm lengths (they reach further in the blow).</summary>
-        private const double PickReach = 0.73;
-
-        /// <summary>Length of the pick's handle from the hands to the head, and behind the hands, tiles at the default height.</summary>
-        private const double PickAhead = 0.62, PickBehind = 0.10;
-
-        /// <summary>The point between the shoulders the pick swings round.</summary>
-        private Vec3 PickPivot(HumanoidPoseBuilder b, Quat chest) =>
-            (Shoulder(b, 1) + Shoulder(b, -1)) * 0.5 + chest.Forward.Horizontal.Normalized * (0.03 * sizeScale) - chest.Up * (0.015 * sizeScale);
+        /// <summary>Length of the pick's handle from the hand to the head, and behind the hand, tiles at the default height.</summary>
+        private const double PickAhead = 0.55, PickBehind = 0.05;
 
         /// <summary>
         /// The handle angle (radians from forward-horizontal, up positive) at which the pick's point, swung
         /// down in front with the hands <paramref name="reach"/> arm lengths out, touches the ground; the lowest
         /// it reaches when the ground is too far down.
         /// </summary>
-        private double GroundAlpha(HumanoidPoseBuilder b, Quat chest, double reach)
+        private double GroundAlpha(Vec3 pivot, double reach)
         {
             // the point: pivot + handle(alpha) * along - head(alpha) * point, so its height is
             // pivot.Z + along * sin(alpha) - point * cos(alpha) = pivot.Z + r * sin(alpha - phi)
             (double r, double phi) = PickSwing(reach);
-            double height = PickPivot(b, chest).Z;
+            double height = pivot.Z;
             return phi + (height >= r ? -Math.PI / 2 : Math.Asin(-height / r));
         }
 
@@ -324,28 +312,39 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         }
 
         /// <summary>
-        /// The pickaxe with its handle at <paramref name="alpha"/> radians from forward-horizontal, up
-        /// positive (model.hold_pick), both hands closed round it (<see cref="HoldHandle"/>) <paramref name="reach"/>
-        /// arm lengths out. As the pick is raised (<paramref name="raise"/> from 0 to 1), the hands, which
-        /// model.hold_pick moves along the handle to behind the shoulders, stay over the head
-        /// (<see cref="PickWindUp"/>), and the elbows turn from out, back and down to out, up and a little
-        /// forward: shoulders do not reach further back.
+        /// The pickaxe in the right hand, as the engineer swings it: the arm at <paramref name="beta"/> radians from
+        /// forward-horizontal (up positive), <paramref name="reach"/> arm lengths out from the right shoulder, in
+        /// the upright plane through it facing forward, the handle at <paramref name="alpha"/> radians in the same
+        /// plane, its head pointing away from the swing. The elbow points out, down and back while the arm is low
+        /// and out, up and forward while the pick is raised.
         /// </summary>
-        private void HoldPick(HumanoidPoseBuilder b, Quat chest, double alpha, double raise, double reach = PickReach)
+        private void HoldPick(HumanoidPoseBuilder b, Quat chest, double beta, double alpha, double reach)
         {
             Vec3 forward = chest.Forward.Horizontal.Normalized;
+            Vec3 side = Vec3.Cross(forward, Vec3.UnitZ).Normalized;
             Vec3 handle = forward * Math.Cos(alpha) + Vec3.UnitZ * Math.Sin(alpha);
             Vec3 head = -forward * Math.Sin(alpha) + Vec3.UnitZ * Math.Cos(alpha);
-            Vec3 side = Vec3.Cross(forward, Vec3.UnitZ).Normalized;
-            Vec3 pivot = PickPivot(b, chest);
-            Vec3 hands = handle * (reach * rig.ArmLength);
-            double back = Math.Min(0, Vec3.Dot(hands, forward));
-            Vec3 grip = pivot + hands - forward * (back * PickWindUp * raise)
-                        + Vec3.UnitZ * (0.12 * rig.ArmLength * PickWindUp * raise);
-            Vec3 bend = Vec3.Lerp(-forward * 0.3 - Vec3.UnitZ * 0.5, forward * 0.2 + Vec3.UnitZ * 0.6, raise);
+            Vec3 arm = forward * Math.Cos(beta) + Vec3.UnitZ * Math.Sin(beta);
+            Vec3 grip = Shoulder(b, 1) + arm * (reach * rig.ArmLength);
+            double raised = MathUtil.Smoothstep(0.3, 1.5, beta);
+            Vec3 bend = Vec3.Lerp(-forward * 0.3 - Vec3.UnitZ * 0.5, forward * 0.3 + Vec3.UnitZ * 0.4, raised);
             HoldHandle(b, 1, grip, handle, side * 0.8 + bend);
-            HoldHandle(b, -1, grip - handle * (0.07 * sizeScale), handle, -side * 0.8 + bend);
             b.SetProp(new PropPose(PropKind.Pickaxe, grip - handle * (PickBehind * sizeScale), grip + handle * (PickAhead * sizeScale), head));
+        }
+
+        /// <summary>
+        /// The free left arm, balancing the swing: reaching forward at chest height while the pick is raised
+        /// (<paramref name="strike"/> 0), down in front towards the knee as the body bends into the blow (1).
+        /// </summary>
+        private void BalancingArm(HumanoidPoseBuilder b, Quat chest, double strike)
+        {
+            Vec3 forward = chest.Forward.Horizontal.Normalized;
+            Vec3 side = Vec3.Cross(forward, Vec3.UnitZ).Normalized;
+            Vec3 s = Shoulder(b, -1);
+            Vec3 raised = forward * 0.72 + Vec3.UnitZ * 0.12 - side * 0.12;
+            Vec3 down = chest.Forward * 0.55 - chest.Up * 0.55 - side * 0.08;
+            Vec3 hand = s + Vec3.Lerp(raised, down, strike) * rig.ArmLength;
+            b.SetArm(-1, hand, -side * 0.6 - Vec3.UnitZ * 0.6 - forward * 0.2, null, 0.5);
         }
 
         // -- animations -----------------------------------------------------------------------------
@@ -399,7 +398,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         }
 
         /// <summary>
-        /// Running, a light jog: short quick steps, the body nearly upright, and every footfall drives it. Feet
+        /// Running, a light jog: short quick steps, the body leaning into it, and every footfall drives it. Feet
         /// land on frames 1 and 7; the hips drop as the leg takes the weight and rise into the push-off and the
         /// moment both feet are off the ground, tilt down on the swinging leg's side and turn forward with it,
         /// and sit over the foot on the ground. The chest counters
@@ -413,7 +412,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             double ph = MathUtil.Tau * t;
             // lowest just after each landing, highest in the air between steps
             double bounce = -Math.Cos(2 * ph - 0.4);
-            double lean = (gun ? 0.08 : 0.12) + 0.02 * bounce;
+            double lean = (gun ? 0.12 : 0.27) + 0.02 * bounce;
             double hipTwist = (gun ? 0.08 : 0.11) * Math.Sin(ph);
             double twist = (gun ? 0.04 : 0.09) * Math.Sin(ph);
             double hipRoll = 0.05 * Math.Sin(ph);
@@ -466,27 +465,27 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         }
 
         /// <summary>
-        /// Handle angle of every mine frame, degrees, and the forward lean that goes with it: anims.mine's
-        /// tables, with the wind-up peaking on frame 6 so that the swing comes down over frames 7 to 9 (faster
-        /// and faster) instead of in one frame, and the blow from frame 9 on leaned into further, since a
-        /// human's longer body needs that for the pick to reach the ground. In the blow and the dig (<see cref="FirstDigFrame"/> to
-        /// <see cref="LastDigFrame"/>) the arms reach out and the angle is the one that puts the pick's point
-        /// on the ground in front (<see cref="GroundAlpha"/>), as far ahead as the body allows.
+        /// The engineer's swing, frame by frame (26 frames, the pick hitting on frame 19, as the game's own): the
+        /// arm angle and handle angle, degrees from forward-horizontal (up positive), how far the arm reaches out
+        /// (arm lengths) and how far the body leans forward. Frames 1 to 14 hold the pick raised over the shoulder,
+        /// rising slowly; 15 to 18 bring it down, faster and faster; 19 to 21 are the blow, bent deep, the point on
+        /// the ground in front (<see cref="GroundAlpha"/>); 22 to 26 pull it out and up again.
         /// </summary>
-        private static readonly int[] MineAlpha = { -30, 5, 45, 95, 135, 155, 120, 45, -62, -66, -60, -48 };
-        private static readonly double[] MineLean = { 0.30, 0.22, 0.12, 0.03, -0.07, -0.10, 0.05, 0.45, 0.95, 0.98, 0.93, 0.60 };
-        private const int FirstDigFrame = 8, LastDigFrame = 10;
+        private static readonly int[] MineArm = { 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 105, 105, 104, 100, 75, 25, -25, 0, 0, 0, -35, -5, 40, 75, 90 };
+        private static readonly int[] MineHandle = { 140, 142, 144, 146, 148, 150, 151, 152, 153, 154, 155, 155, 155, 154, 145, 105, 40, -15, 0, 0, 0, -25, 15, 70, 115, 135 };
+        private static readonly double[] MineReach = { 0.55, 0.55, 0.55, 0.55, 0.55, 0.55, 0.55, 0.55, 0.55, 0.55, 0.55, 0.55, 0.55, 0.55,
+            0.6, 0.75, 0.85, 0.9, 0.9, 0.9, 0.9, 0.85, 0.75, 0.65, 0.6, 0.55 };
+        private static readonly double[] MineLean = { 0.10, 0.09, 0.08, 0.07, 0.06, 0.05, 0.04, 0.03, 0.02, 0.01, 0.0, -0.01, -0.02, -0.02,
+            0.0, 0.2, 0.45, 0.75, 0.95, 0.97, 0.93, 0.8, 0.6, 0.4, 0.25, 0.15 };
+        private const int FirstDigFrame = 18, LastDigFrame = 20;
 
-        /// <summary>How far out the hands hold the pick in the blow, arm lengths.</summary>
-        private const double PickBlowReach = 0.85;
-
-        /// <summary>anims.mine: raise the pick over the shoulder, strike on frame 9, lean into the blow.</summary>
+        /// <summary>The engineer's mining: one-handed, the pick swung down from over the shoulder, striking on frame 19.</summary>
         private PoseResult Mine(double t)
         {
-            int i = (int)(Math.Round(t * MineAlpha.Length, MidpointRounding.ToEven) % MineAlpha.Length);
-            double alpha = MathUtil.Radians(MineAlpha[i]);
+            int i = (int)(Math.Round(t * MineHandle.Length, MidpointRounding.ToEven) % MineHandle.Length);
             double lean = MineLean[i];
-            double raise = MathUtil.Smoothstep(40, 150, MineAlpha[i]);
+            double reach = MineReach[i];
+            double raise = MathUtil.Smoothstep(40, 150, MineHandle[i]);
             // knees a little bent, so the feet stay planted in the wide stance; crouch and shift the weight
             // forward into the blow
             double crouch = MathUtil.Smoothstep(0.3, 0.6, lean);
@@ -496,20 +495,22 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             HumanoidPoseBuilder b = Torso(pelvis, lean, headPitch: headPitch);
             Quat chest = ChestFrame(lean);
             bool dig = i >= FirstDigFrame && i <= LastDigFrame;
-            double reach = dig ? PickBlowReach : PickReach;
             if (dig)
             {
-                // a body too tall for its arms and pick crouches lower, so the point reaches the ground ahead
-                double tooHigh = PickPivot(b, chest).Z - 0.85 * PickSwing(reach).radius;
+                // a body too tall for its arm and pick crouches lower, so the point reaches the ground ahead
+                double tooHigh = Shoulder(b, 1).Z - 0.85 * PickSwing(reach).radius;
                 if (tooHigh > 0)
                 {
-                    pelvis -= Vec3.UnitZ * Math.Min(tooHigh, 0.15 * rig.LegLength);
+                    pelvis -= Vec3.UnitZ * Math.Min(tooHigh, 0.25 * rig.LegLength);
                     b = Torso(pelvis, lean, headPitch: headPitch);
                 }
             }
-            // the point never goes into the ground
-            double ground = GroundAlpha(b, chest, reach);
-            HoldPick(b, chest, dig ? ground : Math.Max(alpha, ground), raise, reach);
+            // the point never goes into the ground; in the blow it rests on it, the arm in line with the handle
+            double ground = GroundAlpha(Shoulder(b, 1), reach);
+            double alpha = dig ? ground : Math.Max(MathUtil.Radians(MineHandle[i]), ground);
+            double beta = dig ? ground : MathUtil.Radians(MineArm[i]);
+            HoldPick(b, chest, beta, alpha, reach);
+            BalancingArm(b, chest, crouch);
             foreach (int side in Sides)
             {
                 Vec3 rest = rig.Ball(side);

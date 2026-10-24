@@ -74,7 +74,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
             Assert.That(content.GeneratorName, Is.EqualTo("factorio-avatar-exporter"));
             Assert.That(content.PixelsPerTile, Is.EqualTo(64));
             Assert.That(content.Flight, Is.False);
-            Assert.That(content.Timing.MineImpactFrame, Is.EqualTo(9));
+            Assert.That(content.Timing.MineImpactFrame, Is.EqualTo(19));
             Assert.That(content.AnimationSpeeds, Is.Empty);
             Assert.That(content.Tintable, Is.False);
         }

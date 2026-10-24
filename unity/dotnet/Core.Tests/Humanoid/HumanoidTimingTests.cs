@@ -47,9 +47,10 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Humanoid
             HumanoidRig rig = HumanoidRig.Measure(input);
             var animations = new HumanoidAnimations(rig);
             int impact = animations.Timing.MineImpactFrame;
-            PoseResult before = Frame(animations, AnimationSpec.Mine, impact - 2);
+            // the engineer's swing: still up three frames before, down fast
+            PoseResult before = Frame(animations, AnimationSpec.Mine, impact - 4);
             PoseResult hit = Frame(animations, AnimationSpec.Mine, impact - 1);
-            Assert.That(before.Prop.Tip.Z, Is.GreaterThan(rig.HipsHeight), $"still raised on frame {impact - 1}");
+            Assert.That(before.Prop.Tip.Z, Is.GreaterThan(rig.HipsHeight), $"still raised on frame {impact - 3}");
             Assert.That(hit.Prop.Tip.Z, Is.LessThan(rig.HipsHeight * 0.6), $"down on frame {impact}");
         }
 

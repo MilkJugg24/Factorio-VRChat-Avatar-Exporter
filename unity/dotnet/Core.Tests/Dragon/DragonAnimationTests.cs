@@ -153,7 +153,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Dragon
         {
             BodyShape b = BodyShape.Male;
             DragonPose Frame(int i) => DragonAnimations.Mine(b, i / 12.0);
-            Assert.That(DragonAnimations.MineFrames, Is.EqualTo(AnimationSpec.Get(AnimationSpec.Mine).FrameCount));
+            Assert.That(DragonAnimations.MineFrames, Is.EqualTo(12));
             Assert.That(DragonAnimations.MineLean.Count, Is.EqualTo(DragonAnimations.MineFrames));
             DragonPoseAssert.Same(Frame(2), DragonAnimations.Mine(b, 0.125), 0, "t*12 = 1.5 rounds to 2");
             DragonPoseAssert.Same(Frame(4), DragonAnimations.Mine(b, 0.375), 0, "t*12 = 4.5 rounds to 4");
@@ -167,7 +167,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Dragon
         [Test]
         public void ThePickIsDownInTheImpactFrame()
         {
-            int impact = AnimationSpec.MineImpactFrame - 1;
+            int impact = DragonAnimations.MineImpactFrame - 1;
             Assert.That(DragonAnimations.MineAlpha[impact], Is.LessThan(0));
             Assert.That(DragonAnimations.MineAlpha[impact - 1], Is.GreaterThan(0));
         }
@@ -178,7 +178,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Dragon
             // the in-game check of 2026-10-22 saw the pick stop at hip height; frames 9 to 11 are the blow
             foreach (BodyShape body in BodyShape.All)
             {
-                for (int frame = AnimationSpec.MineImpactFrame - 1; frame <= AnimationSpec.MineImpactFrame + 1; frame++)
+                for (int frame = DragonAnimations.MineImpactFrame - 1; frame <= DragonAnimations.MineImpactFrame + 1; frame++)
                 {
                     var pick = (DragonPick)DragonAnimations.Mine(body, frame / 12.0).Prop;
                     Vec3 d = pick.HandleDirection, e = pick.HeadDirection;

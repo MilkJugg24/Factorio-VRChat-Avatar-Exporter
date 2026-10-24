@@ -175,9 +175,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Foundation
         [Test]
         public void MatchesPythonTables()
         {
-            // tools/dragon_render/anims.py ANIMATIONS plus the corpse
+            // tools/dragon_render/anims.py ANIMATIONS plus the corpse; the mine is the engineer's 26 frames
             Assert.That(AnimationSpec.Get("run").FrameCount, Is.EqualTo(12));
-            Assert.That(AnimationSpec.Get("mine").FrameCount, Is.EqualTo(12));
+            Assert.That(AnimationSpec.Get("mine").FrameCount, Is.EqualTo(26));
             Assert.That(AnimationSpec.Get("run-gun").DirectionCount, Is.EqualTo(18));
             Assert.That(AnimationSpec.Get("fly-gun").FrameCount, Is.EqualTo(8));
             Assert.That(AnimationSpec.Get("take-off").Loop, Is.False);

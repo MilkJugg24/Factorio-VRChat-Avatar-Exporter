@@ -272,11 +272,11 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Export
         }
 
         [TestCase(64, 1024, "run-gun shadow", 18)]
-        [TestCase(32, 768, "mine base", 8)]
+        [TestCase(32, 512, "run-gun shadow", 18)]
         public void SheetsThatDoNotFitNameTheAnimationAndLayer(int pixelsPerTile, int maxSheetSize, string layer, int directions)
         {
             // The stick figure's run-gun shadow is about 100 px wide and too wide and tall for 1024 px sheets
-            // at 64 pixels per tile; at 32 the mine (pick held high) is first to fit neither way into 768.
+            // at 64 pixels per tile, and for 512 px sheets at 32.
             var settings = new ExportSettings
             {
                 PixelsPerTile = pixelsPerTile,
