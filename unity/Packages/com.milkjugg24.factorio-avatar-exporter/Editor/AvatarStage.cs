@@ -40,6 +40,10 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         // turn before the loose parts follow their bones, the others (on a part of their own) after
         private readonly List<(Transform root, bool left, bool inBody)> wings = new List<(Transform, bool, bool)>();
 
+        // each wing's hinge: of its chains, the base nearest the spine (where the wing-arm joins the body); all chains
+        // of a side turn about it together, so a wing made of several chains (arm, membrane, fingers) moves as one
+        private Transform leftHinge, rightHinge;
+
         // the tail's bones (named "tail"), root first
         private readonly List<Transform> tail = new List<Transform>();
 
@@ -269,8 +273,23 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                     unsided.Add(root.name);
                 }
             }
+            foreach (bool left in new[] { true, false })
+            {
+                Transform hinge = wings.Where(w => w.left == left)
+                    .OrderBy(w => Math.Abs(Vector3.Dot(Pivot.InverseTransformPoint(w.root.position) - top, restRight)))
+                    .Select(w => w.root).FirstOrDefault();
+                if (left)
+                {
+                    leftHinge = hinge;
+                }
+                else
+                {
+                    rightHinge = hinge;
+                }
+            }
             if (wings.Count > 0)
             {
+                Notes.Add("wing hinges: " + string.Join(", ", new[] { leftHinge, rightHinge }.Where(h => h != null).Select(h => h.name)));
                 Notes.Add("wings that flap and stretch: " + string.Join(", ", wings.Select(w => $"{w.root.name} ({(w.left ? "left" : "right")})")));
             }
             else
@@ -350,7 +369,10 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             }
         }
 
-        /// <summary>Turns the wing roots (of the body, or the others) about the chest's forward axis, outwards and up.</summary>
+        /// <summary>
+        /// Turns the wing roots (of the body, or the others) about the chest's forward axis through their side's hinge,
+        /// outwards and up: every chain of a wing by the same angle about the same point.
+        /// </summary>
         private void PoseWings(PoseResult pose, bool inBody)
         {
             Quaternion chest = TurnFromRest(TopOfTrunk()) * Pivot.rotation;
@@ -364,7 +386,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 }
                 Vector3 outward = chest * (left ? -restRight : restRight);
                 float sign = Vector3.Dot(Quaternion.AngleAxis(1, forward) * outward, up) >= Vector3.Dot(outward, up) ? 1 : -1;
-                root.rotation = Quaternion.AngleAxis(sign * (float)(lift * 180 / Math.PI), forward) * root.rotation;
+                Transform hinge = left ? leftHinge : rightHinge;
+                root.RotateAround(hinge != null ? hinge.position : root.position, forward, sign * (float)(lift * 180 / Math.PI));
             }
         }
 
