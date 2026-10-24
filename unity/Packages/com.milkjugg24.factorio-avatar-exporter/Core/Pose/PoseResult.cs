@@ -100,12 +100,19 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         public bool GroundToLowestPoint { get; set; }
 
         /// <summary>
-        /// How far the left and right wing are raised and swung out from their rest, radians, for avatars with
-        /// wings (bones named "wing"; ignored otherwise): the renderer turns each wing's root bone about the
-        /// chest's forward axis, outwards and up.
+        /// How far the left and right wing are spread, for avatars with wings (bones named "wing"; ignored
+        /// otherwise): 0 leaves a wing as the avatar was saved (often folded down the back), 1 turns it all the way
+        /// to <see cref="WingElevation"/>. The renderer turns each whole wing about its hinge (where it joins the
+        /// body) and the chest's forward axis.
         /// </summary>
-        public double LeftWingLift { get; set; }
-        public double RightWingLift { get; set; }
+        public double LeftWingSpread { get; set; }
+        public double RightWingSpread { get; set; }
+
+        /// <summary>
+        /// Where a fully spread wing points, radians above straight out sideways (negative below), measured in the
+        /// chest's own frame, whatever the angle the wing was saved at.
+        /// </summary>
+        public double WingElevation { get; set; }
 
         /// <summary>
         /// The tail's sideways swing, for avatars with tail bones (named "tail"): each tail bone, from the root,

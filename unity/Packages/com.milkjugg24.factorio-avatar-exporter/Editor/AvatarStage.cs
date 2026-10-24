@@ -44,6 +44,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         // of a side turn about it together, so a wing made of several chains (arm, membrane, fingers) moves as one
         private Transform leftHinge, rightHinge;
 
+        // the angle each wing was saved at, radians above straight out sideways (folded down the back is about -1.4)
+        private double leftRestElevation, rightRestElevation;
+
         // the tail's bones (named "tail"), root first
         private readonly List<Transform> tail = new List<Transform>();
 
@@ -257,7 +260,22 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 float side = Vector3.Dot(centre / chain.Length - top, restRight);
                 if (Math.Abs(side) >= 0.01f)
                 {
-                    wings.Add((root, side < 0, InBody(root)));
+                    // up to the top of the wing on this side (its shoulder), below the bone in the middle that holds
+                    // both wings: joint bones that move no mesh are not in the bones the search started from
+                    Transform top1 = root;
+                    for (Transform p = root.parent; p != null && p != Avatar.transform && !copies.Contains(p) && !bones.ContainsValue(p); p = p.parent)
+                    {
+                        float at = Vector3.Dot(Pivot.InverseTransformPoint(p.position) - top, restRight);
+                        if (Math.Abs(at) < 0.01f || (at < 0) != (side < 0))
+                        {
+                            break;
+                        }
+                        top1 = p;
+                    }
+                    if (!wings.Any(w => w.root == top1))
+                    {
+                        wings.Add((top1, side < 0, InBody(top1)));
+                    }
                     continue;
                 }
                 List<Transform> children = root.Cast<Transform>().Where(c => skin.Contains(c) && !copies.Contains(c)).ToList();
@@ -273,23 +291,45 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                     unsided.Add(root.name);
                 }
             }
+            // a chain inside another wing chain would turn twice
+            wings.RemoveAll(w => wings.Any(o => o.root != w.root && w.root.IsChildOf(o.root)));
             foreach (bool left in new[] { true, false })
             {
                 Transform hinge = wings.Where(w => w.left == left)
                     .OrderBy(w => Math.Abs(Vector3.Dot(Pivot.InverseTransformPoint(w.root.position) - top, restRight)))
                     .Select(w => w.root).FirstOrDefault();
+                // the saved angle: from the hinge to the middle of the wing's bones, in the body's upright crosswise plane
+                double elevation = 0;
+                if (hinge != null)
+                {
+                    Vector3 centre = Vector3.zero;
+                    int count = 0;
+                    foreach ((Transform root, bool side, bool _) in wings.Where(w => w.left == left))
+                    {
+                        foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
+                        {
+                            centre += Pivot.InverseTransformPoint(t.position);
+                            count++;
+                        }
+                    }
+                    Vector3 along = centre / count - Pivot.InverseTransformPoint(hinge.position);
+                    elevation = Math.Atan2(Vector3.Dot(along, Vector3.up), Vector3.Dot(along, left ? -restRight : restRight));
+                }
                 if (left)
                 {
                     leftHinge = hinge;
+                    leftRestElevation = elevation;
                 }
                 else
                 {
                     rightHinge = hinge;
+                    rightRestElevation = elevation;
                 }
             }
             if (wings.Count > 0)
             {
-                Notes.Add("wing hinges: " + string.Join(", ", new[] { leftHinge, rightHinge }.Where(h => h != null).Select(h => h.name)));
+                Notes.Add("wing hinges: " + string.Join(", ", new[] { (leftHinge, leftRestElevation), (rightHinge, rightRestElevation) }
+                    .Where(h => h.Item1 != null).Select(h => $"{h.Item1.name} (saved at {h.Item2 * 180 / Math.PI:0} degrees from straight out)")));
                 Notes.Add("wings that flap and stretch: " + string.Join(", ", wings.Select(w => $"{w.root.name} ({(w.left ? "left" : "right")})")));
             }
             else
@@ -371,7 +411,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
 
         /// <summary>
         /// Turns the wing roots (of the body, or the others) about the chest's forward axis through their side's hinge,
-        /// outwards and up: every chain of a wing by the same angle about the same point.
+        /// from the angle the wing was saved at towards <see cref="PoseResult.WingElevation"/>, as far as its spread
+        /// says: every chain of a wing by the same angle about the same point.
         /// </summary>
         private void PoseWings(PoseResult pose, bool inBody)
         {
@@ -379,8 +420,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             Vector3 forward = chest * restForward, up = chest * Vector3.up;
             foreach ((Transform root, bool left, bool body) in wings)
             {
-                double lift = left ? pose.LeftWingLift : pose.RightWingLift;
-                if (body != inBody || lift == 0)
+                double spread = left ? pose.LeftWingSpread : pose.RightWingSpread;
+                double lift = spread * (pose.WingElevation - (left ? leftRestElevation : rightRestElevation));
+                if (body != inBody || spread == 0)
                 {
                     continue;
                 }
@@ -870,7 +912,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         /// Poses the avatar as PoseResult documents: from the rest pose, parent first, every listed bone gets
         /// the rotation <c>delta * rest</c> (in the pivot's space), then the hips move to the pose's hips
         /// position, the tail sways and the wings turn (<see cref="PoseResult.TailSwing"/>,
-        /// <see cref="PoseResult.LeftWingLift"/>), then the parts held on the body follow their bones and the held tool is placed, then the
+        /// <see cref="PoseResult.LeftWingSpread"/>), then the parts held on the body follow their bones and the held tool is placed, then the
         /// whole avatar drops onto the ground if the pose asks for it. Fingers don't close around the tools yet.
         /// </summary>
         public void ApplyPose(PoseResult pose)

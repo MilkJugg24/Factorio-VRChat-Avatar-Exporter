@@ -87,9 +87,11 @@ Every avatar is drawn as tall as the engineer.
 - **Flying** (mech armor): wings flap; hovering, they beat slowly. Take-off and landing are
   empty-handed.
 - **Wings** move when their bones have "wing" in their names (any case). If no bone does, the bones of
-  an object named "wing" (like "Wings") are used. Each wing turns as one piece about the point where it
-  joins the body, even when it's made of several bone chains (arm, membrane, fingers); the **Report**
-  names those hinges ("wing hinges").
+  an object named "wing" (like "Wings") are used. Each wing turns as one piece from its shoulder, even
+  when it's made of several bone chains (arm, membrane, fingers). In the air the wings open out and beat
+  around straight out sideways, however they were saved (folded down the back, or spread); standing,
+  one stretches out now and then. The **Report** names each wing's hinge and the angle it was saved at
+  ("wing hinges").
 - **Tails** sway when the avatar's own bones below the hips have "tail" in their names. A tail that's
   part of the body mesh works too, as long as it has its own bones. Anything attached to a tail bone,
   like a tuft, moves with it.

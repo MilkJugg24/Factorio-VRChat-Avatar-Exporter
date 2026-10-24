@@ -355,8 +355,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// </summary>
         private const double LeftStretchStart = 0.125, StretchLength = 0.09375;
 
-        /// <summary>How far a stretching wing swings out, radians.</summary>
-        private const double WingStretch = 1.0;
+        /// <summary>Where a stretching wing points, radians above straight out sideways.</summary>
+        private const double WingStretch = 0.35;
 
         /// <summary>
         /// Standing (16 s loop, 48 frames): breathing, the weight shifting slowly from foot to foot with the hips
@@ -390,8 +390,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             }
             StandingFeet(b, 0.01);
             PoseResult pose = b.Build();
-            pose.LeftWingLift = WingStretch * left;
-            pose.RightWingLift = WingStretch * right;
+            pose.LeftWingSpread = left;
+            pose.RightWingSpread = right;
+            pose.WingElevation = WingStretch;
             pose.TailSwing = 0.06;
             pose.TailPhase = 2 * ph;
             pose.TailLift = 0.05;
@@ -458,7 +459,6 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                 }
             }
             PoseResult pose = b.Build();
-            pose.LeftWingLift = pose.RightWingLift = 0.05 * (1 + bounce);
             pose.TailSwing = 0.10;
             pose.TailPhase = ph + Math.PI;
             pose.TailLift = 0.15;
@@ -547,7 +547,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             DanglingLegs(b, HoverLegAngle);
             PoseResult pose = b.Build();
             // slow, gentle wingbeats holding the body up; the tail hangs and drifts
-            pose.LeftWingLift = pose.RightWingLift = HoverWings(ph);
+            pose.LeftWingSpread = pose.RightWingSpread = 1;
+            pose.WingElevation = HoverWings(ph);
             pose.TailSwing = 0.05;
             pose.TailPhase = ph;
             pose.TailLift = -0.1;
@@ -555,7 +556,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         }
 
         /// <summary>The wings while hovering at phase <paramref name="ph"/>: slow, gentle beats.</summary>
-        private static double HoverWings(double ph) => 0.3 + 0.45 * Math.Sin(ph);
+        private static double HoverWings(double ph) => 0.1 + 0.35 * Math.Sin(ph);
 
         /// <summary>anims.fly: leaning into the flight, legs trailing in the flight direction.</summary>
         private PoseResult Fly(double t, bool gun, double move)
@@ -576,7 +577,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             DanglingLegs(b, lean + 0.1, move);
             PoseResult pose = b.Build();
             // full wingbeats, one per loop; the tail streams out behind, rippling
-            pose.LeftWingLift = pose.RightWingLift = 0.35 + 0.75 * Math.Sin(ph);
+            pose.LeftWingSpread = pose.RightWingSpread = 1;
+            pose.WingElevation = 0.15 + 0.6 * Math.Sin(ph);
             pose.TailSwing = 0.06;
             pose.TailPhase = 2 * ph;
             pose.TailLift = 0.25;
@@ -606,8 +608,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                 DanglingLegs(b, HoverLegAngle, 0, MathUtil.Smoothstep(0.05, 0.7, lift));
             }
             PoseResult pose = b.Build();
-            // the wings open and beat hard once to lift off, ending as the first hover frame's
-            pose.LeftWingLift = pose.RightWingLift = HoverWings(0) * MathUtil.Smoothstep(0, 1, t) + 0.6 * Math.Sin(Math.PI * t);
+            // the wings open out while crouching and beat hard once to lift off, ending as the first hover frame's
+            pose.LeftWingSpread = pose.RightWingSpread = MathUtil.Smoothstep(0, 0.6, t);
+            pose.WingElevation = HoverWings(0) + 0.5 * Math.Sin(Math.PI * t);
             pose.TailLift = -0.1 * lift;
             return pose;
         }
