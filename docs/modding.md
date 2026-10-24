@@ -3,7 +3,7 @@
 ## Prototypes
 
 - The vanilla `character` prototype stays the engineer.
-- Each pack, and each character of a bundle, adds an `avatar-pack-<id>` character and an
+- Each pack (and each character of a legacy bundle) adds an `avatar-pack-<id>` character and an
   `avatar-pack-corpse-<id>` corpse. They are copied from `character` and `character-corpse` in
   `data-final-fixes`, so they inherit changes other mods make to those.
 - If another mod temporarily swaps a player's character (a jetpack, for example), Avatar Characters

@@ -1,8 +1,8 @@
 # Factorio Avatar Exporter: the full guide
 
 This Unity tool turns your avatar into an **avatar pack**, a small Factorio mod, for the **Avatar
-Characters** mod. The quick steps, installing in Factorio and playing on a server are on the project
-page: https://github.com/MilkJugg24/Factorio-VRChat-Avatar-Exporter. This guide explains every option
+Characters** mod. The quick steps, installing in Factorio and playing on a server (every player installs every
+player's pack) are on the project page: https://github.com/MilkJugg24/Factorio-VRChat-Avatar-Exporter. This guide explains every option
 in the exporter window.
 
 Open it with **Tools ▸ Factorio Avatar Exporter ▸ Exporter**.
@@ -93,19 +93,6 @@ Every avatar is drawn as tall as the engineer.
   like a tuft, moves with it.
 - Not yet: fingers don't close around the gun or pickaxe, ears stay still, and the player colour doesn't
   tint the avatar.
-
-## Combine Packs for a Server
-
-**Tools ▸ Factorio Avatar Exporter ▸ Combine Packs for a Server** puts several packs into one
-**bundle**, so a server needs only one zip for everyone's avatars.
-
-1. **Add a Pack or Bundle...** or **Add a Folder of Packs...**
-2. Name the bundle (your server's name) and press **Combine...**
-
-To update it, add the **previous bundle** plus the new or updated packs and combine again; the version
-goes up by itself, and a newer version of a character replaces the older one. To drop a character,
-untick it, but first run `/avatar-revert-all <id>` for it in the game, or the characters using it are
-deleted with their items.
 
 ## If something goes wrong
 

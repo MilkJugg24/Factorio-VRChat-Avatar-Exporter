@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.5.1
+Date: 2026-10-24
+  Changes:
+    - The avatar window's text no longer mentions bundles: a server simply installs every player's
+      avatar pack. Bundles made earlier still load.
+---------------------------------------------------------------------------------------------------
 Version: 0.5.0
 Date: 2026-10-24
   Features:

@@ -269,10 +269,12 @@ does):
   engineer, 1.7 tiles. In the flight animations the body is raised 0.42 tiles
   off the ground.
 
-## Bundles
+## Bundles (legacy)
 
-An **avatar bundle** is one mod holding several packs, so a server hands its players one file. The
-exporter's Combine Packs for a Server writes them; they need `avatar-characters` 0.3.0 or newer (the exporter now writes 0.5.0).
+An **avatar bundle** is one mod holding several packs. Exporters 0.3.0 to 0.10.0 could write them with
+Combine Packs for a Server; from 0.11.0 on the exporter no longer does, since servers simply install
+every player's pack. Avatar Characters still loads bundles (0.3.0 or newer), so existing ones keep
+working.
 
 | Thing | Name |
 | --- | --- |

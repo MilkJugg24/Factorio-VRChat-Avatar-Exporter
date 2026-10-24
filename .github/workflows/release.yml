@@ -78,8 +78,8 @@ jobs:
 
           | File | Who needs it |
           | --- | --- |
-          | **$(basename "$zip")** | **Every player.** The Factorio mod: drop it, still zipped, into Factorio's \`mods\` folder together with the avatar packs, or your server's avatar bundle. |
-          | **$(basename "$package")** | **Only whoever makes an avatar pack**, or combines everyone's packs into a bundle for a server, in Unity. |
+          | **$(basename "$zip")** | **Every player.** The Factorio mod: drop it, still zipped, into Factorio's \`mods\` folder together with the avatar packs (on a server, every player's). |
+          | **$(basename "$package")** | **Only whoever makes an avatar pack**, in Unity. |
 
           The **Source code** links under them are added to every release by GitHub. Players don't need them.
 

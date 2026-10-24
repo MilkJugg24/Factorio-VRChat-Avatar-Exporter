@@ -7,7 +7,7 @@ The README is for players and avatar makers only. Keep developer and agent mater
 
 | Path | What it is |
 | --- | --- |
-| `avatar-characters/` | The Factorio 2.1 mod (Lua). Turns installed avatar packs and bundles into characters; the avatar window; `/avatar-revert-all`. |
+| `avatar-characters/` | The Factorio 2.1 mod (Lua). Turns installed avatar packs into characters; the avatar window; `/avatar-revert-all`. It still loads legacy bundles (several packs in one mod), which the exporter no longer makes; `Core/Pack/PackBundler.cs` and `PackHarness bundle` remain only to test that. |
 | `unity/Packages/com.milkjugg24.factorio-avatar-exporter/` | The Unity package. `Core/` decides everything and writes packs; it has no Unity references and is built and tested outside Unity. `Editor/` is the thin Unity layer (window, stage, camera, renderer). Its `README.md` ships inside the `.unitypackage` as the user guide to the window. |
 | `unity/dotnet/` | Builds and tests `Core/` with .NET, the stick-figure `PackHarness`, and `EditorTypeCheck` (compiles `Editor/` against Unity's assemblies). See its README for Core's layout and C# rules. |
 | `docs/avatar-pack-format.md` | The pack format (the contract between exporter and mod). |
@@ -45,7 +45,7 @@ release, marked latest, with two files: `FactorioAvatarExporter_<v>.unitypackage
 - A new mod version alone (`avatar-characters/info.json`, plus an entry in `changelog.txt`) swaps the
   mod zip in the current release.
 - When the pack format gains something the mod must understand, raise `PackFormat.MinMainModVersion`
-  (and `PackBundler.MinMainModVersion`) so packs depend on the new mod, and document it in
+  so packs depend on the new mod, and document it in
   `docs/avatar-pack-format.md`.
 
 ## Conventions
@@ -55,5 +55,6 @@ release, marked latest, with two files: `FactorioAvatarExporter_<v>.unitypackage
 - In-game screenshots and exported packs of real avatars are private: don't commit them. The repository
   is public. README screenshots are added by the owner.
 - Keep the README plain-English and task-based (play, make an avatar, run a server, remove safely,
-  troubleshooting). Technical detail goes in the files above.
+  troubleshooting). Multiplayer means every player installs every player's pack; don't bring bundles
+  back into user-facing docs. Technical detail goes in the files above.
 - Code comments and docs: plain sentences, matching the surrounding style.

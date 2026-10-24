@@ -72,6 +72,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
     }
 
     /// <summary>
+    /// Legacy: the exporter no longer offers bundles (servers install every player's pack instead); this stays
+    /// so the tests can still check that Avatar Characters loads bundles made by exporters 0.3.0 to 0.10.0.
+    ///
     /// Avatar bundles (docs/avatar-pack-format.md, "Bundles"): several avatar packs in one mod, so a server
     /// hands every player one file. Each character keeps its pack id, and so its character prototype names,
     /// whether it comes as a pack or in a bundle: a save keeps its characters when a server switches.

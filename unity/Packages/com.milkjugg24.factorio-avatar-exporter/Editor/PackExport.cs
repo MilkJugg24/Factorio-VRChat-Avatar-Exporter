@@ -13,7 +13,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
     /// <summary>The version of this package, written into every pack (kept equal to package.json by a test).</summary>
     internal static class ExporterInfo
     {
-        public const string Version = "0.10.0";
+        public const string Version = "0.11.0";
     }
 
     /// <summary>What the user chose for a pack.</summary>

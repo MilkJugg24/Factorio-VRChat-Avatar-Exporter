@@ -21,8 +21,7 @@ You need Factorio 2.1. Space Age is optional; with it, avatars fly with mech arm
 
 1. Put these zips into Factorio's `mods` folder, **still zipped**:
    - `avatar-characters_<version>.zip`;
-   - the avatar pack (`avatar-pack-<name>_<version>.zip`), or a server's bundle
-     (`avatar-bundle-<name>_<version>.zip`).
+   - one or more avatar packs (`avatar-pack-<name>_<version>.zip`), as many as you like.
 
    The `mods` folder is:
    - Windows: `%APPDATA%\Factorio\mods` (paste that into the address bar of File Explorer);
@@ -66,20 +65,17 @@ export again, and replace the old zip in the `mods` folder with the new one.
 ## Play together on a server
 
 Factorio can't download these mods by itself, so **every player needs exactly the same mods as the
-server**, same versions too. The easy way is a **bundle**: one zip with everyone's avatars.
+server**, same versions too. Each avatar is its own zip, and you can install as many as you like.
 
 1. Every player makes their own avatar pack and sends the zip to whoever runs the server.
-2. The server owner, in Unity, chooses **Tools ▸ Factorio Avatar Exporter ▸ Combine Packs for a
-   Server**, adds everyone's packs, names the bundle and presses **Combine...**.
-
-   *(Screenshot coming: the Combine Packs window with a few packs added. File: `docs/images/combine-packs.png`)*
-3. The server owner shares two zips: the bundle and `avatar-characters_<version>.zip`. Every player,
-   and the server, puts both into the `mods` folder.
+2. The server owner puts `avatar-characters_<version>.zip` and **all** the players' pack zips into the
+   server's `mods` folder, and shares the same set of zips with everyone (a shared folder or a zip of
+   zips works well).
+3. Every player puts that same set into their own `mods` folder.
 4. In the game, everyone picks their own look and sees everyone else's.
 
-**When someone joins later or updates their avatar:** in Combine Packs, add the previous bundle plus the
-new packs and combine again. Everyone swaps the old bundle zip for the new one. Nobody loses their
-character or items.
+**When someone joins later or updates their avatar:** the server owner adds the new zip (or replaces the
+old version of it) and shares it; everyone does the same. Nobody loses their character or items.
 
 **If you can't join** ("your active mods don't match the server's"): your zips aren't the server's
 versions. The game's **Synchronize** button can't fetch these mods; get the current zips from the
