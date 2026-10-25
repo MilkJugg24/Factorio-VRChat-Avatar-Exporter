@@ -46,7 +46,7 @@ end
 -- "Every armor flies (wings)" (prototypes/armor-flight.lua)
 ---------------------------------------------------------------------------
 
-if settings.startup["vrc-avatars-armor-flight"].value then
+if settings.startup["vrc-avatars-armor-flight"].value and feature_flags["space_travel"] then
   for name, armor in pairs(data.raw["armor"]) do
     check(armor.provides_flight == true, "armor flight: " .. name .. " does not fly")
   end
@@ -63,6 +63,7 @@ if settings.startup["vrc-avatars-armor-flight"].value then
       and set.take_off and set.landing, "armor flight: an engineer animation set without flight animations")
   end
 else
+  -- off, or without Space Age, where Factorio allows no flying armor
   check(data.raw["armor"]["light-armor"].provides_flight ~= true, "light armor flies with the setting off")
 end
 

@@ -4,8 +4,10 @@
 -- pair of wings on its icon.
 -- Runs in data-final-fixes before prototypes/characters.lua, which then gives
 -- every avatar its flight animations.
+-- Factorio only allows flying armor with Space Age (the space_travel feature
+-- flag); without it the setting does nothing.
 
-if not settings.startup["vrc-avatars-armor-flight"].value then
+if not settings.startup["vrc-avatars-armor-flight"].value or not feature_flags["space_travel"] then
   return
 end
 

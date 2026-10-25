@@ -5,6 +5,7 @@ Date: 2026-10-25
     - New startup setting "Every armor flies (wings)": every armor lets its wearer fly over
       buildings, cliffs and water, like Space Age's mech armor, so winged avatars can take to the
       air. Armor that flies this way has a small pair of wings on its icon. Off by default.
+      Needs Space Age: without it, Factorio allows no flying armor and the setting does nothing.
 ---------------------------------------------------------------------------------------------------
 Version: 0.8.1
 Date: 2026-10-25
