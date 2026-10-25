@@ -44,13 +44,14 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         // -1.4); each root is a whole wing from its shoulder, and its own hinge
         private readonly Dictionary<Transform, double> restElevation = new Dictionary<Transform, double>();
 
-        // the joints inside each wing (elbow, wrist, fingers: its bones below the root that hold others), parent
-        // first, with the bones each one points at; they straighten as the wing spreads, so a folded wing opens out
+        // the joints inside each wing (elbow, wrist, the fingers' own joints: its bones below the root that hold
+        // others), parent first, with the bones each one points at; they straighten as the wing spreads, so a folded
+        // wing opens out. A bone with siblings (a finger, a membrane chain, next to others from the same bone) keeps
+        // its angle to them, so the fingers stay fanned as they were made
         private readonly Dictionary<Transform, List<(Transform joint, Transform[] next)>> wingJoints =
             new Dictionary<Transform, List<(Transform, Transform[])>>();
 
-        // how far a spread wing's joints straighten: 1 would line every bone up with the one before it (and close
-        // the fingers); this opens a folded wing and keeps its fingers fanned
+        // how far a spread wing's joints straighten: 1 would line every bone up with the one before it
         private const float WingUnfold = 0.75f;
 
         // the tail's bones (named "tail"), root first
@@ -314,7 +315,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 foreach (Transform t in chain)
                 {
                     Transform[] next = t.Cast<Transform>().Where(c => skin.Contains(c)).ToArray();
-                    if (t != root && next.Length > 0 && skin.Contains(t))
+                    bool fanned = t.parent != null && t.parent.Cast<Transform>().Count(c => skin.Contains(c)) > 1;
+                    if (t != root && next.Length > 0 && skin.Contains(t) && !fanned)
                     {
                         joints.Add((t, next));
                     }
