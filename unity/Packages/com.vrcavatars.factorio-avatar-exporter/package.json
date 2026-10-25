@@ -1,6 +1,6 @@
 {
   "name": "com.vrcavatars.factorio-avatar-exporter",
-  "version": "0.26.2",
+  "version": "0.26.3",
   "displayName": "Factorio Avatar Exporter",
   "description": "Turns a humanoid avatar into an avatar pack for the VRC Avatars Factorio mod. Tools > Factorio Avatar Exporter previews the avatar posed in every animation and exports it as an avatar pack (a Factorio mod zip).",
   "unity": "2022.3"

@@ -654,6 +654,9 @@ namespace FactorioAvatarExporter.Core
 
         private static double FlyLift(double ph) => 0.1 + 0.6 * Math.Sin(ph);
 
+        /// <summary>How far the arms as wings are rolled from palms down, radians (30 degrees).</summary>
+        private const double WingArmRoll = Math.PI / 6;
+
         /// <summary>
         /// Both arms out to the sides as wings, <paramref name="sweep"/> radians forward of straight out and
         /// <paramref name="lift"/> above it: a wing stroke goes up and forward, then down and back.
@@ -662,6 +665,10 @@ namespace FactorioAvatarExporter.Core
         private void SpreadArms(HumanoidPoseBuilder b, Quat chest, double sweep, double lift, double stroke)
         {
             double reach = rig.ArmLength * 0.95;
+            // the arms and hands rolled so the palms face down and back instead of straight down (the thumb side, the
+            // wing's leading edge, up): the membranes between them and the body stay apart through the stroke
+            Vec3 thumb = chest.Forward * Math.Cos(WingArmRoll) + chest.Up * Math.Sin(WingArmRoll);
+            Vec3 elbow = -chest.Forward * Math.Cos(WingArmRoll) - chest.Up * Math.Sin(WingArmRoll) + chest.Up * 0.3;
             foreach (int side in Sides)
             {
                 Vec3 s = Shoulder(b, side);
@@ -669,7 +676,7 @@ namespace FactorioAvatarExporter.Core
                     + chest.Up * Math.Sin(lift);
                 Vec3 hand = s + outward * reach;
                 Vec3 handDirection = (outward - (chest.Forward * 0.4 + chest.Up * 0.3) * stroke).Normalized;
-                b.SetArm(side, hand, -chest.Forward + chest.Up * 0.3, handDirection, 0.1);
+                b.SetArm(side, hand, elbow, handDirection, 0.1, thumb);
             }
         }
 
