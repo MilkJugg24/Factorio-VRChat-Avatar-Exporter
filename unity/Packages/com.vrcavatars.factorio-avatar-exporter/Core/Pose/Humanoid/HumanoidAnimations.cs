@@ -624,7 +624,7 @@ namespace FactorioAvatarExporter.Core
             }
             else if (flap)
             {
-                SpreadArms(b, chest, HoverSweep(ph), 0.15 + 0.1 * Math.Cos(ph), Math.Cos(ph));
+                SpreadArms(b, chest, HoverSweep(ph), HoverLift(ph), Math.Cos(ph));
             }
             else
             {
@@ -642,18 +642,22 @@ namespace FactorioAvatarExporter.Core
         }
 
         /// <summary>
-        /// The arms as wings while hovering, radians forward of straight out sideways: they reach out and forward,
-        /// then sweep back, slowly.
+        /// The arms as wings while hovering, radians forward of straight out sideways (<see cref="HoverLift"/>:
+        /// above it): a stroke goes up and forward, then down and back, slowly.
         /// </summary>
         private static double HoverSweep(double ph) => 0.1 + 0.45 * Math.Sin(ph);
 
-        /// <summary>The arms as wings while flying: full strokes, forward and back.</summary>
+        private static double HoverLift(double ph) => 0.15 + 0.45 * Math.Sin(ph);
+
+        /// <summary>The arms as wings while flying: full strokes, up and forward, then down and back.</summary>
         private static double FlySweep(double ph) => 0.65 * Math.Sin(ph);
+
+        private static double FlyLift(double ph) => 0.1 + 0.6 * Math.Sin(ph);
 
         /// <summary>
         /// Both arms out to the sides as wings, <paramref name="sweep"/> radians forward of straight out and
-        /// <paramref name="lift"/> above it: a wing stroke reaches out and forward, then sweeps back.
-        /// <paramref name="stroke"/> (-1 to 1, sweeping forward positive) bends the wrists back against the motion.
+        /// <paramref name="lift"/> above it: a wing stroke goes up and forward, then down and back.
+        /// <paramref name="stroke"/> (-1 to 1, rising and sweeping forward positive) bends the wrists against the motion.
         /// </summary>
         private void SpreadArms(HumanoidPoseBuilder b, Quat chest, double sweep, double lift, double stroke)
         {
@@ -664,7 +668,7 @@ namespace FactorioAvatarExporter.Core
                 Vec3 outward = chest.Right * (side * Math.Cos(sweep) * Math.Cos(lift)) + chest.Forward * (Math.Sin(sweep) * Math.Cos(lift))
                     + chest.Up * Math.Sin(lift);
                 Vec3 hand = s + outward * reach;
-                Vec3 handDirection = (outward - chest.Forward * (0.4 * stroke)).Normalized;
+                Vec3 handDirection = (outward - (chest.Forward * 0.4 + chest.Up * 0.3) * stroke).Normalized;
                 b.SetArm(side, hand, -chest.Forward + chest.Up * 0.3, handDirection, 0.1);
             }
         }
@@ -689,7 +693,7 @@ namespace FactorioAvatarExporter.Core
             }
             else if (flap)
             {
-                SpreadArms(b, chest, FlySweep(ph), 0.1 + 0.1 * Math.Cos(ph), Math.Cos(ph));
+                SpreadArms(b, chest, FlySweep(ph), FlyLift(ph), Math.Cos(ph));
             }
             else
             {
@@ -724,9 +728,11 @@ namespace FactorioAvatarExporter.Core
             if (flap)
             {
                 double open = MathUtil.Smoothstep(0, 0.6, t);
-                // from hanging at the sides out to the first hover-flap frame, with one hard stroke forward and back
-                double armLift = -1.3 * (1 - open) + 0.25 * open;
-                double sweep = (HoverSweep(0) + 0.5 * Math.Sin(2 * Math.PI * MathUtil.Smoothstep(0.3, 1, t))) * open;
+                // from hanging at the sides out to the first hover-flap frame, with one hard stroke up and forward,
+                // then down and back
+                double beat = Math.Sin(2 * Math.PI * MathUtil.Smoothstep(0.3, 1, t));
+                double armLift = -1.3 * (1 - open) + (HoverLift(0) + 0.5 * beat) * open;
+                double sweep = (HoverSweep(0) + 0.5 * beat) * open;
                 SpreadArms(b, ChestFrame(lean), sweep, armLift, t < 0.3 ? 1 : Math.Cos(2 * Math.PI * MathUtil.Smoothstep(0.3, 1, t)));
             }
             else
