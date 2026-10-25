@@ -652,14 +652,21 @@ namespace FactorioAvatarExporter.Core
         /// The arms as wings while hovering, radians forward of straight out sideways (<see cref="HoverLift"/>:
         /// above it): a stroke goes up and forward, then down and back, slowly.
         /// </summary>
-        private static double HoverSweep(double ph) => 0.1 + 0.3 * Math.Sin(ph - SweepLag);
+        private static double HoverSweep(double ph) => 0.1 + 0.3 * Downstroke(Math.Sin(ph - SweepLag), 0.25);
 
-        private static double HoverLift(double ph) => 0.15 + 0.7 * Math.Sin(ph);
+        private static double HoverLift(double ph) => 0.15 + 0.7 * Downstroke(Math.Sin(ph), 1.4);
 
         /// <summary>The arms as wings while flying: full strokes, up and forward, then down and back.</summary>
-        private static double FlySweep(double ph) => 0.4 * Math.Sin(ph - SweepLag);
+        private static double FlySweep(double ph) => 0.4 * Downstroke(Math.Sin(ph - SweepLag), 0.25);
 
-        private static double FlyLift(double ph) => 0.15 + 0.85 * Math.Sin(ph);
+        private static double FlyLift(double ph) => 0.15 + 0.85 * Downstroke(Math.Sin(ph), 1.3);
+
+        /// <summary>
+        /// <paramref name="wave"/> (-1 to 1) with its negative half scaled by <paramref name="scale"/>: the down and back
+        /// half of a wing stroke goes further down and less far back than its up and forward half mirrored, so the
+        /// membranes don't meet behind the back.
+        /// </summary>
+        private static double Downstroke(double wave, double scale) => wave < 0 ? wave * scale : wave;
 
         /// <summary>How far the arms as wings are rolled from palms down, radians (30 degrees).</summary>
         private const double WingArmRoll = Math.PI / 6;
