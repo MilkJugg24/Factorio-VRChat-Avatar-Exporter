@@ -40,6 +40,12 @@ how fast you need to be, or turn sprinting off, in **Settings ▸ Mod settings �
 armor speed bonus"). Avatars exported before exporter 0.21.0 always jog; export them again to get the
 sprint.
 
+**Flying in any armor.** Normally only Space Age's mech armor flies. Turn on **Settings ▸ Mod settings ▸
+Startup ▸ Every armor flies (wings)** and every armor lets you fly over buildings, cliffs and water, so a
+winged avatar can take to the air. Armor that flies this way has a small pair of wings on its icon. Without
+any armor you still walk. On a server, the host turns it on and players get the same setting when they
+join.
+
 ## Make your own avatar
 
 You need Unity 2022.3 with your avatar in a project. Your VRChat avatar project works.

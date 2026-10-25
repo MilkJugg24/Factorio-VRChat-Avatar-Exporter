@@ -56,6 +56,10 @@ jobs:
         run: tests/run_headless.sh "$FACTORIO" --test-packs
       - name: Space Age
         run: tests/run_headless.sh "$FACTORIO" --space-age --test-packs
+      - name: Every armor flies (base game and Space Age)
+        run: |
+          tests/run_headless.sh "$FACTORIO" --armor-flight --test-packs
+          tests/run_headless.sh "$FACTORIO" --armor-flight --space-age --test-packs
       - name: Broken packs are rejected
         run: tests/run_headless.sh "$FACTORIO" --broken-packs
       - name: In-game screenshot scenes (dry run)

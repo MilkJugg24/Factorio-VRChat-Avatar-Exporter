@@ -43,6 +43,30 @@ for _, armor in pairs(data.raw["armor"] or {}) do
 end
 
 ---------------------------------------------------------------------------
+-- "Every armor flies (wings)" (prototypes/armor-flight.lua)
+---------------------------------------------------------------------------
+
+if settings.startup["vrc-avatars-armor-flight"].value then
+  for name, armor in pairs(data.raw["armor"]) do
+    check(armor.provides_flight == true, "armor flight: " .. name .. " does not fly")
+  end
+  local light = data.raw["armor"]["light-armor"]
+  local badge = light.icons and light.icons[#light.icons]
+  check(light.icon == nil and badge and badge.icon == "__vrc-avatars__/graphics/icons/armor-wings.png"
+    and light.icons[1].icon:find("light%-armor") ~= nil, "armor flight: no wings on the light armor icon")
+  local mech = data.raw["armor"]["mech-armor"]
+  if mech then
+    check(mech.icon ~= nil, "armor flight: wings added to mech armor, which flew already")
+  end
+  for _, set in ipairs(data.raw["character"]["character"].animations) do
+    check(set.flying and set.flying_with_gun and set.idle_in_air and set.idle_with_gun_in_air
+      and set.take_off and set.landing, "armor flight: an engineer animation set without flight animations")
+  end
+else
+  check(data.raw["armor"]["light-armor"].provides_flight ~= true, "light armor flies with the setting off")
+end
+
+---------------------------------------------------------------------------
 -- The engineer is left as it is
 ---------------------------------------------------------------------------
 

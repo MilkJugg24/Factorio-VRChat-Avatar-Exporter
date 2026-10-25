@@ -10,6 +10,10 @@
   with the sprint and a longer `distance_per_frame`. VRC Avatars swaps a player to it while their
   armor grid's `movement_bonus` is at least the map setting `vrc-avatars-sprint-bonus` (a percent,
   60 by default, 0 off), and back, when the armor or its equipment changes and nothing is open.
+- With the startup setting `vrc-avatars-armor-flight`, every armor prototype gets
+  `provides_flight = true` in `data-final-fixes` (before the characters are made), with a wings badge
+  added to the icons of those that didn't fly. Character animation sets without flight animations get
+  another set's (Space Age's mech armor engineer) or their ground ones.
 - If another mod temporarily swaps a player's character (a jetpack, for example), VRC Avatars
   leaves it alone and reapplies the player's look once they're back to a normal character.
 

@@ -15,5 +15,13 @@ data:extend({
     minimum_value = 0,
     maximum_value = 1000,
     order = "b"
+  },
+  {
+    -- prototypes/armor-flight.lua
+    type = "bool-setting",
+    name = "vrc-avatars-armor-flight",
+    setting_type = "startup",
+    default_value = false,
+    order = "c"
   }
 })
