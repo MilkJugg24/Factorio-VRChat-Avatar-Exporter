@@ -56,9 +56,9 @@ The ground shadow isn't affected by the lighting: it's always drawn the way the 
   <name> by <author>". Any name will do; Factorio needs one.
 - **Version:** always 1.0.0, so a new export of your avatar has the same file name and simply replaces
   the old one, for you and everyone on your server.
-- **Resolution:** **Normal Quality** (the default) suits almost everyone and keeps packs small, which
-  matters on a server where everyone loads everyone's avatar. **High Quality** is sharper when zoomed in
-  and uses four times the video memory. Both are the same size in the game.
+- **Resolution:** **High Quality** (the default) is sharp and right for almost everyone. **Low Quality**
+  uses a quarter of the video memory, for very large servers or old computers, but your character looks
+  blurry when zoomed in; the window warns you when it's chosen. Both are the same size in the game.
 
 Exporting is only possible once the name, pack id and author are filled in; an empty one is outlined
 in red. Every pack includes the

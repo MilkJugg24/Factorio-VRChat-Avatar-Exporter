@@ -320,8 +320,8 @@ namespace FactorioAvatarExporter.Editor
             }
         }
 
-        private static readonly string[] Resolutions = { "Normal Quality", "High Quality" };
-        private static readonly int[] ResolutionValues = { 32, 64 };
+        private static readonly string[] Resolutions = { "High Quality", "Low Quality" };
+        private static readonly int[] ResolutionValues = { 64, 32 };
 
         private static readonly Color MissingColor = new Color(0.9f, 0.2f, 0.2f);
 
@@ -366,6 +366,10 @@ namespace FactorioAvatarExporter.Editor
                     "of your avatar has the same file name and simply replaces the old one."), PackContent.DefaultVersion);
             }
             pixelsPerTile = EditorGUILayout.IntPopup("Resolution", pixelsPerTile, Resolutions, ResolutionValues);
+            if (pixelsPerTile < 64)
+            {
+                EditorGUILayout.HelpBox("Low Quality: your character will look blurry when zoomed in.", MessageType.Warning);
+            }
 
             PackOptions options = Options();
             string problem = options.Problem();

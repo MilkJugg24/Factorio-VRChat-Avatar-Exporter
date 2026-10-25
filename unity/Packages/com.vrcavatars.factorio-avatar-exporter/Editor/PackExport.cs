@@ -24,10 +24,10 @@ namespace FactorioAvatarExporter.Editor
         public string Author;
         public string Version = PackContent.DefaultVersion;
         /// <summary>
-        /// "Normal Quality", the window's default: 32 pixels per tile, a quarter of the video memory of "High Quality"
-        /// (64, <see cref="Conventions.DefaultPixelsPerTile"/>), the same size in the game.
+        /// "High Quality", the window's default: 64 pixels per tile. "Low Quality" (32) uses a quarter of the video
+        /// memory and is the same size in the game, but blurry when zoomed in.
         /// </summary>
-        public const int DefaultPixelsPerTile = 32;
+        public const int DefaultPixelsPerTile = Conventions.DefaultPixelsPerTile;
 
         public int PixelsPerTile = DefaultPixelsPerTile;
         public bool Flight = true;
