@@ -642,17 +642,24 @@ namespace FactorioAvatarExporter.Core
         }
 
         /// <summary>
+        /// How far the forward sweep of the arms as wings lags behind their rise, radians of the stroke: the arm is
+        /// near the top before it swings forward. Rising while coming forward, towards a camera that looks down,
+        /// barely moves on the screen, so a stroke that does both at once hardly shows from the front.
+        /// </summary>
+        private const double SweepLag = 0.9;
+
+        /// <summary>
         /// The arms as wings while hovering, radians forward of straight out sideways (<see cref="HoverLift"/>:
         /// above it): a stroke goes up and forward, then down and back, slowly.
         /// </summary>
-        private static double HoverSweep(double ph) => 0.1 + 0.45 * Math.Sin(ph);
+        private static double HoverSweep(double ph) => 0.1 + 0.3 * Math.Sin(ph - SweepLag);
 
-        private static double HoverLift(double ph) => 0.15 + 0.45 * Math.Sin(ph);
+        private static double HoverLift(double ph) => 0.15 + 0.7 * Math.Sin(ph);
 
         /// <summary>The arms as wings while flying: full strokes, up and forward, then down and back.</summary>
-        private static double FlySweep(double ph) => 0.65 * Math.Sin(ph);
+        private static double FlySweep(double ph) => 0.4 * Math.Sin(ph - SweepLag);
 
-        private static double FlyLift(double ph) => 0.1 + 0.6 * Math.Sin(ph);
+        private static double FlyLift(double ph) => 0.15 + 0.85 * Math.Sin(ph);
 
         /// <summary>How far the arms as wings are rolled from palms down, radians (30 degrees).</summary>
         private const double WingArmRoll = Math.PI / 6;
