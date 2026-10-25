@@ -5,6 +5,10 @@ Date: 2026-10-25
     - "Flap my arms as wings when flying" in the avatar window, for avatars whose wings are their
       arms (wyverns): in the air, their arms beat as wings instead of hanging. Each player chooses;
       it shows for avatars exported with Factorio Avatar Exporter 0.26.0 or newer.
+  Bugfixes:
+    - After dying, players came back as the engineer. With Space Age a respawned player comes down
+      in a cargo pod, which hands them a new engineer when it lands, after the look was applied.
+      The look is now applied again when the pod lands, and checked for a minute after respawning.
 ---------------------------------------------------------------------------------------------------
 Version: 0.10.0
 Date: 2026-10-25

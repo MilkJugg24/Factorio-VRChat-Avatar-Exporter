@@ -65,7 +65,7 @@ function swap.blocked_reason(player)
   if cursor and cursor.valid_for_read then
     return "cursor"
   end
-  if try_get(character, "cargo_pod") then
+  if try_get(character, "cargo_pod") or try_get(player, "cargo_pod") then
     return "cargo-pod"
   end
   if try_get(character, "is_flying") then

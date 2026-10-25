@@ -14,11 +14,17 @@ local RETRY_INTERVAL = 30
 --   avatar_gone_notified: the missing pack the player was told about
 -- storage.pending[player_index] = true while the player's character does not yet match
 -- storage.swap_tick[player_index] = tick of the player's last character swap
+-- storage.recheck[player_index] = tick until which a respawned player's
+--   character is checked again (see on_player_respawned)
 local function init_storage()
   storage.players = storage.players or {}
   storage.pending = storage.pending or {}
   storage.swap_tick = storage.swap_tick or {}
+  storage.recheck = storage.recheck or {}
 end
+
+-- How long after respawning a player's character is checked again, ticks.
+local RESPAWN_RECHECK = 60 * 60
 
 local function prefs_of(player_index)
   local prefs = storage.players[player_index]
@@ -204,14 +210,27 @@ script.on_event(defines.events.on_player_removed, function(event)
   storage.players[event.player_index] = nil
   storage.pending[event.player_index] = nil
   storage.swap_tick[event.player_index] = nil
+  storage.recheck[event.player_index] = nil
 end)
 
+-- The game can still replace a respawned player's character after this event:
+-- with Space Age they come down in a cargo pod, which hands them a new engineer
+-- when it lands. So the character is checked again for a while (on_nth_tick).
 script.on_event(defines.events.on_player_respawned, function(event)
   local player = game.get_player(event.player_index)
   if player then
+    storage.recheck[player.index] = game.tick + RESPAWN_RECHECK
     apply_appearance(player)
   end
 end)
+
+if defines.events.on_cargo_pod_finished_descending then
+  script.on_event(defines.events.on_cargo_pod_finished_descending, function(event)
+    if event.player_index then
+      storage.pending[event.player_index] = true
+    end
+  end)
+end
 
 script.on_event(defines.events.on_player_died, function(event)
   local player = game.get_player(event.player_index)
@@ -251,6 +270,18 @@ for _, name in ipairs({
 end
 
 script.on_nth_tick(RETRY_INTERVAL, function()
+  for index, until_tick in pairs(storage.recheck) do
+    local player = game.get_player(index)
+    if not player or game.tick > until_tick then
+      storage.recheck[index] = nil
+    elseif player.connected then
+      local character = player.character
+      local target = appearance.resolve(prefs_of(index), prototype_exists, is_fast(player))
+      if character and character.valid and character.name ~= target then
+        storage.pending[index] = true
+      end
+    end
+  end
   if not next(storage.pending) then
     return
   end
