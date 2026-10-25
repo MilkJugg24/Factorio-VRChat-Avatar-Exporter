@@ -137,6 +137,7 @@ local function merged_timing(pack_name, timing, animations)
   local frames = format.default_timing(animations["run"].frame_count, animations["mine"].frame_count)
   local result = {
     distance_per_frame = defaults.distance_per_frame,
+    sprint_distance_per_frame = nil,
     mine_impact_frame = frames.mine_impact_frame,
     left_foot_frames = frames.left_foot_frames,
     right_foot_frames = frames.right_foot_frames,
@@ -158,6 +159,14 @@ local function merged_timing(pack_name, timing, animations)
       fail(pack_name, "timing.distance_per_frame must be a number above 0 and at most 2")
     end
     result.distance_per_frame = d
+  end
+  result.sprint_distance_per_frame = result.distance_per_frame * format.SPRINT_CYCLE_SCALE
+  if timing.sprint_distance_per_frame ~= nil then
+    local d = timing.sprint_distance_per_frame
+    if not is_number(d) or d <= 0 or d > 2 then
+      fail(pack_name, "timing.sprint_distance_per_frame must be a number above 0 and at most 2")
+    end
+    result.sprint_distance_per_frame = d
   end
   if timing.mine_impact_frame ~= nil then
     result.mine_impact_frame = timing.mine_impact_frame
@@ -208,7 +217,7 @@ local function validate(mod_data)
   local id = d.id
   if not format.valid_id(id) then
     fail(pack_name, "has an invalid id \"" .. tostring(id) .. "\" (lowercase letters, digits and -, "
-      .. "at most " .. format.MAX_ID_LENGTH .. " characters, not starting with corpse-)")
+      .. "at most " .. format.MAX_ID_LENGTH .. " characters, not starting with corpse- or sprint-)")
   end
   local mod_name = format.MOD_PREFIX .. id
   if pack_name ~= mod_name then
@@ -268,6 +277,15 @@ local function validate(mod_data)
       check_animation(pack_name, prefix, name, animations[name], tintable)
     end
   end
+  for _, name in ipairs(format.OPTIONAL) do
+    if animations[name] ~= nil then
+      check_animation(pack_name, prefix, name, animations[name], tintable)
+    end
+  end
+  if animations["sprint"] ~= nil and animations["sprint"].frame_count ~= animations["run"].frame_count then
+    fail(pack_name, "has a \"sprint\" animation of " .. animations["sprint"].frame_count
+      .. " frames; it must have as many as the run (" .. animations["run"].frame_count .. ")")
+  end
   return {
     id = id,
     mod_name = mod_name,
@@ -277,6 +295,7 @@ local function validate(mod_data)
     scale = 32 / ppt,
     tintable = tintable,
     flight = flight,
+    sprint = animations["sprint"] ~= nil,
     timing = merged_timing(pack_name, d.timing, animations),
     animations = animations,
   }

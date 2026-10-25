@@ -35,6 +35,11 @@ You need Factorio 2.1. Space Age is optional; with it, avatars fly with mech arm
 Your choice is saved with the game. Without any packs installed, the mod changes nothing: everyone stays
 the engineer.
 
+With two or more exoskeletons in your armor, your avatar sprints instead of jogging. The host can change
+how fast you need to be, or turn sprinting off, in **Settings ▸ Mod settings ▸ Map** ("Sprint from this
+armor speed bonus"). Avatars exported before exporter 0.21.0 always jog; export them again to get the
+sprint.
+
 ## Make your own avatar
 
 You need Unity 2022.3 with your avatar in a project. Your VRChat avatar project works.

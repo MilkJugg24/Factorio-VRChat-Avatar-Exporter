@@ -231,6 +231,9 @@ local function test_any_packs(surface, force)
     local character, expected = equipped_character(surface, force, "character")
     for _, pack in ipairs(packs) do
       character = transfer_and_check(character, expected, pack.character)
+      if pack.sprint then
+        character = transfer_and_check(character, expected, pack.sprint)
+      end
     end
     transfer_and_check(character, expected, "character").destroy()
   end
@@ -257,6 +260,8 @@ local function test_generated_packs(surface, force, packs)
   check(small.title == string.rep("竜", 30), "pack small: UTF-8 title")
   check(test.tintable == true and small.tintable == false, "tintable flags")
   check(test.character == "vrc-avatar-test" and test.corpse == "vrc-avatar-corpse-test", "pack test: names")
+  check(test.sprint == "vrc-avatar-sprint-test" and small.sprint == nil, "sprinting characters")
+  check(call("is_avatar_character", "vrc-avatar-sprint-test") == "test", "a sprinting character is its pack's")
 
   -- a missing pack falls back to the engineer; no choice is the engineer
   local function exists(name) return prototypes.entity[name] ~= nil end
@@ -264,6 +269,19 @@ local function test_generated_packs(surface, force, packs)
   check(resolved == "character" and note == "avatar-missing", "resolve of a missing pack")
   resolved, note = appearance.resolve({}, exists)
   check(resolved == "character" and note == nil, "resolve of no choice")
+  check(appearance.resolve({ avatar = "test" }, exists, true) == "vrc-avatar-sprint-test", "resolve sprinting")
+  check(appearance.resolve({ avatar = "small" }, exists, true) == "vrc-avatar-small", "resolve sprinting without a sprint")
+  check(appearance.resolve({}, exists, true) == "character", "the engineer has no sprint")
+
+  -- the armor speed the sprint switch reads: two exoskeletons
+  local runner = surface.create_entity({ name = "character", position = { 30, 20 }, force = force })
+  local armor = runner.get_inventory(defines.inventory.character_armor)
+  armor.insert({ name = "power-armor-mk2" })
+  armor[1].grid.put({ name = "exoskeleton-equipment" })
+  armor[1].grid.put({ name = "exoskeleton-equipment" })
+  check(type(armor[1].grid.movement_bonus) == "number", "armor grid movement_bonus")
+  log("AVATAR-TEST: two exoskeletons give a movement bonus of " .. tostring(armor[1].grid.movement_bonus))
+  runner.destroy()
   check(call("is_avatar_character", "some-other-mod-character") == nil, "foreign character is not ours")
   check(call("is_avatar_character", "character") == nil, "the engineer is not a pack's")
 

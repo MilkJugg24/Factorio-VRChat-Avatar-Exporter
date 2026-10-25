@@ -182,7 +182,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Foundation
             Assert.That(AnimationSpec.Get("run-gun").DirectionCount, Is.EqualTo(18));
             Assert.That(AnimationSpec.Get("fly-gun").FrameCount, Is.EqualTo(8));
             Assert.That(AnimationSpec.Get("take-off").Loop, Is.False);
-            Assert.That(AnimationSpec.All.Count, Is.EqualTo(11));
+            // plus the sprint, which the dragon renderer has not
+            Assert.That(AnimationSpec.All.Count, Is.EqualTo(12));
+            Assert.That(AnimationSpec.Get("sprint").FrameCount, Is.EqualTo(AnimationSpec.Get("run").FrameCount));
         }
 
         [Test]
@@ -207,8 +209,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Foundation
         [Test]
         public void PackSets()
         {
-            Assert.That(System.Linq.Enumerable.Count(AnimationSpec.ForPack(false)), Is.EqualTo(6));
-            Assert.That(System.Linq.Enumerable.Count(AnimationSpec.ForPack(true)), Is.EqualTo(11));
+            Assert.That(System.Linq.Enumerable.Count(AnimationSpec.ForPack(false)), Is.EqualTo(7));
+            Assert.That(System.Linq.Enumerable.Count(AnimationSpec.ForPack(true)), Is.EqualTo(12));
         }
     }
 }

@@ -15,6 +15,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                 { AnimationSpec.Idle, (b, t) => DragonAnimations.Idle(b, t, false) },
                 { AnimationSpec.IdleGun, (b, t) => DragonAnimations.Idle(b, t, true) },
                 { AnimationSpec.Run, (b, t) => DragonAnimations.Run(b, t, false) },
+                // the dragon has no sprint of its own
+                { AnimationSpec.Sprint, (b, t) => DragonAnimations.Run(b, t, false) },
                 { AnimationSpec.Mine, DragonAnimations.Mine },
                 { AnimationSpec.Hover, (b, t) => DragonAnimations.Hover(b, t, false) },
                 { AnimationSpec.HoverGun, (b, t) => DragonAnimations.Hover(b, t, true) },

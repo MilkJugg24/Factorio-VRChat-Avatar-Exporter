@@ -1,4 +1,14 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.8.0
+Date: 2026-10-25
+  Features:
+    - Avatars sprint when their armor makes them fast: with two or more exoskeletons (a movement
+      bonus of 60 % or more), the avatar runs with long bounding strides instead of a quick jog.
+      The map setting "Sprint from this armor speed bonus" changes the threshold; 0 turns sprinting
+      off. The switch happens when the armor or its equipment changes, once nothing is open.
+    - Packs exported with Factorio Avatar Exporter 0.21.0 or newer have the sprint; older packs
+      keep working and always jog.
+---------------------------------------------------------------------------------------------------
 Version: 0.7.0
 Date: 2026-10-24
   Changes:

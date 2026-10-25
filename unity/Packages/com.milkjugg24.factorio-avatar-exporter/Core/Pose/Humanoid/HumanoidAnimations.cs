@@ -64,6 +64,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                 // the game moves distance_per_frame / animation_speed tiles per running frame: one cycle
                 // covers the vanilla engineer's ground, longer for longer legs, like the dragon's 0.238
                 DistancePerFrame = EngineerRunCycle * legScale * run.DefaultSpeed / run.FrameCount,
+                SprintDistancePerFrame = EngineerRunCycle * legScale * run.DefaultSpeed / run.FrameCount * AnimationSpec.SprintCycleScale,
             };
         }
 
@@ -81,6 +82,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                 case AnimationSpec.IdleGun: return Idle(t, true);
                 case AnimationSpec.Run: return Run(t, false, move);
                 case AnimationSpec.RunGun: return Run(t, true, move);
+                case AnimationSpec.Sprint: return Sprint(t);
                 case AnimationSpec.Mine: return Mine(t);
                 case AnimationSpec.Corpse: return Corpse();
                 case AnimationSpec.Hover: return Hover(t, false, Conventions.FlyHeight, 0);
@@ -462,6 +464,80 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             pose.TailSwing = 0.10;
             pose.TailPhase = ph + Math.PI;
             pose.TailLift = 0.15;
+            return pose;
+        }
+
+        /// <summary>
+        /// Half the fore-aft travel of a foot on the ground in a sprint, at dragon size, tiles. A sprint cycle covers
+        /// <see cref="AnimationSpec.SprintCycleScale"/> times a run cycle's ground, and each foot is on the ground for
+        /// <see cref="SprintStance"/> of it instead of half, so the foot moves back with the ground as in the run.
+        /// </summary>
+        private const double SprintStride = RunStride * AnimationSpec.SprintCycleScale * SprintStance / 0.5;
+
+        /// <summary>The part of a sprint cycle each foot is on the ground; between the steps both are in the air.</summary>
+        private const double SprintStance = 0.3;
+
+        /// <summary>
+        /// Sprinting, for running fast (exoskeletons): long bounding strides with both feet off the ground between
+        /// them, the body leaning well into it, the arms pumping hard with the elbows bent, the tail streaming out
+        /// behind. Feet land on frames 1 and 7, as in the run. The wings stay as they are.
+        /// </summary>
+        private PoseResult Sprint(double t)
+        {
+            double ph = MathUtil.Tau * t;
+            // lowest as a foot takes the weight, highest in the air between steps
+            double bounce = -Math.Cos(2 * ph - 0.6);
+            double lean = 0.5 + 0.03 * bounce;
+            double hipTwist = 0.14 * Math.Sin(ph);
+            double twist = 0.10 * Math.Sin(ph);
+            double hipRoll = 0.04 * Math.Sin(ph);
+            Vec3 shift = new Vec3(-0.015 * legScale * Math.Sin(ph), 0, 0);
+            var pelvis = new Vec3(shift.X, shift.Y, rig.HipsHeight - 0.09 * rig.LegLength + 0.02 * legScale * bounce);
+            HumanoidPoseBuilder b = Torso(pelvis, lean, twist, -hipTwist,
+                headPitch: -0.3 - 0.03 * bounce, headYaw: -twist * 0.5,
+                hipRoll: hipRoll, chestRoll: -0.55 * hipRoll, headRoll: -0.1 * hipRoll);
+            foreach ((int side, double phase) in new[] { (-1, t), (1, t + 0.5) })
+            {
+                double phi = MathUtil.PositiveModulo(phase, 1.0);
+                double y, z, heelLift, toe;
+                if (phi < SprintStance)
+                {
+                    // on the ground: lands ahead, the body passes over it, pushes off behind on the ball
+                    double u = phi / SprintStance;
+                    y = SprintStride * legScale * Math.Cos(Math.PI * u);
+                    z = 0;
+                    heelLift = 0.8 * MathUtil.Smoothstep(0.4, 1.0, u);
+                    toe = 0;
+                }
+                else
+                {
+                    // in the air: the heel kicks up high behind, then the knee drives forward and the foot reaches out
+                    double s = (phi - SprintStance) / (1 - SprintStance);
+                    y = -SprintStride * legScale * Math.Cos(Math.PI * s);
+                    z = 0.2 * legScale * Math.Sin(Math.PI * Math.Pow(s, 0.7));
+                    heelLift = 0.8 * (1 - MathUtil.Smoothstep(0.1, 0.9, s)) + 0.2 * Math.Sin(Math.PI * s);
+                    toe = heelLift;
+                }
+                Vec3 rest = rig.Ball(side);
+                var ball = new Vec3(rest.X - side * 0.01 * legScale, rest.Y + 0.02 * legScale + y, rest.Z + z);
+                Vec3 forward = rig.FootForward(side);
+                b.SetFoot(side, ball, forward, heelLift, forward + Vec3.UnitZ * 0.2, toe);
+            }
+            Quat chest = ChestFrame(lean, twist);
+            foreach ((int side, double phase) in new[] { (-1, t), (1, t + 0.5) })
+            {
+                double a = Math.Cos(MathUtil.Tau * (phase + 0.5));
+                double ahead = Math.Max(a, 0);
+                Vec3 s = Shoulder(b, side);
+                Vec3 hand = s + chest.Right * (side * (0.08 - 0.05 * ahead) * armScale)
+                            + chest.Forward * ((0.12 + 0.20 * a) * armScale)
+                            - chest.Up * ((0.22 - 0.12 * a) * armScale);
+                b.SetArm(side, hand, -chest.Forward * 0.6 + chest.Right * (side * 0.35) - chest.Up, null, 0.6);
+            }
+            PoseResult pose = b.Build();
+            pose.TailSwing = 0.08;
+            pose.TailPhase = ph + Math.PI;
+            pose.TailLift = 0.35;
             return pose;
         }
 

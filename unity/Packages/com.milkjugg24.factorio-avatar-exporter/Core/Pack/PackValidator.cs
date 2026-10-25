@@ -31,7 +31,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         {
             if (!PackNaming.IsValidId(content.Id))
             {
-                errors.Add(Invariant($"the id \"{content.Id}\" is not valid: use 1 to {PackFormat.MaxIdLength} lowercase letters, digits and -, starting with a letter or digit and not with corpse-"));
+                errors.Add(Invariant($"the id \"{content.Id}\" is not valid: use 1 to {PackFormat.MaxIdLength} lowercase letters, digits and -, starting with a letter or digit and not with corpse- or sprint-"));
             }
             if (string.IsNullOrWhiteSpace(content.Title))
             {
@@ -259,12 +259,21 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             {
                 errors.Add(Invariant($"timing: the distance per frame must be above 0 and at most {PackFormat.MaxDistancePerFrame} tiles, not {distance}"));
             }
+            double sprint = timing.SprintDistancePerFrame;
+            if (!(sprint > 0 && sprint <= PackFormat.MaxDistancePerFrame))
+            {
+                errors.Add(Invariant($"timing: the sprint's distance per frame must be above 0 and at most {PackFormat.MaxDistancePerFrame} tiles, not {sprint}"));
+            }
             if (frameCounts.TryGetValue(AnimationSpec.Mine, out int mineFrames) &&
                 (timing.MineImpactFrame < 1 || timing.MineImpactFrame > mineFrames))
             {
                 errors.Add(Invariant($"timing: the mine impact frame {timing.MineImpactFrame} is not a frame of the mine animation (1 to {mineFrames})"));
             }
             bool runKnown = frameCounts.TryGetValue(AnimationSpec.Run, out int runFrames);
+            if (runKnown && frameCounts.TryGetValue(AnimationSpec.Sprint, out int sprintFrames) && sprintFrames != runFrames)
+            {
+                errors.Add(Invariant($"timing: the sprint has {sprintFrames} frames and the run {runFrames}; they must be the same (the feet land on the same frames)"));
+            }
             CheckFootFrames("left", timing.LeftFootFrames, runKnown ? runFrames : (int?)null, errors);
             CheckFootFrames("right", timing.RightFootFrames, runKnown ? runFrames : (int?)null, errors);
         }

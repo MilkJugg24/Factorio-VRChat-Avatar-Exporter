@@ -5,5 +5,15 @@ data:extend({
     setting_type = "runtime-per-user",
     default_value = true,
     order = "a"
+  },
+  {
+    -- percent; 0 turns sprinting off (scripts/pack-format.lua DEFAULT_SPRINT_BONUS)
+    type = "int-setting",
+    name = "vrc-avatars-sprint-bonus",
+    setting_type = "runtime-global",
+    default_value = 60,
+    minimum_value = 0,
+    maximum_value = 1000,
+    order = "b"
   }
 })

@@ -24,9 +24,11 @@ for _, armor in pairs(data.raw["armor"] or {}) do
   end
 end
 
-local function new_character(pack, look)
+-- `sprint`: the copy that runs with the pack's sprint animation, used while the
+-- player's armor makes them fast (control.lua); everything else is the same.
+local function new_character(pack, look, sprint)
   local character = table.deepcopy(vanilla_character)
-  character.name = format.character_name(pack.id)
+  character.name = sprint and format.sprint_name(pack.id) or format.character_name(pack.id)
   character.localised_name = { "entity-name.character" }
   character.localised_description = vanilla_character.localised_description
   character.hidden_in_factoriopedia = true
@@ -34,7 +36,7 @@ local function new_character(pack, look)
   character.icon = pack.icon.filename
   character.icon_size = pack.icon.size
   character.icons = nil
-  character.animations = { builder.armor_animation(look, flight) }
+  character.animations = { builder.armor_animation(look, flight, sprint and "sprint" or "run") }
   character.mining_with_tool_particles_animation_positions = { pack.timing.mine_impact_frame }
   -- the walking sound plays on running_sound_animation_positions only: every footfall, both feet
   local steps = {}
@@ -45,7 +47,7 @@ local function new_character(pack, look)
   character.moving_sound_animation_positions = steps
   character.left_footprint_frames = pack.timing.left_foot_frames
   character.right_footprint_frames = pack.timing.right_foot_frames
-  character.distance_per_frame = pack.timing.distance_per_frame
+  character.distance_per_frame = sprint and pack.timing.sprint_distance_per_frame or pack.timing.distance_per_frame
   if vanilla_corpse then
     character.character_corpse = format.corpse_name(pack.id)
   end
@@ -70,7 +72,10 @@ end
 local new_prototypes = {}
 for _, pack in ipairs(avatar_packs.collect()) do
   local look = avatar_packs.look(pack)
-  new_prototypes[#new_prototypes + 1] = new_character(pack, look)
+  new_prototypes[#new_prototypes + 1] = new_character(pack, look, false)
+  if pack.sprint then
+    new_prototypes[#new_prototypes + 1] = new_character(pack, look, true)
+  end
   if vanilla_corpse then
     new_prototypes[#new_prototypes + 1] = new_corpse(pack, look)
   end

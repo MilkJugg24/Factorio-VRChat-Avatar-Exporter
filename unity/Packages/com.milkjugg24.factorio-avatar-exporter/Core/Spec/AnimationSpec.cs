@@ -65,6 +65,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         public const string IdleGun = "idle-gun";
         public const string Run = "run";
         public const string RunGun = "run-gun";
+        public const string Sprint = "sprint";
         public const string Mine = "mine";
         public const string Corpse = "corpse";
         public const string Hover = "hover";
@@ -76,7 +77,13 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// <summary>1-based frame of the mine animation in which the pick hits the ground.</summary>
         public const int MineImpactFrame = 19;
 
-        /// <summary>1-based frames of the run cycle in which each foot lands.</summary>
+        /// <summary>
+        /// How much further a sprint cycle goes than a run cycle: the sprint's distance_per_frame is the run's times
+        /// this, so at the same speed its strides come this many times less often.
+        /// </summary>
+        public const double SprintCycleScale = 2.2;
+
+        /// <summary>1-based frames of the run (and sprint) cycle in which each foot lands.</summary>
         public static readonly IReadOnlyList<int> LeftFootFrames = new[] { 1 };
         public static readonly IReadOnlyList<int> RightFootFrames = new[] { 7 };
 
@@ -88,6 +95,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             new AnimationInfo(IdleGun, 8, 48, true, 0.05, false, true, true),
             new AnimationInfo(Run, 8, 12, true, 0.6, false, false, true),
             new AnimationInfo(RunGun, 18, 12, true, 0.6, false, true, true),
+            // running fast (exoskeletons): long bounding strides, feet landing on frames 1 and 7 as in the run
+            new AnimationInfo(Sprint, 8, 12, true, 0.6, false, false, true),
             // the engineer's own: 26 frames at 0.9, the pick hitting on frame 19
             new AnimationInfo(Mine, 8, 26, true, 0.9, false, false, true),
             new AnimationInfo(Corpse, 1, 1, true, 1.0, false, false, true),

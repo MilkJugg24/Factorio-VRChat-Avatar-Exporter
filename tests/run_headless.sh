@@ -116,10 +116,10 @@ new_mods_dir "$MODS"
 PACK_NAMES=()
 if [ "$TEST_PACKS" = true ]; then
   python3 "$MAKE_PACK" --out "$MODS" --id test --title "Test Avatar" --flight --tint --max-sheet 1024 --frames idle=16 --half run > /dev/null
-  # a 30-character title of 90 bytes, and default timing scaled to 6 run / 8 mine frames
-  # installed as a zip only, like a downloaded pack
+  # a 30-character title of 90 bytes, and default timing scaled to 6 run / 8 mine frames, no sprint
+  # (as packs made before it); installed as a zip only, like a downloaded pack
   python3 "$MAKE_PACK" --out "$WORK/packs" --id small --title "$(printf '竜%.0s' $(seq 30))" --ppt 32 \
-    --default-timing --frames run=6,mine=8 --zip > /dev/null
+    --default-timing --frames run=6,mine=8 --no-sprint --zip > /dev/null
   cp "$WORK/packs/vrc-avatar-small_1.0.0.zip" "$MODS/"
   PACK_NAMES+=(vrc-avatar-test vrc-avatar-small_1.0.0.zip)
 fi

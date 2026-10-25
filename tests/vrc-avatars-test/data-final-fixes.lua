@@ -97,6 +97,19 @@ if mods["vrc-avatar-test"] then
     check(math.abs(anim.mining_with_tool.layers[1].animation_speed - 0.415 * 10 / 12) < 1e-9,
       "pack test: default mine speed, scaled to its 10 frames")
     check(c.distance_per_frame == 0.15, "pack test: distance_per_frame")
+    -- the sprinting character: the same but for its run
+    local s = data.raw["character"]["vrc-avatar-sprint-test"]
+    check(s ~= nil, "pack test: no sprinting character")
+    if s then
+      check(s.distance_per_frame == 0.33, "pack test: sprint distance_per_frame")
+      check(s.animations[1].running.layers[1].filename == "__vrc-avatar-test__/graphics/sprint-base.png",
+        "pack test: the sprinting character runs with the sprint")
+      check(diff(anim.running_with_gun, s.animations[1].running_with_gun, "") == nil
+        and diff(anim.idle, s.animations[1].idle, "") == nil, "pack test: sprinting character's other animations")
+      check(s.character_corpse == "vrc-avatar-corpse-test", "pack test: sprint corpse link")
+      check(diff(c.running_sound_animation_positions, s.running_sound_animation_positions, "") == nil,
+        "pack test: sprint footsteps")
+    end
     check(c.mining_with_tool_particles_animation_positions[1] == 6, "pack test: mine impact frame")
     check(diff({ 1, 5 }, c.running_sound_animation_positions, "") == nil
       and diff({ 1, 5 }, c.moving_sound_animation_positions, "") == nil,
@@ -127,6 +140,7 @@ if mods["vrc-avatar-small"] then
     check(layer_count(anim.idle) == 2, "pack small: idle should have base and shadow")
     check(anim.idle.layers[1].scale == 1, "pack small: scale should be 1 at 32 pixels per tile")
     check(c.distance_per_frame == 0.238, "pack small: default distance_per_frame")
+    check(data.raw["character"]["vrc-avatar-sprint-small"] == nil, "pack small: a sprinting character without a sprint")
     check(c.mining_with_tool_particles_animation_positions[1] == 6, "pack small: scaled mine impact frame")
     check(diff({ 1 }, c.left_footprint_frames, "") == nil, "pack small: default left foot frames")
     check(diff({ 4 }, c.right_footprint_frames, "") == nil, "pack small: scaled right foot frames")

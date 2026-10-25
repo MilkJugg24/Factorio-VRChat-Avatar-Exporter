@@ -1,7 +1,7 @@
 # Avatar pack format (version 1)
 
 An **avatar pack** is a small Factorio mod that adds one look to the VRC
-Avatars mod (internal name `vrc-avatars`, 0.7.0 or newer). The pack only ships
+Avatars mod (internal name `vrc-avatars`, 0.8.0 or newer). The pack only ships
 sprite sheets and a description of them. `vrc-avatars` reads that
 description, creates the character and corpse prototypes, and offers the look
 in its avatar window, where each player picks their own.
@@ -20,11 +20,12 @@ python3 tools/validate_sprites.py --pack path/to/vrc-avatar-<id>_<version>.zip
 
 | Thing | Name |
 | --- | --- |
-| Pack id | `<id>`: lowercase letters, digits and `-`; starts with a letter or digit; at most 35 characters; must not start with `corpse-` |
+| Pack id | `<id>`: lowercase letters, digits and `-`; starts with a letter or digit; at most 35 characters; must not start with `corpse-` or `sprint-` |
 | Mod name (`info.json`) | `vrc-avatar-<id>` |
 | Zip file | `vrc-avatar-<id>_<version>.zip`, containing one folder `vrc-avatar-<id>_<version>/` (or `vrc-avatar-<id>/`) |
 | mod-data prototype | `vrc-avatar-<id>`, with `data_type = "vrc-avatars.avatar-pack"` |
 | Character prototype (created by vrc-avatars) | `vrc-avatar-<id>` |
+| Sprinting character prototype (created by vrc-avatars, for a pack with a `sprint`) | `vrc-avatar-sprint-<id>` |
 | Corpse prototype (created by vrc-avatars) | `vrc-avatar-corpse-<id>` |
 | GUI sprite (created by vrc-avatars from `icon`) | `vrc-avatars-pack-<id>` |
 
@@ -53,7 +54,7 @@ vrc-avatar-<id>_<version>/
   "author": "<author>",
   "factorio_version": "2.1",
   "description": "...",
-  "dependencies": ["vrc-avatars >= 0.7.0"]
+  "dependencies": ["vrc-avatars >= 0.8.0"]
 }
 ```
 
@@ -96,6 +97,7 @@ return {
   flight = true,                 -- true: the flight animations below are all present
   timing = {                     -- optional, every field optional (defaults below)
     distance_per_frame = 0.238,
+    sprint_distance_per_frame = 0.524,
     mine_impact_frame = 9,
     left_foot_frames = { 1 },
     right_foot_frames = { 7 },
@@ -145,6 +147,7 @@ return {
 | `idle-gun` | 8 | 0.06 | standing with a gun |
 | `run` | 8 | 0.6 | running |
 | `run-gun` | 18 | 0.6 | running with a gun (see below) |
+| `sprint` | 8 | 0.6 | running fast: armor with exoskeletons (optional, vrc-avatars 0.8.0+) |
 | `mine` | 8 | 0.415 x frames / 12 | mining with a pickaxe (the default keeps a swing's length, whatever the frame count) |
 | `corpse` | 1 | 1 | the corpse (1 frame recommended) |
 | `hover` | 8 | 0.27 | flying in place (mech armor) |
@@ -154,6 +157,13 @@ return {
 | `take-off` | 8 | 0.3 | taking off, with the gun; landing plays it backwards |
 
 - `idle`, `idle-gun`, `run`, `run-gun`, `mine` and `corpse` are required.
+- `sprint` is optional and has as many frames as `run` (the foot frames are
+  the run's). A pack with it gets a second character, `vrc-avatar-sprint-<id>`,
+  that runs with it at `sprint_distance_per_frame`; vrc-avatars switches a
+  player to it while the movement bonus of their armor's equipment is at least
+  the map setting "Sprint from this armor speed bonus" (60 % by default: two
+  exoskeletons), and back. Everything else, the gun run included, is the
+  same as the pack's other character. Without a `sprint` the pack always runs.
 - The flight animations are all present (`flight = true`) or all absent. A pack
   without them still works with flying armor: the ground animations are used
   in the air.
@@ -184,6 +194,7 @@ return {
   | Field | Default |
   | --- | --- |
   | `distance_per_frame` | 0.238 |
+  | `sprint_distance_per_frame` | `distance_per_frame x 2.2` (a sprint cycle goes 2.2 times as far as a run cycle) |
   | `mine_impact_frame` | `max(1, floor(mine frames x 9 / 12 + 0.5))` |
   | `left_foot_frames` | `{ 1 }` |
   | `right_foot_frames` | `{ floor(run frames / 2) + 1 }` |
@@ -279,7 +290,7 @@ working.
 
 | Thing | Name |
 | --- | --- |
-| Mod name | `avatar-bundle-<name>`, with `"dependencies": ["vrc-avatars >= 0.7.0"]` |
+| Mod name | `avatar-bundle-<name>`, with `"dependencies": ["vrc-avatars >= 0.8.0"]` |
 | Zip file | `avatar-bundle-<name>_<version>.zip` |
 | A character's folder | `characters/<id>/`, holding `avatar-pack.lua` (the pack's description), its graphics, `README.txt` (its source) and `pack.json` (id, title, author and the pack's version) |
 | mod-data, character and corpse prototypes | the same as the pack's: `vrc-avatar-<id>`, `vrc-avatar-corpse-<id>` |
@@ -320,7 +331,8 @@ problem) when a pack:
 - has an invalid `id`, or a mod-data name or mod name that does not match it;
 - is missing a required animation or layer, or has only some of the flight
   animations, or `tintable = true` without a `mask` everywhere;
-- has the wrong `direction_count` for an animation;
+- has the wrong `direction_count` for an animation, or a `sprint` with a
+  different frame count from `run`;
 - has a non-integer or out-of-range `frame_count` (1 to 255), `width` or
   `height`, or a `shift` that is not two numbers;
 - has a `title` that is empty or longer than 80 characters;

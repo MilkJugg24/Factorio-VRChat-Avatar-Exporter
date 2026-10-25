@@ -26,7 +26,7 @@ GUN_ROWS = [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2), (1, 3), (2, 0), (2, 
             (3, 1), (3, 2), (3, 3), (3, 4), (4, 2), (4, 3), (4, 4)]
 DIRECTION_NAMES = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
 DEFAULT_SPEEDS = {
-    "idle": 0.06, "idle-gun": 0.06, "run": 0.6, "run-gun": 0.6, "mine": 0.415, "corpse": 1,
+    "idle": 0.06, "idle-gun": 0.06, "run": 0.6, "run-gun": 0.6, "sprint": 0.6, "mine": 0.415, "corpse": 1,
     "hover": 0.27, "hover-gun": 0.27, "fly": 0.3, "fly-gun": 0.3, "take-off": 0.3,
 }
 GROUND = (74, 86, 58, 255)

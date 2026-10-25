@@ -9,6 +9,8 @@ format.SUPPORTED_VERSION = 1
 -- mod, mod-data and character prototype names are MOD_PREFIX .. id
 format.MOD_PREFIX = "vrc-avatar-"
 format.CORPSE_PREFIX = "vrc-avatar-corpse-"
+-- the same character sprinting (format.sprint_name)
+format.SPRINT_PREFIX = "vrc-avatar-sprint-"
 format.SPRITE_PREFIX = "vrc-avatars-pack-"
 
 -- Avatar bundles hold several packs in one mod; a pack's `mod` field then names
@@ -27,6 +29,7 @@ format.DIRECTIONS = {
   ["idle-gun"] = 8,
   ["run"] = 8,
   ["run-gun"] = 18,
+  ["sprint"] = 8,
   ["mine"] = 8,
   ["corpse"] = 1,
   ["hover"] = 8,
@@ -38,6 +41,17 @@ format.DIRECTIONS = {
 
 format.REQUIRED = { "idle", "idle-gun", "run", "run-gun", "mine", "corpse" }
 format.FLIGHT = { "hover", "hover-gun", "fly", "fly-gun", "take-off" }
+-- Optional on their own. A pack with a sprint gets a second character that
+-- runs with it; the sprint has as many frames as the run.
+format.OPTIONAL = { "sprint" }
+
+-- A sprint's distance_per_frame, when the pack leaves it out, is the run's
+-- times this: its strides go this much further.
+format.SPRINT_CYCLE_SCALE = 2.2
+
+-- The movement bonus of a player's armor equipment (0.3 per exoskeleton) from
+-- which they sprint, unless the map setting says otherwise.
+format.DEFAULT_SPRINT_BONUS = 0.6
 
 -- Layers an animation may have besides base/shadow/mask.
 format.OPTIONAL_LAYERS = { ["run-gun"] = { "shadow-flipped" } }
@@ -57,6 +71,7 @@ format.DEFAULT_TIMING = {
     ["idle-gun"] = 0.06,
     ["run"] = 0.6,
     ["run-gun"] = 0.6,
+    ["sprint"] = 0.6,
     ["mine"] = 0.415, -- for a 12-frame swing; scaled to the pack's frame count
     ["hover"] = 0.27,
     ["hover-gun"] = 0.27,
@@ -87,6 +102,10 @@ function format.character_name(id)
   return format.MOD_PREFIX .. id
 end
 
+function format.sprint_name(id)
+  return format.SPRINT_PREFIX .. id
+end
+
 function format.corpse_name(id)
   return format.CORPSE_PREFIX .. id
 end
@@ -95,10 +114,14 @@ function format.sprite_name(id)
   return format.SPRITE_PREFIX .. id
 end
 
--- The pack id of an avatar character/corpse prototype name, or nil.
+-- The pack id of an avatar character prototype name (running or sprinting),
+-- or nil; nil for a corpse.
 function format.id_of_character(name)
   if type(name) ~= "string" or name:sub(1, #format.CORPSE_PREFIX) == format.CORPSE_PREFIX then
     return nil
+  end
+  if name:sub(1, #format.SPRINT_PREFIX) == format.SPRINT_PREFIX then
+    return name:sub(#format.SPRINT_PREFIX + 1)
   end
   if name:sub(1, #format.MOD_PREFIX) == format.MOD_PREFIX then
     return name:sub(#format.MOD_PREFIX + 1)
@@ -115,7 +138,7 @@ end
 
 function format.valid_id(id)
   return type(id) == "string" and #id >= 1 and #id <= format.MAX_ID_LENGTH
-    and id:match(format.ID_PATTERN) ~= nil and id:sub(1, 7) ~= "corpse-"
+    and id:match(format.ID_PATTERN) ~= nil and id:sub(1, 7) ~= "corpse-" and id:sub(1, 7) ~= "sprint-"
 end
 
 return format

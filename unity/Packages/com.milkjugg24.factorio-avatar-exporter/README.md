@@ -82,6 +82,8 @@ Every avatar is drawn as tall as the engineer.
   left then right.
 - **Running:** a light jog, leaning into it. Shooting while running looks the same, a little calmer, so
   the gun stays on target.
+- **Sprinting:** with two or more exoskeletons in the armor, long bounding strides with both feet off the
+  ground between them, leaning well forward, the arms pumping.
 - **Mining:** the engineer's own swing: the pickaxe raised over the right shoulder, brought down fast,
   the other arm out for balance.
 - **Flying** (mech armor): wings flap; hovering, they beat slowly. Take-off and landing are

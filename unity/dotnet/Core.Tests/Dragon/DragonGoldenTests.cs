@@ -20,11 +20,14 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Dragon
             "head", "hr", "hf", "hu", "breath", "jaw_open", "arms", "legs", "prop",
         };
 
+        /// <summary>The animations the Python renderer drew: all but the sprint (the dragon sprints with its run).</summary>
+        private static IEnumerable<AnimationInfo> PythonAnimations => AnimationSpec.All.Where(a => a.Name != AnimationSpec.Sprint);
+
         public static IEnumerable<TestCaseData> BodyAnimations()
         {
             foreach (BodyShape body in BodyShape.All)
             {
-                foreach (AnimationInfo animation in AnimationSpec.All)
+                foreach (AnimationInfo animation in PythonAnimations)
                 {
                     yield return new TestCaseData(body.Name, animation.Name).SetName($"Golden({body.Name}, {animation.Name})");
                 }
@@ -51,7 +54,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Dragon
             var expected = new List<string>();
             foreach (BodyShape body in BodyShape.All)
             {
-                foreach (AnimationInfo info in AnimationSpec.All)
+                foreach (AnimationInfo info in PythonAnimations)
                 {
                     IEnumerable<double> moves = Enumerable.Range(0, info.DirectionCount)
                         .Select(row => AnimationSpec.Direction(info.Name, row).Move).Distinct();

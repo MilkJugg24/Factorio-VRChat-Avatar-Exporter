@@ -51,8 +51,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// <summary>Its title in Factorio's mod list.</summary>
         public const string MainModTitle = "VRC Avatars";
 
-        /// <summary>The first vrc-avatars version that loads packs of this format (0.4.0 added frames_per_file, 0.5.0 an animation's own pixels_per_tile; 0.7.0 is the first under the name vrc-avatars).</summary>
-        public const string MinMainModVersion = "0.7.0";
+        /// <summary>The first vrc-avatars version that loads packs of this format (0.4.0 added frames_per_file, 0.5.0 an animation's own pixels_per_tile; 0.7.0 is the first under the name vrc-avatars, 0.8.0 adds the sprint).</summary>
+        public const string MinMainModVersion = "0.8.0";
 
         /// <summary>The info.json dependency every pack declares.</summary>
         public const string Dependency = MainMod + " >= " + MinMainModVersion;

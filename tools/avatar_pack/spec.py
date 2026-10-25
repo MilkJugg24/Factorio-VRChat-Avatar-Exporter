@@ -25,14 +25,18 @@ MIN_BUNDLE_MAIN_VERSION = (0, 3, 0)
 INFO_TITLE_MAX_BYTES = 100
 
 DIRECTIONS = {
-    "idle": 8, "idle-gun": 8, "run": 8, "run-gun": 18, "mine": 8, "corpse": 1,
+    "idle": 8, "idle-gun": 8, "run": 8, "run-gun": 18, "sprint": 8, "mine": 8, "corpse": 1,
     "hover": 8, "hover-gun": 8, "fly": 8, "fly-gun": 18, "take-off": 8,
 }
 REQUIRED = ("idle", "idle-gun", "run", "run-gun", "mine", "corpse")
 FLIGHT = ("hover", "hover-gun", "fly", "fly-gun", "take-off")
+# Optional on their own; a sprint has as many frames as the run (the feet land on the same frames)
+OPTIONAL = ("sprint",)
 OPTIONAL_LAYERS = {"run-gun": ("shadow-flipped",)}
 
 DEFAULT_DISTANCE_PER_FRAME = 0.238
+# a sprint's distance_per_frame, when the pack leaves it out, is the run's times this
+SPRINT_CYCLE_SCALE = 2.2
 
 
 def default_timing(run_frames, mine_frames):
@@ -96,4 +100,4 @@ def info_title(title, author=None):
 
 def valid_id(pack_id):
     return (isinstance(pack_id, str) and 1 <= len(pack_id) <= MAX_ID_LENGTH
-            and ID_PATTERN.fullmatch(pack_id) is not None and not pack_id.startswith("corpse-"))
+            and ID_PATTERN.fullmatch(pack_id) is not None and not pack_id.startswith(("corpse-", "sprint-")))

@@ -140,6 +140,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
     public sealed class PackTiming
     {
         public double DistancePerFrame { get; set; } = 0.238;
+
+        /// <summary>The sprint's distance per frame (<see cref="AnimationSpec.SprintCycleScale"/> times the run's).</summary>
+        public double SprintDistancePerFrame { get; set; } = 0.238 * AnimationSpec.SprintCycleScale;
         public int MineImpactFrame { get; set; } = AnimationSpec.MineImpactFrame;
         public IReadOnlyList<int> LeftFootFrames { get; set; } = AnimationSpec.LeftFootFrames;
         public IReadOnlyList<int> RightFootFrames { get; set; } = AnimationSpec.RightFootFrames;

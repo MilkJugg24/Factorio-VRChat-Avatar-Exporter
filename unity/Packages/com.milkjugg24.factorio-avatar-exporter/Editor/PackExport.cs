@@ -13,7 +13,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
     /// <summary>The version of this package, written into every pack (kept equal to package.json by a test).</summary>
     internal static class ExporterInfo
     {
-        public const string Version = "0.20.3";
+        public const string Version = "0.21.0";
     }
 
     /// <summary>What the user chose for a pack.</summary>
@@ -57,7 +57,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             }
             if (!PackNaming.IsValidId(Id))
             {
-                return "The pack id must be lowercase letters, digits and -, at most 35 characters, not starting with corpse-.";
+                return "The pack id must be lowercase letters, digits and -, at most 35 characters, not starting with corpse- or sprint-.";
             }
             if (!PackNaming.IsValidVersion(Version))
             {

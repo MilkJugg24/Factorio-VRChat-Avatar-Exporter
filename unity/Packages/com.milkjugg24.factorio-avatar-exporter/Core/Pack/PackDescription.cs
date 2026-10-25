@@ -57,6 +57,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             var table = new Dictionary<string, object>(StringComparer.Ordinal)
             {
                 ["distance_per_frame"] = timing.DistancePerFrame,
+                ["sprint_distance_per_frame"] = timing.SprintDistancePerFrame,
                 ["mine_impact_frame"] = timing.MineImpactFrame,
                 ["left_foot_frames"] = IntList(timing.LeftFootFrames),
                 ["right_foot_frames"] = IntList(timing.RightFootFrames),

@@ -89,7 +89,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         public const string ModPrefix = "avatar-bundle-";
 
         /// <summary>The first vrc-avatars version that loads bundles (and frames_per_file, 0.4.0, and an animation's own pixels_per_tile, 0.5.0; 0.7.0 is the first under the name vrc-avatars).</summary>
-        public const string MinMainModVersion = "0.7.0";
+        public const string MinMainModVersion = "0.8.0";
 
         public const string Dependency = PackFormat.MainMod + " >= " + MinMainModVersion;
 

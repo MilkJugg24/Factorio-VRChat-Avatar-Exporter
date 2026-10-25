@@ -302,6 +302,9 @@ class Checker:
         d = timing.get("distance_per_frame")
         if d is not None and (not is_number(d) or d <= 0 or d > 2):
             self.error("timing.distance_per_frame must be a number above 0 and at most 2")
+        d = timing.get("sprint_distance_per_frame")
+        if d is not None and (not is_number(d) or d <= 0 or d > 2):
+            self.error("timing.sprint_distance_per_frame must be a number above 0 and at most 2")
         speeds = timing.get("animation_speed")
         if speeds is not None:
             if not isinstance(speeds, dict):
@@ -316,6 +319,10 @@ class Checker:
         if not all(isinstance(a, dict) and is_int(a.get("frame_count"), 1, spec.MAX_FRAMES) for a in (mine, run)):
             return  # already reported by check_animation
         mine_frames, run_frames = mine["frame_count"], run["frame_count"]
+        sprint = animations.get("sprint")
+        if isinstance(sprint, dict) and is_int(sprint.get("frame_count"), 1, spec.MAX_FRAMES) \
+                and sprint["frame_count"] != run_frames:
+            self.error(f'the "sprint" animation has {sprint["frame_count"]} frames; it must have as many as the run ({run_frames})')
         defaults = spec.default_timing(run_frames, mine_frames)
         impact = timing.get("mine_impact_frame", defaults["mine_impact_frame"])
         if not is_int(impact, 1, mine_frames):
@@ -356,7 +363,7 @@ class Checker:
         pack_id = d.get("id")
         if not spec.valid_id(pack_id):
             self.error(f'has an invalid id "{pack_id}" (lowercase letters, digits and -, at most '
-                       f"{spec.MAX_ID_LENGTH} characters, not starting with corpse-)")
+                       f"{spec.MAX_ID_LENGTH} characters, not starting with corpse- or sprint-)")
             return
         if spec.MOD_PREFIX + pack_id != mod_name:
             self.error(f'id "{pack_id}" does not match ' + (f'its folder characters/{mod_name[len(spec.MOD_PREFIX):]}'
@@ -400,6 +407,9 @@ class Checker:
             elif not flight and name in animations:
                 self.error(f'has a "{name}" animation but flight is not true')
             elif flight:
+                self.check_animation(name, animations[name], tintable)
+        for name in spec.OPTIONAL:
+            if name in animations:
                 self.check_animation(name, animations[name], tintable)
         for name in animations:
             if name not in spec.DIRECTIONS:

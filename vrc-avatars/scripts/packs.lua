@@ -21,6 +21,8 @@ local function build()
           tintable = d.tintable == true,
           sprite = format.sprite_name(id),
           character = format.character_name(id),
+          -- nil for a pack without a sprint
+          sprint = prototypes.entity[format.sprint_name(id)] and format.sprint_name(id) or nil,
           corpse = format.corpse_name(id),
         }
       end
@@ -47,7 +49,7 @@ local function data()
   return cache
 end
 
--- Sorted by title: { id, title, author, tintable, sprite, character, corpse }
+-- Sorted by title: { id, title, author, tintable, sprite, character, sprint, corpse }
 function packs.list()
   return data().list
 end

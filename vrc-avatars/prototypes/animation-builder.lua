@@ -116,11 +116,13 @@ end
 -- A single CharacterArmorAnimation used for every armor.
 -- `flight` adds the in-air animations used by flight-capable armor (Space Age
 -- mech armor); a look without flight animations shows its ground ones instead.
-function builder.armor_animation(look, flight)
+-- `running` names the animation it runs with: "run", or "sprint" for the
+-- sprinting character.
+function builder.armor_animation(look, flight, running)
   local anim = {
     idle = rotated(look, "idle"),
     idle_with_gun = rotated(look, "idle-gun"),
-    running = rotated(look, "run"),
+    running = rotated(look, running or "run"),
     running_with_gun = rotated(look, "run-gun"),
     flipped_shadow_running_with_gun = flipped_shadow(look, "run-gun"),
     mining_with_tool = rotated(look, "mine"),

@@ -30,6 +30,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
 
             yield return Case("BadId", p => p.Id = "Mika", "the id \"Mika\" is not valid");
             yield return Case("CorpseId", p => p.Id = "corpse-mika", "the id \"corpse-mika\" is not valid");
+            yield return Case("SprintId", p => p.Id = "sprint-mika", "the id \"sprint-mika\" is not valid");
             yield return Case("MissingId", p => p.Id = null, "the id \"\" is not valid");
             yield return Case("EmptyTitle", p => p.Title = " ", "the title is empty");
             yield return Case("LongTitle", p => p.Title = new string('x', 81), "the title has 81 characters; at most 80");
@@ -82,6 +83,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
                 "animation \"run-gun\" layer \"shadow-flipped\" file 1 is 12x4200 px");
             yield return Case("MissingTiming", p => p.Timing = null, "the timing is missing");
             yield return Case("BadDistance", p => p.Timing.DistancePerFrame = 0, "timing: the distance per frame must be above 0 and at most 2 tiles, not 0");
+            yield return Case("BadSprintDistance", p => p.Timing.SprintDistancePerFrame = 3, "timing: the sprint's distance per frame must be above 0 and at most 2 tiles, not 3");
             yield return Case("NaNDistance", p => p.Timing.DistancePerFrame = double.NaN, "timing: the distance per frame must be above 0");
             yield return Case("BadImpactFrame", p => p.Timing.MineImpactFrame = 27,
                 "timing: the mine impact frame 27 is not a frame of the mine animation (1 to 26)");
@@ -114,6 +116,11 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
             }
             pack.Timing.MineImpactFrame = 15;
             pack.Timing.RightFootFrames = new[] { 4 };
+            Assert.That(PackValidator.Validate(pack), Is.EqualTo(new[] { "timing: the sprint has 12 frames and the run 6; they must be the same (the feet land on the same frames)" }));
+            foreach (string layer in new[] { PackLayers.Base, PackLayers.Shadow })
+            {
+                pack.SetLayer("sprint", layer, Sheets(8, 6));
+            }
             Assert.That(PackValidator.Validate(pack), Is.Empty);
             pack.Timing.RightFootFrames = new[] { 7 };
             Assert.That(PackValidator.Validate(pack), Is.EqualTo(new[] { "timing: right foot frame 7 is not a frame of the run animation (1 to 6)" }));

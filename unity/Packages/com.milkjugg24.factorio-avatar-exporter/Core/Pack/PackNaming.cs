@@ -11,6 +11,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
     {
         private const string FallbackId = "avatar";
         private const string CorpsePrefix = "corpse-";
+        private const string SprintPrefix = "sprint-";
         private const string InfoTitlePrefix = "VRC Avatar: ";
         private const string Ellipsis = "…";
 
@@ -18,7 +19,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// A valid pack id made from a title: ASCII letters (lowercased) and digits are kept, every run
         /// of other characters becomes one '-', and the result is trimmed of '-' and cut to
         /// <see cref="PackFormat.MaxIdLength"/>. A title without ASCII letters or digits gives "avatar";
-        /// an id that would start with "corpse-" (reserved for corpse prototypes) gets "avatar-" in front.
+        /// an id that would start with "corpse-" or "sprint-" (reserved for the corpse and sprinting prototypes) gets
+        /// "avatar-" in front.
         /// </summary>
         public static string DeriveId(string title)
         {
@@ -50,7 +52,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             {
                 return FallbackId;
             }
-            if (result.StartsWith(CorpsePrefix, StringComparison.Ordinal))
+            if (result.StartsWith(CorpsePrefix, StringComparison.Ordinal) || result.StartsWith(SprintPrefix, StringComparison.Ordinal))
             {
                 result = Shorten(FallbackId + "-" + result);
             }
@@ -62,7 +64,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
 
         /// <summary>
         /// True for 1 to <see cref="PackFormat.MaxIdLength"/> characters of lowercase ASCII letters,
-        /// digits and '-', starting with a letter or digit and not with "corpse-" (spec.valid_id).
+        /// digits and '-', starting with a letter or digit and not with "corpse-" or "sprint-" (spec.valid_id).
         /// </summary>
         public static bool IsValidId(string id)
         {
@@ -79,7 +81,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                     return false;
                 }
             }
-            return !id.StartsWith(CorpsePrefix, StringComparison.Ordinal);
+            return !id.StartsWith(CorpsePrefix, StringComparison.Ordinal) && !id.StartsWith(SprintPrefix, StringComparison.Ordinal);
         }
 
         /// <summary>

@@ -35,6 +35,25 @@ local function prototype_exists(name)
   return prototypes.entity[name] ~= nil
 end
 
+-- The movement bonus the player's armor equipment gives (0.3 per exoskeleton).
+local function armor_movement_bonus(player)
+  local character = player.character
+  if not (character and character.valid) then
+    return 0
+  end
+  local armor = character.get_inventory(defines.inventory.character_armor)
+  local stack = armor and armor[1]
+  local grid = stack and stack.valid_for_read and stack.grid
+  return grid and grid.movement_bonus or 0
+end
+
+-- True when the player's armor makes them fast enough to sprint (the map
+-- setting, a percent; 0 never).
+local function is_fast(player)
+  local percent = settings.global["vrc-avatars-sprint-bonus"].value
+  return percent > 0 and armor_movement_bonus(player) >= percent / 100 - 1e-9
+end
+
 -- The engineer and installed packs' characters; anything else comes from
 -- another mod.
 local function is_own_character(name)
@@ -46,11 +65,19 @@ end
 local function apply_appearance(player)
   local prefs = prefs_of(player.index)
   -- `note` is "avatar-missing" when the chosen avatar pack is gone; the engineer is used instead
-  local target, note = appearance.resolve(prefs, prototype_exists)
+  local target, note = appearance.resolve(prefs, prototype_exists, is_fast(player))
   local character = player.character
   local status
+  -- only the sprint changes (armor or exoskeletons put on or taken off): wait
+  -- quietly while the player has something open (their inventory, the armor's
+  -- equipment grid), since changing the character would close it
+  local sprint_only = character and character.valid and character.name ~= target
+    and packs.id_of_character(character.name) ~= nil
+    and packs.id_of_character(character.name) == packs.id_of_character(target)
   if character and character.valid and character.name == target then
     status = nil
+  elseif sprint_only and player.opened ~= nil and player.opened ~= gui.get_frame(player) then
+    status = "sprint-wait"
   elseif character and character.valid and not is_own_character(character.name) then
     -- A character prototype from another mod (e.g. a temporary jetpack
     -- character). Leave it alone and try again once it is ours again.
@@ -80,6 +107,10 @@ local function apply_appearance(player)
     storage.pending[player.index] = nil
   end
   status = status or note
+  if sprint_only then
+    -- the player chose nothing: no message in the window
+    status = nil
+  end
   prefs.status = status
   gui.refresh(player, prefs)
   return status
@@ -187,6 +218,23 @@ script.on_event(defines.events.on_player_died, function(event)
   end
 end)
 
+-- Armor or its equipment changed: the player may now be fast enough to sprint,
+-- or no longer. Applied with the other pending changes, not inside the event:
+-- the swap itself moves the armor between characters.
+local function speed_may_have_changed(event)
+  if event.player_index then
+    storage.pending[event.player_index] = true
+  end
+end
+
+for _, name in ipairs({
+  "on_player_armor_inventory_changed",
+  "on_player_placed_equipment",
+  "on_player_removed_equipment",
+}) do
+  script.on_event(defines.events[name], speed_may_have_changed)
+end
+
 for _, name in ipairs({
   "on_player_controller_changed",
   "on_player_driving_changed_state",
@@ -212,7 +260,11 @@ script.on_nth_tick(RETRY_INTERVAL, function()
 end)
 
 script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
-  if event.setting == "vrc-avatars-show-top-button" and event.player_index then
+  if event.setting == "vrc-avatars-sprint-bonus" then
+    for _, player in pairs(game.players) do
+      storage.pending[player.index] = true
+    end
+  elseif event.setting == "vrc-avatars-show-top-button" and event.player_index then
     local player = game.get_player(event.player_index)
     if player then
       gui.update_top_button(player)
@@ -393,7 +445,8 @@ remote.add_interface("vrc-avatars", {
       gui.open(player, prefs_of(player_index))
     end
   end,
-  -- Installed avatar packs: array of { id, title, author, tintable, character, corpse }
+  -- Installed avatar packs: array of { id, title, author, tintable, character,
+  -- sprint (the sprinting character, nil without one), corpse }
   get_avatar_packs = function()
     local list = {}
     for _, pack in ipairs(packs.list()) do
@@ -403,12 +456,13 @@ remote.add_interface("vrc-avatars", {
         author = pack.author,
         tintable = pack.tintable,
         character = pack.character,
+        sprint = pack.sprint,
         corpse = pack.corpse,
       }
     end
     return list
   end,
-  -- The avatar pack id of a character prototype name, or nil.
+  -- The avatar pack id of a character prototype name (running or sprinting), or nil.
   is_avatar_character = function(name)
     return packs.id_of_character(name)
   end,
