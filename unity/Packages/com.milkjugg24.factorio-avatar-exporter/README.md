@@ -22,7 +22,7 @@ Open it with **Tools ▸ Factorio Avatar Exporter**.
 
 ## Preview
 
-The preview is on the right. Pick an animation, a direction and a frame, or press **Play** to see it at the speed the game plays it. The yellow cross is where your character
+The preview is on the right. Pick an animation, a direction and a frame, or press **Play** to see it at the speed the game plays it. Scroll on the preview to zoom in, drag to move around, double-click to see the whole frame again. The yellow cross is where your character
 stands in the game. **Pose check** under the preview should be 0 or close to it; if it's over 1 px, the
 posing doesn't fit your rig exactly (please report it with `report.txt`).
 

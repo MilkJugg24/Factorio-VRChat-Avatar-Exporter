@@ -25,7 +25,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         [SerializeField] private int animationIndex;
         [SerializeField] private int row = 4;
         [SerializeField] private int frame;
-        [SerializeField] private int zoom = 2;
+        // the preview's own zoom, 1 showing the whole frame, and the frame's pixel at the middle of the box
+        private float viewZoom = 1;
+        private Vector2 viewCentre;
         [SerializeField] private StageLighting lighting = new StageLighting();
 
         // the pack
@@ -50,15 +52,15 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         /// <summary>Width of the column of settings on the left; the preview takes the rest.</summary>
         private const float ControlsWidth = 470;
 
-        /// <summary>The size the window opens at: the settings and a preview of any animation at zoom 2.</summary>
-        private static readonly Vector2 OpenSize = new Vector2(ControlsWidth + 560, 880);
+        /// <summary>The size the window opens at: the settings, and the preview beside them as tall as they are.</summary>
+        private static readonly Vector2 OpenSize = new Vector2(ControlsWidth + 440, 600);
         [MenuItem("Tools/Factorio Avatar Exporter")]
         public static void Open()
         {
             ExporterWindow window = GetWindow<ExporterWindow>("Factorio Avatar Exporter");
             window.minSize = new Vector2(ControlsWidth + 240, 480);
-            // big enough for everything, without scrolling; a floating window only (a docked one keeps its place)
-            if (!window.docked && (window.position.width < OpenSize.x || window.position.height < OpenSize.y))
+            // just big enough for everything, without scrolling; a floating window only (a docked one keeps its place)
+            if (!window.docked)
             {
                 Rect main = EditorGUIUtility.GetMainWindowPosition();
                 window.position = new Rect(main.x + Mathf.Max(0, (main.width - OpenSize.x) / 2),
@@ -176,7 +178,6 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             row = EditorGUILayout.IntSlider("Direction", Mathf.Clamp(row, 0, info.DirectionCount - 1), 0, info.DirectionCount - 1);
             EditorGUILayout.LabelField(" ", PosePreview.DirectionName(info.Name, row));
             frame = EditorGUILayout.IntSlider("Frame", Mathf.Clamp(frame, 0, info.FrameCount - 1), 0, info.FrameCount - 1);
-            zoom = EditorGUILayout.IntSlider("Zoom", zoom, 1, 4);
             bool changed = EditorGUI.EndChangeCheck();
             using (new EditorGUILayout.HorizontalScope())
             {
@@ -212,14 +213,55 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             {
                 return;
             }
-            Rect rect = GUILayoutUtility.GetRect(texture.width * zoom, texture.height * zoom,
-                GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
-            EditorGUI.DrawRect(rect, Ground);
+            Rect box = GUILayoutUtility.GetRect(200, 200, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+            var size = new Vector2(texture.width, texture.height);
+            // zoom 1 fits the whole frame in the box
+            float fit = Mathf.Min(box.width / size.x, box.height / size.y);
+            if (viewZoom <= 1)
+            {
+                viewZoom = 1;
+                viewCentre = size / 2;
+            }
+            Event e = Event.current;
+            if (box.Contains(e.mousePosition))
+            {
+                if (e.type == EventType.ScrollWheel)
+                {
+                    // zoom about the pixel under the mouse
+                    Vector2 fromMiddle = e.mousePosition - box.center;
+                    Vector2 under = viewCentre + fromMiddle / (fit * viewZoom);
+                    viewZoom = Mathf.Clamp(viewZoom * (e.delta.y < 0 ? 1.25f : 0.8f), 1, 16);
+                    viewCentre = under - fromMiddle / (fit * viewZoom);
+                    e.Use();
+                    Repaint();
+                }
+                else if (e.type == EventType.MouseDown && e.clickCount == 2)
+                {
+                    viewZoom = 1;
+                    e.Use();
+                    Repaint();
+                }
+                else if (e.type == EventType.MouseDrag)
+                {
+                    viewCentre -= e.delta / (fit * viewZoom);
+                    e.Use();
+                    Repaint();
+                }
+            }
+            viewCentre = Vector2.Max(Vector2.zero, Vector2.Min(size, viewCentre));
+            float scale = fit * viewZoom;
+            EditorGUI.DrawRect(box, Ground);
+            GUI.BeginClip(box);
+            var rect = new Rect(box.width / 2 - viewCentre.x * scale, box.height / 2 - viewCentre.y * scale,
+                size.x * scale, size.y * scale);
             GUI.DrawTexture(rect, texture, ScaleMode.StretchToFill, true);
             // the entity position: where the character stands in the game
-            var anchor = new Vector2(rect.x + shown.Canvas.AnchorX * zoom, rect.y + shown.Canvas.AnchorY * zoom);
+            var anchor = new Vector2(rect.x + shown.Canvas.AnchorX * scale, rect.y + shown.Canvas.AnchorY * scale);
             EditorGUI.DrawRect(new Rect(anchor.x - 4, anchor.y, 9, 1), Anchor);
             EditorGUI.DrawRect(new Rect(anchor.x, anchor.y - 4, 1, 9), Anchor);
+            GUI.EndClip();
+            EditorGUILayout.LabelField("Scroll on the preview to zoom in, drag to move it, double-click to see it all.",
+                EditorStyles.wordWrappedMiniLabel);
             string check = double.IsNaN(shown.JointErrorPixels)
                 ? "pose check: not done for this pose"
                 : $"pose check: bones within {shown.JointErrorPixels:0.0} px of where Core put them" +
