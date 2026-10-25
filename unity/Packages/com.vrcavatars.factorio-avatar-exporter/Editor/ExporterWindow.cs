@@ -366,7 +366,6 @@ namespace FactorioAvatarExporter.Editor
                     "of your avatar has the same file name and simply replaces the old one."), PackContent.DefaultVersion);
             }
             pixelsPerTile = EditorGUILayout.IntPopup("Resolution", pixelsPerTile, Resolutions, ResolutionValues);
-            EditorGUILayout.LabelField(" ", preview.SizeNote, EditorStyles.miniLabel);
 
             PackOptions options = Options();
             string problem = options.Problem();
