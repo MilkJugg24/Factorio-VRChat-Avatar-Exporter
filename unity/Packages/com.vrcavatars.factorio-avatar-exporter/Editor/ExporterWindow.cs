@@ -147,6 +147,7 @@ namespace FactorioAvatarExporter.Editor
                 if (GUILayout.Button(preview == null ? "Load avatar" : "Reload avatar"))
                 {
                     Load();
+                    EndGUIAfterLongAction();
                 }
             }
             if (error != null)
@@ -186,6 +187,7 @@ namespace FactorioAvatarExporter.Editor
                     "image, in the preview folder, to look at it closely. Not needed for the game.")))
                 {
                     SaveSheet(info.Name);
+                    EndGUIAfterLongAction();
                 }
                 bool play = GUILayout.Toggle(playing, playing ? "Pause" : "Play", "Button");
                 if (play && !playing)
@@ -377,6 +379,7 @@ namespace FactorioAvatarExporter.Editor
                     {
                         ExportAll(options);
                     }
+                    EndGUIAfterLongAction();
                 }
             }
             if (problem != null)
@@ -387,6 +390,17 @@ namespace FactorioAvatarExporter.Editor
             {
                 EditorGUILayout.HelpBox(exported, MessageType.Info);
             }
+        }
+
+        /// <summary>
+        /// Ends this OnGUI pass after something that showed a file dialog, a message box or a progress bar: Unity
+        /// handled other GUI events while those were open, which left this pass's layout groups unbalanced
+        /// ("EndLayoutGroup: BeginLayoutGroup must be called first"). The window draws itself again next time.
+        /// </summary>
+        private void EndGUIAfterLongAction()
+        {
+            Repaint();
+            GUIUtility.ExitGUI();
         }
 
         /// <summary>
