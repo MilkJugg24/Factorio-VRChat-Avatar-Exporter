@@ -54,8 +54,9 @@ The ground shadow isn't affected by the lighting: it's always drawn the way the 
   again, so the new pack replaces the old one.
 - **Author:** your name as you'd like it shown. The pack appears in Factorio's mod list as "VRC Avatar:
   <name> by <author>". Any name will do; Factorio needs one.
-- **Version:** always 1.0.0, so a new export of your avatar has the same file name and simply replaces
-  the old one, for you and everyone on your server.
+- **Version:** the version of the exporter, so the pack's file name shows which exporter made it (for
+  example `vrc-avatar-draco_0.27.0.zip`). Factorio uses the newest version of a pack it finds; delete the
+  old zip when you export again, and give everyone on your server the new one.
 - **Resolution:** **High Quality** (the default) is sharp and right for almost everyone. **Low Quality**
   uses a quarter of the video memory, for very large servers or old computers, but your character looks
   blurry when zoomed in; the window warns you when it's chosen. Both are the same size in the game.
@@ -68,7 +69,7 @@ flight animations (hovering and flying with Space Age's mech armor).
   instead (the same size in the game, a little softer); if one is too large even then, it stops and
   says which, before the long render: turn off the part that reaches far out (a long tail, wide
   wings, a big accessory) and export again. Then it renders everything (a few minutes; you can cancel)
-  and saves the pack. Keep the file name `vrc-avatar-<id>_1.0.0.zip`, as Factorio expects.
+  and saves the pack. Keep the file name `vrc-avatar-<id>_<exporter version>.zip`, as Factorio expects.
 - **Export Selected Animation** (next to Play): saves only the animation in the preview as one image.
   Not needed for the game.
 

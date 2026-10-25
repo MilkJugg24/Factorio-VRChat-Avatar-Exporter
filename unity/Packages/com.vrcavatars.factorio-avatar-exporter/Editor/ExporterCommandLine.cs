@@ -89,7 +89,7 @@ namespace FactorioAvatarExporter.Editor
                     Title = source.name,
                     Id = PackNaming.DeriveId(source.name),
                     Author = "run_unity_export.ps1",
-                    ZipPath = Path.Combine(folder, PackNaming.ZipFileName(PackNaming.DeriveId(source.name), PackContent.DefaultVersion)),
+                    ZipPath = Path.Combine(folder, PackNaming.ZipFileName(PackNaming.DeriveId(source.name), ExporterInfo.Version)),
                     PreviewFolder = folder,
                 };
                 return preview.ExportPack(options, null, CancellationToken.None).Report;

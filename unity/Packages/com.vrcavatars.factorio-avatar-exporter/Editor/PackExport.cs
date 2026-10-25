@@ -13,7 +13,7 @@ namespace FactorioAvatarExporter.Editor
     /// <summary>The version of this package, written into every pack (kept equal to package.json by a test).</summary>
     internal static class ExporterInfo
     {
-        public const string Version = "0.26.4";
+        public const string Version = "0.27.0";
     }
 
     /// <summary>What the user chose for a pack.</summary>
@@ -22,7 +22,8 @@ namespace FactorioAvatarExporter.Editor
         public string Title;
         public string Id;
         public string Author;
-        public string Version = PackContent.DefaultVersion;
+        /// <summary>The pack's version: the exporter's own (<see cref="ExporterInfo.Version"/>).</summary>
+        public string Version = ExporterInfo.Version;
         /// <summary>
         /// "High Quality", the window's default: 64 pixels per tile. "Low Quality" (32) uses a quarter of the video
         /// memory and is the same size in the game, but blurry when zoomed in.

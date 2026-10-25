@@ -359,11 +359,12 @@ namespace FactorioAvatarExporter.Editor
             packId = id == derived ? "" : id;
             author = RequiredField(new GUIContent("Author", "Your name as you'd like it shown with the pack (\"VRC Avatar: " +
                 "<name> by <author>\"). Factorio needs one for every mod; any name will do."), author);
-            // always 1.0.0: a new export of the same avatar simply replaces the old zip, for everyone
+            // the exporter's own version, so a pack's file name says which exporter made it
             using (new EditorGUI.DisabledScope(true))
             {
-                EditorGUILayout.TextField(new GUIContent("Version", "Always " + PackContent.DefaultVersion + ", so a new export " +
-                    "of your avatar has the same file name and simply replaces the old one."), PackContent.DefaultVersion);
+                EditorGUILayout.TextField(new GUIContent("Version", "The version of this exporter (" + ExporterInfo.Version +
+                    "), so the pack's file name shows which exporter made it. An export with a newer exporter gets a " +
+                    "newer version, which Factorio uses instead of the older one."), ExporterInfo.Version);
             }
             pixelsPerTile = EditorGUILayout.IntPopup("Resolution", pixelsPerTile, Resolutions, ResolutionValues);
             if (pixelsPerTile < 64)
@@ -441,7 +442,7 @@ namespace FactorioAvatarExporter.Editor
             Title = packTitle,
             Id = string.IsNullOrEmpty(packId) ? PackNaming.DeriveId(packTitle ?? "") : packId,
             Author = author,
-            Version = PackContent.DefaultVersion,
+            Version = ExporterInfo.Version,
             PixelsPerTile = pixelsPerTile,
             PreviewFolder = PreviewFolder,
         };

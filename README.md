@@ -24,7 +24,7 @@ You need Factorio 2.1. Space Age is optional; with it, avatars fly with mech arm
 
 1. Put these zips into Factorio's `mods` folder, **still zipped**:
    - `vrc-avatars_<version>.zip`;
-   - one or more avatar packs (`vrc-avatar-<name>_1.0.0.zip`), as many as you like.
+   - one or more avatar packs (`vrc-avatar-<name>_<version>.zip`), as many as you like.
 
    The `mods` folder is:
    - Windows: `%APPDATA%\Factorio\mods` (paste that into the address bar of File Explorer);
@@ -76,8 +76,9 @@ You need Unity 2022.3 with your avatar in a project. Your VRChat avatar project 
 
 Then install the pack as in [Play with an avatar](#play-with-an-avatar).
 
-**Updating your avatar later:** export again with the same **Name** and replace the old zip in the
-`mods` folder with the new one (it has the same file name).
+**Updating your avatar later:** export again with the same **Name**, delete the old zip from the `mods`
+folder and put in the new one. The number at the end of the file name is the exporter's version, so you
+can tell which exporter made a pack.
 
 ## Play together on a server
 
@@ -91,8 +92,8 @@ server**, same versions too. Each avatar is its own zip, and you can install as 
 3. Every player puts that same set into their own `mods` folder.
 4. In the game, everyone picks their own look and sees everyone else's.
 
-**When someone joins later or updates their avatar:** the server owner adds the new zip (an updated
-avatar has the same file name, so it replaces the old one) and shares it; everyone does the same.
+**When someone joins later or updates their avatar:** the server owner adds the new zip (and deletes
+the old one of an updated avatar) and shares it; everyone does the same.
 Nobody loses their character or items.
 
 **If you can't join** ("your active mods don't match the server's"): some of your zips aren't the same
