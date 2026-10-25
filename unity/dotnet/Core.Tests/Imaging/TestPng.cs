@@ -5,7 +5,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 
-namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Imaging
+namespace FactorioAvatarExporter.Core.Tests.Imaging
 {
     /// <summary>
     /// Builds and takes apart PNG files byte by byte, independently of PngWriter and PngReader: its own

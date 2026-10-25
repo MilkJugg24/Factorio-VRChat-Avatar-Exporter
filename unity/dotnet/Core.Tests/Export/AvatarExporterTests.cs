@@ -4,9 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using NUnit.Framework;
-using MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack;
+using FactorioAvatarExporter.Core.Tests.Pack;
 
-namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Export
+namespace FactorioAvatarExporter.Core.Tests.Export
 {
     public class AvatarExporterTests
     {

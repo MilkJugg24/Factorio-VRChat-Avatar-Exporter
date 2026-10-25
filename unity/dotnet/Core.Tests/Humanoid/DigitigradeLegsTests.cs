@@ -1,7 +1,7 @@
 using System;
 using NUnit.Framework;
 
-namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Humanoid
+namespace FactorioAvatarExporter.Core.Tests.Humanoid
 {
     /// <summary>Digitigrade legs: knees forward, the ankle (hock) high up and behind, the foot nearly vertical.</summary>
     public class DigitigradeLegsTests

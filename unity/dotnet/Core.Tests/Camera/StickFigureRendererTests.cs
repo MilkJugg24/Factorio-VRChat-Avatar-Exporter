@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using NUnit.Framework;
 
-namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Camera
+namespace FactorioAvatarExporter.Core.Tests.Camera
 {
     public class StickFigureRendererTests
     {

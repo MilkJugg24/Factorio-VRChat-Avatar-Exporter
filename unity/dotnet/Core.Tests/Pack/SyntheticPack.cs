@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
+namespace FactorioAvatarExporter.Core.Tests.Pack
 {
     /// <summary>Small synthetic frames and packs for the pack tests.</summary>
     internal static class SyntheticPack

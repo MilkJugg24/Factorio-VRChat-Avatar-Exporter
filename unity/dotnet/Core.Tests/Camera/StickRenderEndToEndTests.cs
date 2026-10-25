@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 
-namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Camera
+namespace FactorioAvatarExporter.Core.Tests.Camera
 {
     /// <summary>
     /// Dragon poses through the whole frame path the exporter will use: measure, plan the canvases, render,

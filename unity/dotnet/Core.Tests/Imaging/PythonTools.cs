@@ -5,7 +5,7 @@ using System.IO;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
-namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Imaging
+namespace FactorioAvatarExporter.Core.Tests.Imaging
 {
     /// <summary>
     /// Runs python3 (with numpy and Pillow) for cross-checks. Tests that use it are skipped, not failed,

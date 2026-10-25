@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Camera
+namespace FactorioAvatarExporter.Core.Tests.Camera
 {
     /// <summary>Hand-made poses for the stick figure tests (model space, tiles).</summary>
     internal static class TestPoses

@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text.Json;
 using NUnit.Framework;
 
-namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Dragon
+namespace FactorioAvatarExporter.Core.Tests.Dragon
 {
     /// <summary>One pose of Goldens/dragon_poses.json (written by tools/dragon_render/export_goldens.py).</summary>
     internal sealed class GoldenCase

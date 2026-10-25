@@ -3,7 +3,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <RootNamespace>MilkJugg24.FactorioAvatarExporter.Core.Tests</RootNamespace>
+    <RootNamespace>FactorioAvatarExporter.Core.Tests</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />

@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-using MilkJugg24.FactorioAvatarExporter.Core.Tests.Humanoid;
+using FactorioAvatarExporter.Core.Tests.Humanoid;
 
-namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Dragon
+namespace FactorioAvatarExporter.Core.Tests.Dragon
 {
     public class DragonPoseResultTests
     {

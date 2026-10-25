@@ -1,7 +1,7 @@
 using System;
 using NUnit.Framework;
 
-namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Imaging
+namespace FactorioAvatarExporter.Core.Tests.Imaging
 {
     public class ColorSpaceTests
     {

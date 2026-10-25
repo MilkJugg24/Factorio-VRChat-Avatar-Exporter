@@ -1,7 +1,7 @@
 using System;
 using NUnit.Framework;
 
-namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Camera
+namespace FactorioAvatarExporter.Core.Tests.Camera
 {
     public class CapsuleTests
     {

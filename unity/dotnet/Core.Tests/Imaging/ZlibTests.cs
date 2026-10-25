@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using NUnit.Framework;
 
-namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Imaging
+namespace FactorioAvatarExporter.Core.Tests.Imaging
 {
     public class ZlibTests
     {

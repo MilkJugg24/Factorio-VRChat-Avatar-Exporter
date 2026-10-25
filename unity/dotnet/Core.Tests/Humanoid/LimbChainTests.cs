@@ -1,7 +1,7 @@
 using System;
 using NUnit.Framework;
 
-namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Humanoid
+namespace FactorioAvatarExporter.Core.Tests.Humanoid
 {
     public class LimbChainTests
     {

@@ -2,7 +2,7 @@
   "name": "vrc-avatars-screenshots",
   "version": "0.1.0",
   "title": "VRC Avatars - in-game screenshots",
-  "author": "MilkJugg24",
+  "author": "VRC Avatars",
   "factorio_version": "2.1",
   "description": "Development only: makes the engineer and every installed avatar pack idle, run, shoot, mine, fly and die side by side, and screenshots each step. Used by tests/run_ingame_checks.ps1. Not meant to be installed by players.",
   "dependencies": ["vrc-avatars", "? space-age"]

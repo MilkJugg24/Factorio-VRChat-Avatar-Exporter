@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 
-namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
+namespace FactorioAvatarExporter.Core.Tests.Pack
 {
     /// <summary>
     /// A minimal PNG encoder for tests (the real one is another module): 8-bit RGBA, no filtering,

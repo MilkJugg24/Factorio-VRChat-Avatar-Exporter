@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.Json;
 using NUnit.Framework;
 
-namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
+namespace FactorioAvatarExporter.Core.Tests.Pack
 {
     /// <summary>Runs the repository's Python tools for cross-checks; tests are skipped without python3.</summary>
     internal static class PythonTools

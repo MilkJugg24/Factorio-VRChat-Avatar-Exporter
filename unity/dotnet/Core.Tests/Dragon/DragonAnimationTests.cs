@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 
-namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Dragon
+namespace FactorioAvatarExporter.Core.Tests.Dragon
 {
     public class DragonAnimationTests
     {

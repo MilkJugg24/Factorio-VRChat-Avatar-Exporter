@@ -14,8 +14,8 @@
     <NoWarn>CS1591;NU1701</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="../../Packages/com.milkjugg24.factorio-avatar-exporter/Core/**/*.cs" />
-    <Compile Include="../../Packages/com.milkjugg24.factorio-avatar-exporter/Editor/**/*.cs" />
+    <Compile Include="../../Packages/com.vrcavatars.factorio-avatar-exporter/Core/**/*.cs" />
+    <Compile Include="../../Packages/com.vrcavatars.factorio-avatar-exporter/Editor/**/*.cs" />
     <PackageReference Include="Unity3D.SDK" Version="2021.1.14.1" />
   </ItemGroup>
 </Project>

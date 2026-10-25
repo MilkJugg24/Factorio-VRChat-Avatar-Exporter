@@ -1,8 +1,8 @@
 {
   "name": "vrc-avatars",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "title": "VRC Avatars",
-  "author": "MilkJugg24",
+  "author": "VRC Avatars",
   "factorio_version": "2.1",
   "description": "Lets every player pick their own look from the installed avatar packs: your VRChat or other humanoid avatar, turned into a pack with the Factorio Avatar Exporter for Unity. Press the avatar button in the shortcut bar (or Ctrl + Shift + A) to choose. Without packs, everyone stays the engineer.",
   "dependencies": [

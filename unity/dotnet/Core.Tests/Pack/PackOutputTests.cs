@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using NUnit.Framework;
 
-namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
+namespace FactorioAvatarExporter.Core.Tests.Pack
 {
     public class PackOutputTests
     {

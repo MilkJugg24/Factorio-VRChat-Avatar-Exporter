@@ -2,11 +2,11 @@
   <!-- Compiles the Unity package's Core sources, which must not reference UnityEngine. -->
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <AssemblyName>MilkJugg24.FactorioAvatarExporter.Core</AssemblyName>
-    <RootNamespace>MilkJugg24.FactorioAvatarExporter.Core</RootNamespace>
+    <AssemblyName>FactorioAvatarExporter.Core</AssemblyName>
+    <RootNamespace>FactorioAvatarExporter.Core</RootNamespace>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="../../Packages/com.milkjugg24.factorio-avatar-exporter/Core/**/*.cs" />
+    <Compile Include="../../Packages/com.vrcavatars.factorio-avatar-exporter/Core/**/*.cs" />
   </ItemGroup>
 </Project>

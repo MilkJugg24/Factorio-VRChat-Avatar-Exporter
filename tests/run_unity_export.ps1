@@ -71,7 +71,7 @@ if (-not $SkipImport) {
 
 Write-Host "== rendering ($Mode; Unity runs without a window; this takes a few minutes)"
 $method = if ($Mode -eq "poses") { "ExporterCommandLine.RenderPoses" } else { "ExporterCommandLine.ExportPacks" }
-$render = @("-executeMethod", "MilkJugg24.FactorioAvatarExporter.Editor.$method", "-exportOut", (Quote $Out))
+$render = @("-executeMethod", "FactorioAvatarExporter.Editor.$method", "-exportOut", (Quote $Out))
 if ($Scene) { $render += @("-exportScene", (Quote $Scene)) }
 if ($Avatar) { $render += @("-exportAvatar", (Quote $Avatar)) }
 $code = Run-Unity ($render + @("-quit")) (PathOf $Out "unity-render.log")

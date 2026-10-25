@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 
-namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Export
+namespace FactorioAvatarExporter.Core.Tests.Export
 {
     /// <summary>
     /// Checks that the exporter gives every render its own pose, orientation and canvas, and builds each layer's

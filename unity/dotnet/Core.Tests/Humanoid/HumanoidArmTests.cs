@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 
-namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Humanoid
+namespace FactorioAvatarExporter.Core.Tests.Humanoid
 {
     /// <summary>How the humanoid animations pose the arms and hands that hold the pick and the gun.</summary>
     public class HumanoidArmTests

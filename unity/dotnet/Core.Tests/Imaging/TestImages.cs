@@ -1,7 +1,7 @@
 using System;
 using NUnit.Framework;
 
-namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Imaging
+namespace FactorioAvatarExporter.Core.Tests.Imaging
 {
     /// <summary>Random and hand-made images for the imaging tests.</summary>
     internal static class TestImages

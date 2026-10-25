@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text.Json;
 using NUnit.Framework;
 
-namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Dragon
+namespace FactorioAvatarExporter.Core.Tests.Dragon
 {
     /// <summary>
     /// The C# port against poses written by the Python renderer

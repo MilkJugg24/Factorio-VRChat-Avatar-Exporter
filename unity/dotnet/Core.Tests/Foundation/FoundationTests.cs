@@ -1,7 +1,7 @@
 using System;
 using NUnit.Framework;
 
-namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Foundation
+namespace FactorioAvatarExporter.Core.Tests.Foundation
 {
     public class MathTests
     {

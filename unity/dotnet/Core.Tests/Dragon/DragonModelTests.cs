@@ -1,7 +1,7 @@
 using System;
 using NUnit.Framework;
 
-namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Dragon
+namespace FactorioAvatarExporter.Core.Tests.Dragon
 {
     public class BodyShapeTests
     {

@@ -2,7 +2,7 @@ using System.IO;
 using System.Linq;
 using NUnit.Framework;
 
-namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
+namespace FactorioAvatarExporter.Core.Tests.Pack
 {
     /// <summary>Writes whole packs and checks them with tools/validate_sprites.py --pack.</summary>
     public class PackEndToEndTests

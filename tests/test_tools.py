@@ -62,7 +62,7 @@ class LuaTableTests(unittest.TestCase):
 
 class ExporterVersionTests(unittest.TestCase):
     def test_editor_version_matches_package_json(self):
-        package = os.path.join(REPO, "unity", "Packages", "com.milkjugg24.factorio-avatar-exporter")
+        package = os.path.join(REPO, "unity", "Packages", "com.vrcavatars.factorio-avatar-exporter")
         with open(os.path.join(package, "package.json"), encoding="utf-8") as fh:
             version = json.load(fh)["version"]
         with open(os.path.join(package, "Editor", "PackExport.cs"), encoding="utf-8") as fh:

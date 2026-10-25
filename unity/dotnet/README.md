@@ -1,6 +1,6 @@
 # Exporter Core: development builds outside Unity
 
-The avatar exporter (`unity/Packages/com.milkjugg24.factorio-avatar-exporter/`) is split in two:
+The avatar exporter (`unity/Packages/com.vrcavatars.factorio-avatar-exporter/`) is split in two:
 
 - `Core/`: everything that decides what to draw and writes the pack: poses, camera, matting, sheets,
   Lua and PNG writers. It must not reference UnityEngine (its asmdef sets `noEngineReferences`), so it

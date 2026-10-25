@@ -43,7 +43,7 @@ jobs:
       - name: Work out the versions
         id: version
         run: |
-          exporter=$(python3 -c "import json; print(json.load(open('unity/Packages/com.milkjugg24.factorio-avatar-exporter/package.json'))['version'])")
+          exporter=$(python3 -c "import json; print(json.load(open('unity/Packages/com.vrcavatars.factorio-avatar-exporter/package.json'))['version'])")
           mod=$(python3 -c "import json; print(json.load(open('vrc-avatars/info.json'))['version'])")
           if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "${GITHUB_REF_NAME#exporter-v}" != "$exporter" ]; then
             echo "Tag $GITHUB_REF_NAME does not match package.json version $exporter"

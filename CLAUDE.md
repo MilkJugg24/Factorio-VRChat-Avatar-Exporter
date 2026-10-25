@@ -8,7 +8,7 @@ The README is for players and avatar makers only. Keep developer and agent mater
 | Path | What it is |
 | --- | --- |
 | `vrc-avatars/` | The Factorio 2.1 mod (Lua). Turns installed avatar packs into characters; the avatar window; `/avatar-revert-all`. It still loads legacy bundles (several packs in one mod), which the exporter no longer makes; `Core/Pack/PackBundler.cs` and `PackHarness bundle` remain only to test that. |
-| `unity/Packages/com.milkjugg24.factorio-avatar-exporter/` | The Unity package. `Core/` decides everything and writes packs; it has no Unity references and is built and tested outside Unity. `Editor/` is the thin Unity layer (window, stage, camera, renderer). Its `README.md` ships inside the `.unitypackage` as the user guide to the window. |
+| `unity/Packages/com.vrcavatars.factorio-avatar-exporter/` | The Unity package. `Core/` decides everything and writes packs; it has no Unity references and is built and tested outside Unity. `Editor/` is the thin Unity layer (window, stage, camera, renderer). Its `README.md` ships inside the `.unitypackage` as the user guide to the window. |
 | `unity/dotnet/` | Builds and tests `Core/` with .NET, the stick-figure `PackHarness`, and `EditorTypeCheck` (compiles `Editor/` against Unity's assemblies). See its README for Core's layout and C# rules. |
 | `docs/vrc-avatar-format.md` | The pack format (the contract between exporter and mod). |
 | `docs/modding.md` | The mod's prototypes and remote interface, for other mod authors. |

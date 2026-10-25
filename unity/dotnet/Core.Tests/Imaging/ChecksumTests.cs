@@ -3,7 +3,7 @@ using System.Linq;
 using System.Text;
 using NUnit.Framework;
 
-namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Imaging
+namespace FactorioAvatarExporter.Core.Tests.Imaging
 {
     public class ChecksumTests
     {

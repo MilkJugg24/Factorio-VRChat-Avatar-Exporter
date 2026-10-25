@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using MilkJugg24.FactorioAvatarExporter.Core;
+using FactorioAvatarExporter.Core;
 
-namespace MilkJugg24.FactorioAvatarExporter.PackHarness
+namespace FactorioAvatarExporter.PackHarness
 {
     /// <summary>
     /// Writes an avatar pack exactly like the Unity exporter will, but from a synthetic rig drawn by the

@@ -133,7 +133,7 @@ folder).
 
 ---
 
-More detail: the [exporter guide](unity/Packages/com.milkjugg24.factorio-avatar-exporter/README.md)
+More detail: the [exporter guide](unity/Packages/com.vrcavatars.factorio-avatar-exporter/README.md)
 (lighting, every window option), [making a pack by hand](docs/vrc-avatar-format.md), and
 [notes for other mod authors](docs/modding.md). Contributors and coding agents: see [CLAUDE.md](CLAUDE.md).
 
