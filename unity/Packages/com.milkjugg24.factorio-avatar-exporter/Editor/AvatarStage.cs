@@ -44,15 +44,21 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         // -1.4); each root is a whole wing from its shoulder, and its own hinge
         private readonly Dictionary<Transform, double> restElevation = new Dictionary<Transform, double>();
 
-        // the joints inside each wing (elbow, wrist, the fingers' own joints: its bones below the root that hold
-        // others), parent first, with the bones each one points at; they straighten as the wing spreads, so a folded
-        // wing opens out. A bone with siblings (a finger, a membrane chain, next to others from the same bone) keeps
-        // its angle to them, so the fingers stay fanned as they were made
+        // the joints inside each wing (elbow, wrist, fingers: its bones below the root that hold others), parent
+        // first, with the bones each one points at; when the wing's mesh was modelled folded too, they straighten as
+        // the wing spreads, so a folded wing opens out
         private readonly Dictionary<Transform, List<(Transform joint, Transform[] next)>> wingJoints =
             new Dictionary<Transform, List<(Transform, Transform[])>>();
 
-        // how far a spread wing's joints straighten: 1 would line every bone up with the one before it
+        // how far a spread wing's joints straighten: 1 would line every bone up with the one before it (and close
+        // the fingers)
         private const float WingUnfold = 0.75f;
+
+        // the turn of each bone inside a wing, against its parent, in the shape the wing's mesh was modelled in (its
+        // bind pose), parent first: a spread wing opens into that shape, fingers fanned as their maker drew them.
+        // Empty for a wing modelled the way it is saved (then its joints straighten instead)
+        private readonly Dictionary<Transform, List<(Transform bone, Quaternion modelled)>> wingModelled =
+            new Dictionary<Transform, List<(Transform, Quaternion)>>();
 
         // the tail's bones (named "tail"), root first
         private readonly List<Transform> tail = new List<Transform>();
@@ -204,6 +210,23 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             new[] { HumanBone.UpperChest, HumanBone.Chest, HumanBone.Spine, HumanBone.Hips }.First(bones.ContainsKey);
 
         /// <summary>
+        /// The world rotation <paramref name="bone"/> had when a mesh of the avatar was modelled on it (its bind pose,
+        /// placed by the mesh's renderer as it is now), or null when no mesh is bound to it.
+        /// </summary>
+        private Quaternion? Modelled(Transform bone)
+        {
+            foreach (SkinnedMeshRenderer r in Avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                int i = r.sharedMesh == null ? -1 : Array.IndexOf(r.bones, bone);
+                if (i >= 0 && i < r.sharedMesh.bindposes.Length)
+                {
+                    return (r.transform.localToWorldMatrix * r.sharedMesh.bindposes[i].inverse).rotation;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
         /// The wings' root bones: bones of any mesh named "wing" whose nearest parent bone is not, each on the side
         /// its bones lie. A root that only follows a body wing bone of its own name is left to follow it.
         /// </summary>
@@ -315,18 +338,30 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 foreach (Transform t in chain)
                 {
                     Transform[] next = t.Cast<Transform>().Where(c => skin.Contains(c)).ToArray();
-                    bool fanned = t.parent != null && t.parent.Cast<Transform>().Count(c => skin.Contains(c)) > 1;
-                    if (t != root && next.Length > 0 && skin.Contains(t) && !fanned)
+                    if (t != root && next.Length > 0 && skin.Contains(t))
                     {
                         joints.Add((t, next));
                     }
                 }
                 wingJoints[root] = joints;
+                var modelled = new List<(Transform, Quaternion)>();
+                double turned = 0;
+                foreach (Transform t in chain)
+                {
+                    if (t != root && Modelled(t) is Quaternion bone && Modelled(t.parent) is Quaternion parent)
+                    {
+                        Quaternion local = Quaternion.Inverse(parent) * bone;
+                        modelled.Add((t, local));
+                        turned = Math.Max(turned, Quaternion.Angle(local, t.localRotation));
+                    }
+                }
+                wingModelled[root] = turned > 10 ? modelled : new List<(Transform, Quaternion)>();
             }
             if (wings.Count > 0)
             {
                 Notes.Add("wings that open out, flap and stretch, from their hinge: " + string.Join(", ", wings.Select(w =>
-                    $"{w.root.name} ({(w.left ? "left" : "right")}, saved at {restElevation[w.root] * 180 / Math.PI:0} degrees from straight out)")));
+                    $"{w.root.name} ({(w.left ? "left" : "right")}, saved at {restElevation[w.root] * 180 / Math.PI:0} degrees from straight out, " +
+                    (wingModelled[w.root].Count > 0 ? "opens into the shape its mesh was modelled in)" : "opens by straightening its joints)"))));
             }
             else
             {
@@ -406,8 +441,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         }
 
         /// <summary>
-        /// Opens each wing (of the body, or the others) as far as its spread says: its joints straighten towards the
-        /// bone before them (<see cref="WingUnfold"/>). Then turns the whole wing about the chest's forward axis through
+        /// Opens each wing (of the body, or the others) as far as its spread says: into the shape its mesh was
+        /// modelled in (<see cref="wingModelled"/>), or else its joints straighten towards the bone before them
+        /// (<see cref="WingUnfold"/>). Then turns the whole wing about the chest's forward axis through
         /// its root (its shoulder), from the angle the opened wing is at towards <see cref="PoseResult.WingElevation"/>.
         /// </summary>
         private void PoseWings(PoseResult pose, bool inBody)
@@ -421,7 +457,11 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 {
                     continue;
                 }
-                foreach ((Transform joint, Transform[] next) in wingJoints[root])
+                foreach ((Transform bone, Quaternion modelled) in wingModelled[root])
+                {
+                    bone.localRotation = Quaternion.Slerp(bone.localRotation, modelled, (float)spread);
+                }
+                foreach ((Transform joint, Transform[] next) in wingModelled[root].Count > 0 ? new List<(Transform, Transform[])>() : wingJoints[root])
                 {
                     Vector3 before = joint.position - joint.parent.position;
                     Vector3 after = next.Aggregate(Vector3.zero, (sum, c) => sum + c.position) / next.Length - joint.position;
