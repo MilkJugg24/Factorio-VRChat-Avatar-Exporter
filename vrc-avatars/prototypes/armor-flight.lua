@@ -36,9 +36,9 @@ for _, armor in pairs(data.raw["armor"] or {}) do
 end
 
 -- Characters (the engineer, other mods' characters) whose animations for some
--- armor have nothing for flying: use the flight animations of another armor
--- when they have some (Space Age's mech armor engineer), otherwise the ground
--- ones, so they are never drawn without a sprite in the air.
+-- armor have nothing for flying show that armor's own ground animations in the
+-- air, so the armor looks the same as on the ground and is never drawn without
+-- a sprite. Only the item icons change.
 local AIR = {
   idle_in_air = "idle",
   idle_with_gun_in_air = "idle_with_gun",
@@ -48,19 +48,11 @@ local AIR = {
   landing = "idle_with_gun",
 }
 for _, character in pairs(data.raw["character"] or {}) do
-  local donor = nil
-  for _, set in ipairs(character.animations or {}) do
-    if set.flying then
-      donor = set
-      break
-    end
-  end
   for _, set in ipairs(character.animations or {}) do
     if not set.flying then
       for air, ground in pairs(AIR) do
-        if set[air] == nil then
-          local from = donor and donor[air] or set[ground]
-          set[air] = from and table.deepcopy(from) or nil
+        if set[air] == nil and set[ground] ~= nil then
+          set[air] = table.deepcopy(set[ground])
         end
       end
     end

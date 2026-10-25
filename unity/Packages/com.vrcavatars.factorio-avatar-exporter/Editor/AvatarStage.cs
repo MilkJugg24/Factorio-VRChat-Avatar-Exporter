@@ -68,6 +68,8 @@ namespace FactorioAvatarExporter.Editor
 
         // the held tools, built from Unity's primitives (the sizes of Core's stick figure)
         private GameObject gun;
+        private Transform gunBody;
+        private Transform gunBarrels;
         private GameObject pickaxe;
         private Transform pickHandle;
         private Transform pickHead;
@@ -500,7 +502,10 @@ namespace FactorioAvatarExporter.Editor
             gun = new GameObject("Factorio gun");
             SceneManager.MoveGameObjectToScene(gun, Scene);
             gun.transform.SetParent(Avatar.transform, false);
-            Cylinder("Barrel", gun.transform, metal);
+            // the engineer's gun: a khaki body with a pistol grip under it and two short dark barrels side by side
+            Material khaki = PropMaterial("Prop khaki", new Color(0.42f, 0.40f, 0.30f), 0.3f, 0.35f);
+            gunBody = Shape("Body", gun.transform, khaki, GunBodyMesh());
+            gunBarrels = Shape("Barrels", gun.transform, metal, GunBarrelsMesh());
             pickaxe = new GameObject("Factorio pickaxe");
             SceneManager.MoveGameObjectToScene(pickaxe, Scene);
             pickaxe.transform.SetParent(Avatar.transform, false);
@@ -599,6 +604,40 @@ namespace FactorioAvatarExporter.Editor
         /// along +x (<see cref="StickFigure.PickHeadBack"/>), the point along -x (<see cref="StickFigure.PickHeadPoint"/>),
         /// both curving down towards the hand and tapering to points; thickest at the eye.
         /// </summary>
+        /// <summary>
+        /// The gun's body, in gun lengths (x across, y from the stock to the muzzle, z up): a squarish receiver over
+        /// the back half and a pistol grip slanting down and back under it.
+        /// </summary>
+        private static Mesh GunBodyMesh()
+        {
+            var receiver = new List<Vector3> { new Vector3(0, 0.02f, 0.02f), new Vector3(0, 0.12f, 0.03f), new Vector3(0, 0.48f, 0.03f), new Vector3(0, 0.52f, 0.02f) };
+            Mesh body = Tube("Gun receiver", receiver, new[] { 0.07f, 0.1f, 0.1f, 0.07f }, Vector3.forward, 4);
+            var grip = new List<Vector3> { new Vector3(0, 0.26f, -0.02f), new Vector3(0, 0.22f, -0.16f), new Vector3(0, 0.19f, -0.27f) };
+            Mesh handle = Tube("Gun grip", grip, new[] { 0.045f, 0.045f, 0.04f }, Vector3.right, 6);
+            return Combine("Gun body", body, handle);
+        }
+
+        /// <summary>The gun's two barrels side by side, from the receiver to the muzzle, in gun lengths.</summary>
+        private static Mesh GunBarrelsMesh()
+        {
+            Mesh Barrel(float x) => Tube("Gun barrel", new List<Vector3> { new Vector3(x, 0.4f, 0.05f), new Vector3(x, 1f, 0.05f) },
+                new[] { 0.045f, 0.045f }, Vector3.forward, 10);
+            return Combine("Gun barrels", Barrel(-0.05f), Barrel(0.05f));
+        }
+
+        /// <summary>One mesh of <paramref name="parts"/>, which are destroyed.</summary>
+        private static Mesh Combine(string name, params Mesh[] parts)
+        {
+            var mesh = new Mesh { name = name, hideFlags = HideFlags.HideAndDontSave };
+            mesh.CombineMeshes(parts.Select(m => new CombineInstance { mesh = m, transform = Matrix4x4.identity }).ToArray(), true, true);
+            foreach (Mesh part in parts)
+            {
+                UnityEngine.Object.DestroyImmediate(part);
+            }
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
         private static Mesh HeadMesh()
         {
             var centers = new List<Vector3>();
@@ -615,22 +654,6 @@ namespace FactorioAvatarExporter.Editor
             return Tube("Pick head", centers, radii, Vector3.forward);
         }
 
-        private Transform Cylinder(string name, Transform parent, Material material)
-        {
-            GameObject cylinder = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            Object.DestroyImmediate(cylinder.GetComponent<Collider>());
-            cylinder.name = name;
-            SceneManager.MoveGameObjectToScene(cylinder, Scene);
-            cylinder.transform.SetParent(parent, false);
-            cylinder.GetComponent<MeshRenderer>().sharedMaterial = material;
-            return cylinder.transform;
-        }
-
-        /// <summary>
-        /// Shows the tool <paramref name="prop"/> holds, if any, from its base to its tip (model space,
-        /// tiles), like Core's stick figure: the gun as a rod, the pickaxe as a handle with a head through the
-        /// tip along Up, its point towards -Up.
-        /// </summary>
         /// <summary>Draws the avatar <paramref name="tiles"/> tall from now on: measures the rig again for that height.</summary>
         public void SetHeight(double tiles)
         {
@@ -639,6 +662,11 @@ namespace FactorioAvatarExporter.Editor
             MetersPerTile = 1 / Rig.TilesPerMeter;
         }
 
+        /// <summary>
+        /// Shows the tool <paramref name="prop"/> holds, if any, from its base to its tip (model space, tiles): the
+        /// gun from its stock to its muzzle, its top along Up; the pickaxe as a handle with a head through the tip
+        /// along Up, its point towards -Up.
+        /// </summary>
         private void PlaceProp(PropPose prop)
         {
             gun.SetActive(prop != null && prop.Kind == PropKind.Gun);
@@ -651,7 +679,17 @@ namespace FactorioAvatarExporter.Editor
             double height = Rig.HeadTopHeight;
             if (prop.Kind == PropKind.Gun)
             {
-                Span(gun.transform.GetChild(0), prop.Base, prop.Tip, StickFigure.GunRadius * height);
+                // the meshes are in gun lengths: x across, y from the stock to the muzzle, z along the gun's Up
+                Vector3 stock = Pivot.TransformPoint(ToUnity(prop.Base, MetersPerTile));
+                Vector3 muzzle = Pivot.TransformPoint(ToUnity(prop.Tip, MetersPerTile));
+                Vector3 gunUp = Pivot.TransformDirection(ToUnity(prop.Up.Normalized, 1));
+                Vector3 gunScale = gun.transform.lossyScale;
+                float gunLength = (muzzle - stock).magnitude;
+                foreach (Transform part in new[] { gunBody, gunBarrels })
+                {
+                    part.SetPositionAndRotation(stock, Quaternion.LookRotation(gunUp, muzzle - stock));
+                    part.localScale = new Vector3(gunLength / gunScale.x, gunLength / gunScale.y, gunLength / gunScale.z);
+                }
                 return;
             }
             Span(pickHandle, prop.Base, prop.Tip, StickFigure.HandleRadius * height);

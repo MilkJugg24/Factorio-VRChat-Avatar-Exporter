@@ -14,7 +14,7 @@
   which Factorio requires for flying armor), every armor prototype gets
   `provides_flight = true` in `data-final-fixes` (before the characters are made), with a wings badge
   added to the icons of those that didn't fly. Character animation sets without flight animations get
-  another set's (Space Age's mech armor engineer) or their ground ones.
+  their own ground ones, so each armor looks the same in the air.
 - If another mod temporarily swaps a player's character (a jetpack, for example), VRC Avatars
   leaves it alone and reapplies the player's look once they're back to a normal character.
 
