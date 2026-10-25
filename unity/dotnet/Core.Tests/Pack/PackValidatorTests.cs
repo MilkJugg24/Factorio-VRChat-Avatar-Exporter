@@ -54,6 +54,9 @@ namespace FactorioAvatarExporter.Core.Tests.Pack
                 p.Animations.Remove("hover");
                 p.Animations.Remove("hover-gun");
                 p.Animations.Remove("fly-gun");
+                p.Animations.Remove("hover-flap");
+                p.Animations.Remove("fly-flap");
+                p.Animations.Remove("take-off-flap");
             }, "the \"take-off\" animation is a flight animation, but Flight is off");
             yield return Case("UnknownAnimation", p => p.SetLayer("swim", PackLayers.Base, Sheets(8, 2)),
                 "\"swim\" is not an animation of the pack format");

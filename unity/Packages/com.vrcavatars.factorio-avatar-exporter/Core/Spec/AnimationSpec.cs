@@ -73,6 +73,9 @@ namespace FactorioAvatarExporter.Core
         public const string Fly = "fly";
         public const string FlyGun = "fly-gun";
         public const string TakeOff = "take-off";
+        public const string HoverFlap = "hover-flap";
+        public const string FlyFlap = "fly-flap";
+        public const string TakeOffFlap = "take-off-flap";
 
         /// <summary>1-based frame of the mine animation in which the pick hits the ground.</summary>
         public const int MineImpactFrame = 19;
@@ -105,6 +108,10 @@ namespace FactorioAvatarExporter.Core
             new AnimationInfo(Fly, 8, 8, true, 0.3, true, false, false),
             new AnimationInfo(FlyGun, 18, 8, true, 0.3, true, true, false),
             new AnimationInfo(TakeOff, 8, 8, false, 0.3, true, false, false),
+            // the same, the arms beating as wings (wyverns, whose wings are their arms): players choose in the game
+            new AnimationInfo(HoverFlap, 8, 8, true, 0.27, true, false, false),
+            new AnimationInfo(FlyFlap, 8, 8, true, 0.3, true, false, false),
+            new AnimationInfo(TakeOffFlap, 8, 8, false, 0.3, true, false, false),
         };
 
         private static readonly Dictionary<string, AnimationInfo> ByName = BuildIndex();

@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.11.0
+Date: 2026-10-25
+  Features:
+    - "Flap my arms as wings when flying" in the avatar window, for avatars whose wings are their
+      arms (wyverns): in the air, their arms beat as wings instead of hanging. Each player chooses;
+      it shows for avatars exported with Factorio Avatar Exporter 0.26.0 or newer.
+---------------------------------------------------------------------------------------------------
 Version: 0.10.0
 Date: 2026-10-25
   Changes:

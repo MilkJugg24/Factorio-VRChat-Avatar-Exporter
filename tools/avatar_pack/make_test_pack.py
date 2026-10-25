@@ -27,14 +27,14 @@ from PIL import Image, ImageDraw, ImageFont
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import lua_table  # noqa: E402
-from avatar_pack.spec import DATA_LUA, DIRECTIONS, FACTORIO_VERSION, FLIGHT, OPTIONAL, REQUIRED, info_title, valid_id  # noqa: E402
+from avatar_pack.spec import DATA_LUA, DIRECTIONS, FACTORIO_VERSION, FLAP, FLIGHT, OPTIONAL, REQUIRED, info_title, valid_id  # noqa: E402
 
 # Frame counts per animation; --frames overrides them.
 FRAMES = {
     "idle": 4, "idle-gun": 4, "run": 8, "run-gun": 8, "sprint": 8, "mine": 10, "corpse": 1,
     "hover": 4, "hover-gun": 4, "fly": 6, "fly-gun": 6, "take-off": 5,
 }
-IN_AIR = {"hover", "hover-gun", "fly", "fly-gun", "take-off"}
+IN_AIR = {"hover", "hover-gun", "fly", "fly-gun", "take-off", "hover-flap", "fly-flap", "take-off-flap"}
 GUN = {"idle-gun", "run-gun", "hover-gun", "fly-gun"}
 # (gun direction, moving direction) of each run-gun / fly-gun row, in eighths clockwise from north
 GUN_ROWS = [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2), (1, 3), (2, 0), (2, 1), (2, 2), (2, 3),
@@ -139,7 +139,7 @@ class Painter:
         cx = w / 2
         # legs: two feet stepping along the moving direction while running or flying
         mx, my = screen_vector(moving)
-        stride = math.sin(phase * 2 * math.pi) * self.px(10) if anim in ("run", "run-gun", "sprint", "fly", "fly-gun") else 0
+        stride = math.sin(phase * 2 * math.pi) * self.px(10) if anim in ("run", "run-gun", "sprint", "fly", "fly-gun", "fly-flap") else 0
         for side, sign in ((-1, 1), (1, -1)):
             fx = cx + side * self.px(9) + mx * stride * sign
             fy = feet_y - self.px(4) + my * stride * sign
@@ -288,11 +288,12 @@ def build(args):
         os.makedirs(os.path.join(folder, sub))
 
     animations = {}
-    names = list(REQUIRED) + ([] if args.no_sprint else list(OPTIONAL)) + (list(FLIGHT) if flight else [])
+    names = list(REQUIRED) + ([] if args.no_sprint else list(OPTIONAL)) + (list(FLIGHT) if flight else []) \
+        + (list(FLAP) if flight and args.flap else [])
     for anim in names:
         painter = Painter(32 if anim in args.half else args.ppt, tint)
         # the sprint has as many frames as the run
-        frames_of = "run" if anim == "sprint" else anim
+        frames_of = "run" if anim == "sprint" else anim.replace("-flap", "")
         dirs, frames = DIRECTIONS[anim], args.frames.get(frames_of, FRAMES[frames_of])
         cells = [[painter.frame(anim, row, f, frames) for f in range(frames)] for row in range(dirs)]
         layer_index = {"base": 0, "shadow": 2}
@@ -422,6 +423,7 @@ def main(argv=None):
                         help="draw these animations at 32 pixels per tile (half resolution, the same size in the game)")
     parser.add_argument("--max-sheet", type=int, default=4096,
                         help="largest sheet size in px; lower it to force split sheets")
+    parser.add_argument("--flap", action="store_true", help="with --flight: the arm-flapping flight animations too")
     parser.add_argument("--no-sprint", action="store_true", help="leave the sprint animation out")
     parser.add_argument("--default-timing", action="store_true", help="leave timing out of the pack")
     parser.add_argument("--frames", type=frame_counts, default={}, metavar="ANIM=N,...",

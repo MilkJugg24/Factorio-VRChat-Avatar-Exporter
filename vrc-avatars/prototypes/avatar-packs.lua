@@ -217,7 +217,7 @@ local function validate(mod_data)
   local id = d.id
   if not format.valid_id(id) then
     fail(pack_name, "has an invalid id \"" .. tostring(id) .. "\" (lowercase letters, digits and -, "
-      .. "at most " .. format.MAX_ID_LENGTH .. " characters, not starting with corpse- or sprint-)")
+      .. "at most " .. format.MAX_ID_LENGTH .. " characters, not starting with corpse-, sprint- or flap-)")
   end
   local mod_name = format.MOD_PREFIX .. id
   if pack_name ~= mod_name then
@@ -282,6 +282,22 @@ local function validate(mod_data)
       check_animation(pack_name, prefix, name, animations[name], tintable)
     end
   end
+  local flap = 0
+  for _, name in ipairs(format.FLAP) do
+    if animations[name] ~= nil then
+      flap = flap + 1
+    end
+  end
+  if flap > 0 and not flight then
+    fail(pack_name, "has arm-flapping flight animations (" .. table.concat(format.FLAP, ", ") .. ") but flight is not true")
+  elseif flap > 0 and flap < #format.FLAP then
+    fail(pack_name, "has only some of the arm-flapping flight animations (" .. table.concat(format.FLAP, ", ")
+      .. "); they come all together")
+  elseif flap > 0 then
+    for _, name in ipairs(format.FLAP) do
+      check_animation(pack_name, prefix, name, animations[name], tintable)
+    end
+  end
   if animations["sprint"] ~= nil and animations["sprint"].frame_count ~= animations["run"].frame_count then
     fail(pack_name, "has a \"sprint\" animation of " .. animations["sprint"].frame_count
       .. " frames; it must have as many as the run (" .. animations["run"].frame_count .. ")")
@@ -296,6 +312,7 @@ local function validate(mod_data)
     tintable = tintable,
     flight = flight,
     sprint = animations["sprint"] ~= nil,
+    flap = flap > 0,
     timing = merged_timing(pack_name, d.timing, animations),
     animations = animations,
   }

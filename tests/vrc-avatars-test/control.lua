@@ -234,6 +234,9 @@ local function test_any_packs(surface, force)
       if pack.sprint then
         character = transfer_and_check(character, expected, pack.sprint)
       end
+      if pack.flap then
+        character = transfer_and_check(character, expected, "vrc-avatar-flap-" .. pack.id)
+      end
     end
     transfer_and_check(character, expected, "character").destroy()
   end
@@ -262,6 +265,8 @@ local function test_generated_packs(surface, force, packs)
   check(test.character == "vrc-avatar-test" and test.corpse == "vrc-avatar-corpse-test", "pack test: names")
   check(test.sprint == "vrc-avatar-sprint-test" and small.sprint == nil, "sprinting characters")
   check(call("is_avatar_character", "vrc-avatar-sprint-test") == "test", "a sprinting character is its pack's")
+  check(call("is_avatar_character", "vrc-avatar-sprint-flap-test") == "test", "a sprinting arm-flapping character is its pack's")
+  check(small.flap == false, "pack small has no arm-flapping flight")
 
   -- a missing pack falls back to the engineer; no choice is the engineer
   local function exists(name) return prototypes.entity[name] ~= nil end
@@ -272,6 +277,12 @@ local function test_generated_packs(surface, force, packs)
   check(appearance.resolve({ avatar = "test" }, exists, true) == "vrc-avatar-sprint-test", "resolve sprinting")
   check(appearance.resolve({ avatar = "small" }, exists, true) == "vrc-avatar-small", "resolve sprinting without a sprint")
   check(appearance.resolve({}, exists, true) == "character", "the engineer has no sprint")
+  if test.flap then
+    check(appearance.resolve({ avatar = "test", flap = true }, exists, false) == "vrc-avatar-flap-test", "resolve flapping")
+    check(appearance.resolve({ avatar = "test", flap = true }, exists, true) == "vrc-avatar-sprint-flap-test",
+      "resolve sprinting and flapping")
+  end
+  check(appearance.resolve({ avatar = "small", flap = true }, exists, false) == "vrc-avatar-small", "resolve flapping without it")
 
   -- the armor speed the sprint switch reads: two exoskeletons
   local runner = surface.create_entity({ name = "character", position = { 30, 20 }, force = force })

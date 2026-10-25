@@ -23,6 +23,8 @@ local function build()
           character = format.character_name(id),
           -- nil for a pack without a sprint
           sprint = prototypes.entity[format.sprint_name(id)] and format.sprint_name(id) or nil,
+          -- true when it can fly flapping its arms (the player's choice)
+          flap = prototypes.entity[format.character_name(id, false, true)] ~= nil,
           corpse = format.corpse_name(id),
         }
       end
@@ -49,7 +51,7 @@ local function data()
   return cache
 end
 
--- Sorted by title: { id, title, author, tintable, sprite, character, sprint, corpse }
+-- Sorted by title: { id, title, author, tintable, sprite, character, sprint, flap, corpse }
 function packs.list()
   return data().list
 end

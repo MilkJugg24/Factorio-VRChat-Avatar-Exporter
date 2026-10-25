@@ -90,6 +90,9 @@ namespace FactorioAvatarExporter.Core
                 case AnimationSpec.Fly: return Fly(t, false, move);
                 case AnimationSpec.FlyGun: return Fly(t, true, move);
                 case AnimationSpec.TakeOff: return TakeOff(t);
+                case AnimationSpec.HoverFlap: return Hover(t, false, Conventions.FlyHeight, 0, true);
+                case AnimationSpec.FlyFlap: return Fly(t, false, move, true);
+                case AnimationSpec.TakeOffFlap: return TakeOff(t, true);
                 default: throw new ArgumentException("unknown animation " + animation, nameof(animation));
             }
         }
@@ -604,8 +607,11 @@ namespace FactorioAvatarExporter.Core
         /// <summary>How far back the legs hang while hovering, radians.</summary>
         private const double HoverLegAngle = 0.08;
 
-        /// <summary>anims.hover: hanging in the air, legs dangling, gently bobbing.</summary>
-        private PoseResult Hover(double t, bool gun, double elevation, double phaseShift)
+        /// <summary>
+        /// anims.hover: hanging in the air, legs dangling, gently bobbing; <paramref name="flap"/>: the arms beat
+        /// as wings (<see cref="AnimationSpec.HoverFlap"/>).
+        /// </summary>
+        private PoseResult Hover(double t, bool gun, double elevation, double phaseShift, bool flap = false)
         {
             double ph = MathUtil.Tau * t + phaseShift;
             const double lean = 0.10;
@@ -615,6 +621,10 @@ namespace FactorioAvatarExporter.Core
             if (gun)
             {
                 HoldGun(b, chest);
+            }
+            else if (flap)
+            {
+                SpreadArms(b, chest, HoverArms(ph), Math.Cos(ph));
             }
             else
             {
@@ -631,11 +641,37 @@ namespace FactorioAvatarExporter.Core
             return pose;
         }
 
+        /// <summary>The arms as wings while hovering, radians above straight out sideways: slow, wide beats.</summary>
+        private static double HoverArms(double ph) => 0.15 + 0.5 * Math.Sin(ph);
+
+        /// <summary>The arms as wings while flying: full beats.</summary>
+        private static double FlyArms(double ph) => 0.1 + 0.75 * Math.Sin(ph);
+
+        /// <summary>
+        /// Both arms out to the sides as wings, <paramref name="elevation"/> radians above straight out;
+        /// <paramref name="stroke"/> (-1 to 1, rising positive) bends the wrists against the motion.
+        /// </summary>
+        private void SpreadArms(HumanoidPoseBuilder b, Quat chest, double elevation, double stroke)
+        {
+            double reach = rig.ArmLength * 0.95;
+            foreach (int side in Sides)
+            {
+                Vec3 s = Shoulder(b, side);
+                Vec3 outward = chest.Right * (side * Math.Cos(elevation)) + chest.Up * Math.Sin(elevation);
+                Vec3 hand = s + outward * reach - chest.Forward * (0.05 * reach);
+                Vec3 handDirection = (outward - chest.Up * (0.35 * stroke) - chest.Forward * 0.2).Normalized;
+                b.SetArm(side, hand, -chest.Forward, handDirection, 0.1);
+            }
+        }
+
         /// <summary>The wings while hovering at phase <paramref name="ph"/>: slow, gentle beats.</summary>
         private static double HoverWings(double ph) => 0.1 + 0.35 * Math.Sin(ph);
 
-        /// <summary>anims.fly: leaning into the flight, legs trailing in the flight direction.</summary>
-        private PoseResult Fly(double t, bool gun, double move)
+        /// <summary>
+        /// anims.fly: leaning into the flight, legs trailing in the flight direction; <paramref name="flap"/>: the
+        /// arms beat as wings (<see cref="AnimationSpec.FlyFlap"/>).
+        /// </summary>
+        private PoseResult Fly(double t, bool gun, double move, bool flap = false)
         {
             double ph = MathUtil.Tau * t;
             const double lean = 0.55;
@@ -645,6 +681,10 @@ namespace FactorioAvatarExporter.Core
             if (gun)
             {
                 HoldGun(b, chest);
+            }
+            else if (flap)
+            {
+                SpreadArms(b, chest, FlyArms(ph), Math.Cos(ph));
             }
             else
             {
@@ -666,7 +706,9 @@ namespace FactorioAvatarExporter.Core
         /// one take-off (and landing, the same played backwards) for armed and unarmed alike, and a gun appearing
         /// for it read as the idle-with-gun pose flashing up.
         /// </summary>
-        private PoseResult TakeOff(double t)
+        /// <remarks><paramref name="flap"/>: the arms open out as wings while crouching and beat hard once to lift
+        /// off, ending in the first <see cref="AnimationSpec.HoverFlap"/> frame (<see cref="AnimationSpec.TakeOffFlap"/>).</remarks>
+        private PoseResult TakeOff(double t, bool flap = false)
         {
             double crouch = MathUtil.Smoothstep(0.0, 0.28, t) * (1 - MathUtil.Smoothstep(0.28, 0.55, t));
             double lift = MathUtil.Smoothstep(0.3, 1.0, t);
@@ -674,7 +716,17 @@ namespace FactorioAvatarExporter.Core
             var pelvis = new Vec3(0, -0.005 * legScale * (1 - lift),
                 standingPelvis - 0.11 * legScale * crouch + Conventions.FlyHeight * lift);
             HumanoidPoseBuilder b = Torso(pelvis, lean, headPitch: -0.05 * lift);
-            RelaxedArms(b, ChestFrame(lean), 0, 0.03);
+            if (flap)
+            {
+                // from hanging at the sides to the first hover-flap frame, with one hard beat on the way
+                double open = MathUtil.Smoothstep(0, 0.6, t);
+                double elevation = -1.3 * (1 - open) + (HoverArms(0) + 0.6 * Math.Sin(Math.PI * t)) * open;
+                SpreadArms(b, ChestFrame(lean), elevation, t < 0.6 ? 1 : Math.Cos(2 * Math.PI * (t - 0.6) / 0.4));
+            }
+            else
+            {
+                RelaxedArms(b, ChestFrame(lean), 0, 0.03);
+            }
             if (lift < 0.05)
             {
                 StandingFeet(b, 0.01);

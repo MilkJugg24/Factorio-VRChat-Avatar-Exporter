@@ -13,7 +13,7 @@ namespace FactorioAvatarExporter.Editor
     /// <summary>The version of this package, written into every pack (kept equal to package.json by a test).</summary>
     internal static class ExporterInfo
     {
-        public const string Version = "0.25.0";
+        public const string Version = "0.26.0";
     }
 
     /// <summary>What the user chose for a pack.</summary>
@@ -63,7 +63,7 @@ namespace FactorioAvatarExporter.Editor
             }
             if (!PackNaming.IsValidId(Id))
             {
-                return "The pack id must be lowercase letters, digits and -, at most 35 characters, not starting with corpse- or sprint-.";
+                return "The pack id must be lowercase letters, digits and -, at most 35 characters, not starting with corpse-, sprint- or flap-.";
             }
             if (!PackNaming.IsValidVersion(Version))
             {

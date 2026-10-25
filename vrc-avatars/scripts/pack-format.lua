@@ -9,7 +9,8 @@ format.SUPPORTED_VERSION = 1
 -- mod, mod-data and character prototype names are MOD_PREFIX .. id
 format.MOD_PREFIX = "vrc-avatar-"
 format.CORPSE_PREFIX = "vrc-avatar-corpse-"
--- the same character sprinting (format.sprint_name)
+-- the same character sprinting, or flapping its arms in the air, or both
+-- (format.character_name): vrc-avatar-[sprint-][flap-]<id>
 format.SPRINT_PREFIX = "vrc-avatar-sprint-"
 format.SPRITE_PREFIX = "vrc-avatars-pack-"
 
@@ -37,6 +38,9 @@ format.DIRECTIONS = {
   ["fly"] = 8,
   ["fly-gun"] = 18,
   ["take-off"] = 8,
+  ["hover-flap"] = 8,
+  ["fly-flap"] = 8,
+  ["take-off-flap"] = 8,
 }
 
 format.REQUIRED = { "idle", "idle-gun", "run", "run-gun", "mine", "corpse" }
@@ -44,6 +48,10 @@ format.FLIGHT = { "hover", "hover-gun", "fly", "fly-gun", "take-off" }
 -- Optional on their own. A pack with a sprint gets a second character that
 -- runs with it; the sprint has as many frames as the run.
 format.OPTIONAL = { "sprint" }
+-- Optional, all together and only with the flight set: flying with the arms
+-- beating as wings (for avatars whose wings are their arms). A pack with them
+-- gets characters that fly with them, which players choose in the avatar window.
+format.FLAP = { "hover-flap", "fly-flap", "take-off-flap" }
 
 -- A sprint's distance_per_frame, when the pack leaves it out, is the run's
 -- times this: its strides go this much further.
@@ -78,6 +86,9 @@ format.DEFAULT_TIMING = {
     ["fly"] = 0.3,
     ["fly-gun"] = 0.3,
     ["take-off"] = 0.3,
+    ["hover-flap"] = 0.27,
+    ["fly-flap"] = 0.3,
+    ["take-off-flap"] = 0.3,
     ["corpse"] = 1,
   },
 }
@@ -98,12 +109,14 @@ function format.utf8_length(s)
   return select(2, s:gsub("[^\128-\191]", ""))
 end
 
-function format.character_name(id)
-  return format.MOD_PREFIX .. id
+-- The character prototype of pack `id`: running or sprinting, its arms still
+-- or flapping in the air.
+function format.character_name(id, sprint, flap)
+  return format.MOD_PREFIX .. (sprint and "sprint-" or "") .. (flap and "flap-" or "") .. id
 end
 
 function format.sprint_name(id)
-  return format.SPRINT_PREFIX .. id
+  return format.character_name(id, true, false)
 end
 
 function format.corpse_name(id)
@@ -114,19 +127,22 @@ function format.sprite_name(id)
   return format.SPRITE_PREFIX .. id
 end
 
--- The pack id of an avatar character prototype name (running or sprinting),
--- or nil; nil for a corpse.
+-- The pack id of an avatar character prototype name (any of its variants),
+-- or nil; nil for a corpse. Second and third values: sprinting, flapping.
 function format.id_of_character(name)
-  if type(name) ~= "string" or name:sub(1, #format.CORPSE_PREFIX) == format.CORPSE_PREFIX then
+  if type(name) ~= "string" or name:sub(1, #format.CORPSE_PREFIX) == format.CORPSE_PREFIX
+    or name:sub(1, #format.MOD_PREFIX) ~= format.MOD_PREFIX then
     return nil
   end
-  if name:sub(1, #format.SPRINT_PREFIX) == format.SPRINT_PREFIX then
-    return name:sub(#format.SPRINT_PREFIX + 1)
+  local rest = name:sub(#format.MOD_PREFIX + 1)
+  local sprint, flap = false, false
+  if rest:sub(1, 7) == "sprint-" then
+    sprint, rest = true, rest:sub(8)
   end
-  if name:sub(1, #format.MOD_PREFIX) == format.MOD_PREFIX then
-    return name:sub(#format.MOD_PREFIX + 1)
+  if rest:sub(1, 5) == "flap-" then
+    flap, rest = true, rest:sub(6)
   end
-  return nil
+  return rest, sprint, flap
 end
 
 function format.id_of_corpse(name)
@@ -138,7 +154,7 @@ end
 
 function format.valid_id(id)
   return type(id) == "string" and #id >= 1 and #id <= format.MAX_ID_LENGTH
-    and id:match(format.ID_PATTERN) ~= nil and id:sub(1, 7) ~= "corpse-" and id:sub(1, 7) ~= "sprint-"
+    and id:match(format.ID_PATTERN) ~= nil and id:sub(1, 7) ~= "corpse-" and id:sub(1, 7) ~= "sprint-" and id:sub(1, 5) ~= "flap-"
 end
 
 return format

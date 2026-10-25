@@ -146,6 +146,27 @@ if mods["vrc-avatar-test"] then
     check(c.icon == "__vrc-avatar-test__/graphics/icon.png", "pack test: icon")
     check(c.inventory_size == data.raw["character"]["character"].inventory_size, "pack test: inventory size")
     check(layer_count(corpse.pictures[1]) == 3, "pack test: corpse layers")
+    -- the characters that fly flapping their arms, made only when some armor flies
+    local flap = data.raw["character"]["vrc-avatar-flap-test"]
+    local sprint_flap = data.raw["character"]["vrc-avatar-sprint-flap-test"]
+    if flight then
+      check(flap ~= nil and sprint_flap ~= nil, "pack test: no arm-flapping characters")
+      if flap and sprint_flap then
+        local fa = flap.animations[1]
+        check(fa.flying.layers[1].filename == "__vrc-avatar-test__/graphics/fly-flap-base.png"
+          and fa.idle_in_air.layers[1].filename == "__vrc-avatar-test__/graphics/hover-flap-base.png"
+          and fa.take_off.layers[1].filename == "__vrc-avatar-test__/graphics/take-off-flap-base.png",
+          "pack test: the arm-flapping character flies with the flap animations")
+        check(fa.landing.layers[1].frame_sequence ~= nil, "pack test: arm-flapping landing not reversed")
+        check(diff(anim.flying_with_gun, fa.flying_with_gun, "") == nil and diff(anim.running, fa.running, "") == nil,
+          "pack test: the arm-flapping character's other animations")
+        check(sprint_flap.animations[1].running.layers[1].filename == "__vrc-avatar-test__/graphics/sprint-base.png"
+          and sprint_flap.animations[1].flying.layers[1].filename == "__vrc-avatar-test__/graphics/fly-flap-base.png",
+          "pack test: the sprinting arm-flapping character")
+      end
+    else
+      check(flap == nil and sprint_flap == nil, "pack test: arm-flapping characters without flying armor")
+    end
     if flight then
       check(anim.flying_with_gun and #anim.flying_with_gun.layers[1].filenames == 3, "pack test: fly-gun split")
       check(anim.take_off.layers[1].filename == "__vrc-avatar-test__/graphics/take-off-base.png",

@@ -1,7 +1,7 @@
 # Avatar pack format (version 1)
 
 An **avatar pack** is a small Factorio mod that adds one look to the VRC
-Avatars mod (internal name `vrc-avatars`, 0.8.0 or newer). The pack only ships
+Avatars mod (internal name `vrc-avatars`, 0.11.0 or newer). The pack only ships
 sprite sheets and a description of them. `vrc-avatars` reads that
 description, creates the character and corpse prototypes, and offers the look
 in its avatar window, where each player picks their own.
@@ -20,12 +20,13 @@ python3 tools/validate_sprites.py --pack path/to/vrc-avatar-<id>_<version>.zip
 
 | Thing | Name |
 | --- | --- |
-| Pack id | `<id>`: lowercase letters, digits and `-`; starts with a letter or digit; at most 35 characters; must not start with `corpse-` or `sprint-` |
+| Pack id | `<id>`: lowercase letters, digits and `-`; starts with a letter or digit; at most 35 characters; must not start with `corpse-`, `sprint-` or `flap-` |
 | Mod name (`info.json`) | `vrc-avatar-<id>` |
 | Zip file | `vrc-avatar-<id>_<version>.zip`, containing one folder `vrc-avatar-<id>_<version>/` (or `vrc-avatar-<id>/`) |
 | mod-data prototype | `vrc-avatar-<id>`, with `data_type = "vrc-avatars.avatar-pack"` |
 | Character prototype (created by vrc-avatars) | `vrc-avatar-<id>` |
 | Sprinting character prototype (created by vrc-avatars, for a pack with a `sprint`) | `vrc-avatar-sprint-<id>` |
+| Arm-flapping character prototypes (created by vrc-avatars, for a pack with the `-flap` animations, when some armor flies) | `vrc-avatar-flap-<id>`, `vrc-avatar-sprint-flap-<id>` |
 | Corpse prototype (created by vrc-avatars) | `vrc-avatar-corpse-<id>` |
 | GUI sprite (created by vrc-avatars from `icon`) | `vrc-avatars-pack-<id>` |
 
@@ -54,7 +55,7 @@ vrc-avatar-<id>_<version>/
   "author": "<author>",
   "factorio_version": "2.1",
   "description": "...",
-  "dependencies": ["vrc-avatars >= 0.8.0"]
+  "dependencies": ["vrc-avatars >= 0.11.0"]
 }
 ```
 
@@ -155,6 +156,7 @@ return {
 | `fly` | 8 | 0.3 | flying |
 | `fly-gun` | 18 | 0.3 | flying with a gun (see below) |
 | `take-off` | 8 | 0.3 | taking off, with the gun; landing plays it backwards |
+| `hover-flap`, `fly-flap`, `take-off-flap` | 8 | 0.27, 0.3, 0.3 | the same without a gun, the arms beating as wings (optional, vrc-avatars 0.11.0+) |
 
 - `idle`, `idle-gun`, `run`, `run-gun`, `mine` and `corpse` are required.
 - `sprint` is optional and has as many frames as `run` (the foot frames are
@@ -164,6 +166,12 @@ return {
   the startup setting "Sprint from this armor speed bonus" (60 % by default: two
   exoskeletons), and back. Everything else, the gun run included, is the
   same as the pack's other character. Without a `sprint` the pack always runs.
+- `hover-flap`, `fly-flap` and `take-off-flap` are optional, come all together
+  and need `flight = true`. They are for avatars whose wings are their arms: a
+  pack with them gets characters that fly with them (`vrc-avatar-flap-<id>`,
+  and `vrc-avatar-sprint-flap-<id>` with a sprint), which each player chooses
+  with "Flap my arms as wings when flying" in the avatar window. With a gun,
+  in the air, the usual `hover-gun` and `fly-gun` are used.
 - The flight animations are all present (`flight = true`) or all absent. A pack
   without them still works with flying armor: the ground animations are used
   in the air.
@@ -290,7 +298,7 @@ working.
 
 | Thing | Name |
 | --- | --- |
-| Mod name | `avatar-bundle-<name>`, with `"dependencies": ["vrc-avatars >= 0.8.0"]` |
+| Mod name | `avatar-bundle-<name>`, with `"dependencies": ["vrc-avatars >= 0.11.0"]` |
 | Zip file | `avatar-bundle-<name>_<version>.zip` |
 | A character's folder | `characters/<id>/`, holding `avatar-pack.lua` (the pack's description), its graphics, `README.txt` (its source) and `pack.json` (id, title, author and the pack's version) |
 | mod-data, character and corpse prototypes | the same as the pack's: `vrc-avatar-<id>`, `vrc-avatar-corpse-<id>` |

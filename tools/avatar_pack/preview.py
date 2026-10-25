@@ -28,6 +28,7 @@ DIRECTION_NAMES = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
 DEFAULT_SPEEDS = {
     "idle": 0.06, "idle-gun": 0.06, "run": 0.6, "run-gun": 0.6, "sprint": 0.6, "mine": 0.415, "corpse": 1,
     "hover": 0.27, "hover-gun": 0.27, "fly": 0.3, "fly-gun": 0.3, "take-off": 0.3,
+    "hover-flap": 0.27, "fly-flap": 0.3, "take-off-flap": 0.3,
 }
 GROUND = (74, 86, 58, 255)
 PLAYER_COLOR = (0.869, 0.5, 0.130)  # Factorio's default player colour

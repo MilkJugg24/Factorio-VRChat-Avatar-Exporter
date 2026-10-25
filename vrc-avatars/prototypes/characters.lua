@@ -25,10 +25,12 @@ for _, armor in pairs(data.raw["armor"] or {}) do
 end
 
 -- `sprint`: the copy that runs with the pack's sprint animation, used while the
--- player's armor makes them fast (control.lua); everything else is the same.
-local function new_character(pack, look, sprint)
+-- player's armor makes them fast (control.lua). `flap`: the copy that flies
+-- with its arms beating as wings, for players who choose it. Everything else
+-- is the same.
+local function new_character(pack, look, sprint, flap)
   local character = table.deepcopy(vanilla_character)
-  character.name = sprint and format.sprint_name(pack.id) or format.character_name(pack.id)
+  character.name = format.character_name(pack.id, sprint, flap)
   character.localised_name = { "entity-name.character" }
   character.localised_description = vanilla_character.localised_description
   character.hidden_in_factoriopedia = true
@@ -36,7 +38,7 @@ local function new_character(pack, look, sprint)
   character.icon = pack.icon.filename
   character.icon_size = pack.icon.size
   character.icons = nil
-  character.animations = { builder.armor_animation(look, flight, sprint and "sprint" or "run") }
+  character.animations = { builder.armor_animation(look, flight, sprint and "sprint" or "run", flap) }
   character.mining_with_tool_particles_animation_positions = { pack.timing.mine_impact_frame }
   -- the walking sound plays on running_sound_animation_positions only: every footfall, both feet
   local steps = {}
@@ -72,9 +74,11 @@ end
 local new_prototypes = {}
 for _, pack in ipairs(avatar_packs.collect()) do
   local look = avatar_packs.look(pack)
-  new_prototypes[#new_prototypes + 1] = new_character(pack, look, false)
-  if pack.sprint then
-    new_prototypes[#new_prototypes + 1] = new_character(pack, look, true)
+  -- every combination the pack has: running or sprinting, arms still or flapping (only when some armor flies)
+  for _, sprint in ipairs(pack.sprint and { false, true } or { false }) do
+    for _, flap in ipairs((pack.flap and flight) and { false, true } or { false }) do
+      new_prototypes[#new_prototypes + 1] = new_character(pack, look, sprint, flap)
+    end
   end
   if vanilla_corpse then
     new_prototypes[#new_prototypes + 1] = new_corpse(pack, look)

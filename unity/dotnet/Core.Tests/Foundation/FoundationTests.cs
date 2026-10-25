@@ -182,8 +182,8 @@ namespace FactorioAvatarExporter.Core.Tests.Foundation
             Assert.That(AnimationSpec.Get("run-gun").DirectionCount, Is.EqualTo(18));
             Assert.That(AnimationSpec.Get("fly-gun").FrameCount, Is.EqualTo(8));
             Assert.That(AnimationSpec.Get("take-off").Loop, Is.False);
-            // plus the sprint, which the dragon renderer has not
-            Assert.That(AnimationSpec.All.Count, Is.EqualTo(12));
+            // plus the sprint and the arm-flapping flight, which the dragon renderer has not
+            Assert.That(AnimationSpec.All.Count, Is.EqualTo(15));
             Assert.That(AnimationSpec.Get("sprint").FrameCount, Is.EqualTo(AnimationSpec.Get("run").FrameCount));
         }
 
@@ -210,7 +210,7 @@ namespace FactorioAvatarExporter.Core.Tests.Foundation
         public void PackSets()
         {
             Assert.That(System.Linq.Enumerable.Count(AnimationSpec.ForPack(false)), Is.EqualTo(7));
-            Assert.That(System.Linq.Enumerable.Count(AnimationSpec.ForPack(true)), Is.EqualTo(12));
+            Assert.That(System.Linq.Enumerable.Count(AnimationSpec.ForPack(true)), Is.EqualTo(15));
         }
     }
 }

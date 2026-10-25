@@ -22,6 +22,10 @@ namespace FactorioAvatarExporter.Core
                 { AnimationSpec.HoverGun, (b, t) => DragonAnimations.Hover(b, t, true) },
                 { AnimationSpec.Fly, (b, t) => DragonAnimations.Fly(b, t, false) },
                 { AnimationSpec.TakeOff, DragonAnimations.TakeOff },
+                // the dragon's wings are not its arms
+                { AnimationSpec.HoverFlap, (b, t) => DragonAnimations.Hover(b, t, false) },
+                { AnimationSpec.FlyFlap, (b, t) => DragonAnimations.Fly(b, t, false) },
+                { AnimationSpec.TakeOffFlap, DragonAnimations.TakeOff },
                 { AnimationSpec.Corpse, (b, t) => DragonAnimations.CorpsePose(b) },
             };
 

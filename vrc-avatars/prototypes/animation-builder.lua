@@ -117,8 +117,9 @@ end
 -- `flight` adds the in-air animations used by flight-capable armor (Space Age
 -- mech armor); a look without flight animations shows its ground ones instead.
 -- `running` names the animation it runs with: "run", or "sprint" for the
--- sprinting character.
-function builder.armor_animation(look, flight, running)
+-- sprinting character. `flap`: in the air without a gun it uses the
+-- arm-flapping animations (hover-flap, fly-flap, take-off-flap).
+function builder.armor_animation(look, flight, running, flap)
   local anim = {
     idle = rotated(look, "idle"),
     idle_with_gun = rotated(look, "idle-gun"),
@@ -130,6 +131,9 @@ function builder.armor_animation(look, flight, running)
   }
   if flight then
     local function air(name)
+      if flap and look.get_meta(name .. "-flap") then
+        return name .. "-flap"
+      end
       if look.get_meta(name) then
         return name
       end
@@ -141,7 +145,7 @@ function builder.armor_animation(look, flight, running)
     anim.flying = rotated(look, air("fly"))
     anim.flying_with_gun = rotated(look, air("fly-gun"))
     anim.take_off = rotated(look, take_off)
-    if take_off == "take-off" then
+    if take_off == "take-off" or take_off == "take-off-flap" then
       local frames = required_meta(look, take_off).frame_count
       anim.landing = rotated(look, take_off, { frame_sequence = reversed_sequence(frames) })
     else

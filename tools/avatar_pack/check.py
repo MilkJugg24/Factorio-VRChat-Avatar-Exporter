@@ -363,7 +363,7 @@ class Checker:
         pack_id = d.get("id")
         if not spec.valid_id(pack_id):
             self.error(f'has an invalid id "{pack_id}" (lowercase letters, digits and -, at most '
-                       f"{spec.MAX_ID_LENGTH} characters, not starting with corpse- or sprint-)")
+                       f"{spec.MAX_ID_LENGTH} characters, not starting with corpse-, sprint- or flap-)")
             return
         if spec.MOD_PREFIX + pack_id != mod_name:
             self.error(f'id "{pack_id}" does not match ' + (f'its folder characters/{mod_name[len(spec.MOD_PREFIX):]}'
@@ -410,6 +410,15 @@ class Checker:
                 self.check_animation(name, animations[name], tintable)
         for name in spec.OPTIONAL:
             if name in animations:
+                self.check_animation(name, animations[name], tintable)
+        flap = [name for name in spec.FLAP if name in animations]
+        if flap and not flight:
+            self.error(f'has a "{flap[0]}" animation but flight is not true')
+        elif flap and len(flap) < len(spec.FLAP):
+            missing = next(name for name in spec.FLAP if name not in animations)
+            self.error(f'has "{flap[0]}" but no "{missing}" (the arm-flapping animations come all together)')
+        elif flap:
+            for name in spec.FLAP:
                 self.check_animation(name, animations[name], tintable)
         for name in animations:
             if name not in spec.DIRECTIONS:

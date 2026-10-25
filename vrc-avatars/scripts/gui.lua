@@ -174,6 +174,16 @@ function gui.open(player, prefs)
   chosen.style.single_line = false
   chosen.style.maximal_width = 330
 
+  -- only for avatars that can (their wings are their arms); shown by gui.refresh
+  options.add({
+    type = "checkbox",
+    name = "avatar_flap",
+    caption = { "vrc-avatars.flap-arms" },
+    tooltip = { "vrc-avatars.flap-arms-tooltip" },
+    state = false,
+    tags = { avatar_action = "flap" },
+  })
+
   local status = options.add({ type = "label", name = "avatar_status" })
   status.style.single_line = false
   status.style.maximal_width = 330
@@ -234,6 +244,11 @@ function gui.refresh(player, prefs)
     else
       chosen.caption = { "vrc-avatars.chosen-engineer" }
     end
+  end
+  local flap = find(frame, "avatar_flap")
+  if flap then
+    flap.visible = pack ~= nil and pack.flap
+    flap.state = prefs.flap == true
   end
   local status = find(frame, "avatar_status")
   if status then

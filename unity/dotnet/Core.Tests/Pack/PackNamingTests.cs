@@ -60,6 +60,8 @@ namespace FactorioAvatarExporter.Core.Tests.Pack
         [TestCase("corpse-x", false)]
         [TestCase("sprint-x", false)]
         [TestCase("sprinter", true)]
+        [TestCase("flap-x", false)]
+        [TestCase("flappy", true)]
         [TestCase("-a", false)]
         [TestCase("Mika", false)]
         [TestCase("mi_ka", false)]

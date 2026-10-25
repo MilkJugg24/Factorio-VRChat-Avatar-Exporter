@@ -20,8 +20,12 @@ namespace FactorioAvatarExporter.Core.Tests.Dragon
             "head", "hr", "hf", "hu", "breath", "jaw_open", "arms", "legs", "prop",
         };
 
-        /// <summary>The animations the Python renderer drew: all but the sprint (the dragon sprints with its run).</summary>
-        private static IEnumerable<AnimationInfo> PythonAnimations => AnimationSpec.All.Where(a => a.Name != AnimationSpec.Sprint);
+        /// <summary>
+        /// The animations the Python renderer drew: all but the sprint and the arm-flapping flight (the dragon uses its
+        /// run and its own flight for those).
+        /// </summary>
+        private static IEnumerable<AnimationInfo> PythonAnimations => AnimationSpec.All.Where(a => a.Name != AnimationSpec.Sprint
+            && a.Name != AnimationSpec.HoverFlap && a.Name != AnimationSpec.FlyFlap && a.Name != AnimationSpec.TakeOffFlap);
 
         public static IEnumerable<TestCaseData> BodyAnimations()
         {

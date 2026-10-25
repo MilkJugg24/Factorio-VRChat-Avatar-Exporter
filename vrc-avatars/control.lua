@@ -3,12 +3,14 @@ local swap = require("scripts.swap")
 local gui = require("scripts.gui")
 local packs = require("scripts.packs")
 local revert = require("scripts.revert")
+local format = require("scripts.pack-format")
 
 -- How often (in ticks) appearance changes that had to wait are retried.
 local RETRY_INTERVAL = 30
 
--- storage.players[player_index] = { avatar, status, gui_location, avatar_gone_notified }
+-- storage.players[player_index] = { avatar, flap, status, gui_location, avatar_gone_notified }
 --   avatar: id of the chosen avatar pack, nil for the engineer
+--   flap: true when the player flies flapping their arms (avatars that can)
 --   avatar_gone_notified: the missing pack the player was told about
 -- storage.pending[player_index] = true while the player's character does not yet match
 -- storage.swap_tick[player_index] = tick of the player's last character swap
@@ -71,9 +73,12 @@ local function apply_appearance(player)
   -- only the sprint changes (armor or exoskeletons put on or taken off): wait
   -- quietly while the player has something open (their inventory, the armor's
   -- equipment grid), since changing the character would close it
-  local sprint_only = character and character.valid and character.name ~= target
-    and packs.id_of_character(character.name) ~= nil
-    and packs.id_of_character(character.name) == packs.id_of_character(target)
+  local sprint_only = false
+  if character and character.valid and character.name ~= target then
+    local id, _, flap = format.id_of_character(character.name)
+    local target_id, _, target_flap = format.id_of_character(target)
+    sprint_only = id ~= nil and packs.get(id) ~= nil and id == target_id and flap == target_flap
+  end
   if character and character.valid and character.name == target then
     status = nil
   elseif sprint_only and player.opened ~= nil and player.opened ~= gui.get_frame(player) then
@@ -314,6 +319,17 @@ script.on_event(defines.events.on_gui_click, function(event)
   end
 end)
 
+script.on_event(defines.events.on_gui_checked_state_changed, function(event)
+  local element = event.element
+  if not (is_ours(element) and element.tags.avatar_action == "flap") then
+    return
+  end
+  local player = game.get_player(event.player_index)
+  local prefs = prefs_of(player.index)
+  prefs.flap = element.state or nil
+  apply_appearance(player)
+end)
+
 script.on_event(defines.events.on_gui_closed, function(event)
   local element = event.element
   if element and element.valid and element.name == gui.FRAME then
@@ -400,9 +416,11 @@ remote.add_interface("vrc-avatars", {
   get_on_character_swapped_event = function()
     return swap.on_character_swapped
   end,
-  -- Returns { avatar = pack id, or nil for the engineer }
+  -- Returns { avatar = pack id, or nil for the engineer; flap = true when the
+  -- player flies flapping their arms }
   get_appearance = function(player_index)
-    return { avatar = prefs_of(player_index).avatar }
+    local prefs = prefs_of(player_index)
+    return { avatar = prefs.avatar, flap = prefs.flap == true }
   end,
   -- Changes the player's avatar (a pack id, or false for the engineer).
   -- Returns nil when applied; "avatar-missing" when applied but the chosen
@@ -424,6 +442,9 @@ remote.add_interface("vrc-avatars", {
     elseif new.avatar ~= nil then
       prefs.avatar = new.avatar
     end
+    if new.flap ~= nil then
+      prefs.flap = new.flap == true or nil
+    end
     return apply_appearance(player)
   end,
   -- Opens the avatar window for a player (for example from a server's welcome message).
@@ -434,7 +455,8 @@ remote.add_interface("vrc-avatars", {
     end
   end,
   -- Installed avatar packs: array of { id, title, author, tintable, character,
-  -- sprint (the sprinting character, nil without one), corpse }
+  -- sprint (the sprinting character, nil without one), flap (true when it can
+  -- fly flapping its arms), corpse }
   get_avatar_packs = function()
     local list = {}
     for _, pack in ipairs(packs.list()) do
@@ -445,6 +467,7 @@ remote.add_interface("vrc-avatars", {
         tintable = pack.tintable,
         character = pack.character,
         sprint = pack.sprint,
+        flap = pack.flap,
         corpse = pack.corpse,
       }
     end

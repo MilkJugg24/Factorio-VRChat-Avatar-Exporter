@@ -31,7 +31,7 @@ namespace FactorioAvatarExporter.Core
         {
             if (!PackNaming.IsValidId(content.Id))
             {
-                errors.Add(Invariant($"the id \"{content.Id}\" is not valid: use 1 to {PackFormat.MaxIdLength} lowercase letters, digits and -, starting with a letter or digit and not with corpse- or sprint-"));
+                errors.Add(Invariant($"the id \"{content.Id}\" is not valid: use 1 to {PackFormat.MaxIdLength} lowercase letters, digits and -, starting with a letter or digit and not with corpse-, sprint- or flap-"));
             }
             if (string.IsNullOrWhiteSpace(content.Title))
             {

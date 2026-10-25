@@ -90,6 +90,9 @@ Every avatar is drawn as tall as the engineer.
   the other arm out for balance.
 - **Flying** (mech armor): wings flap; hovering, they beat slowly. Take-off and landing are
   empty-handed.
+- **Arms as wings:** every pack also has a version of the flight animations where the arms beat as wings,
+  for avatars whose wings are their arms (wyverns). Each player chooses it in the game's avatar window
+  ("Flap my arms as wings when flying").
 - **Wings** move when their bones have "wing" in their names (any case). If no bone does, the bones of
   an object named "wing" (like "Wings") are used. Each wing turns as one piece from its shoulder, even
   when it's made of several bone chains (arm, membrane, fingers). In the air the wings open out (into the shape their mesh was modelled in, or by straightening their joints
