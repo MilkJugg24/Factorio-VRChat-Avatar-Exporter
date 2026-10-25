@@ -6,7 +6,7 @@
 local swap = {}
 
 -- Raised after a player's character was replaced. Other mods can get the id
--- through the "avatar-characters" remote interface.
+-- through the "vrc-avatars" remote interface.
 swap.on_character_swapped = script.generate_event_name()
 
 local BONUSES = {

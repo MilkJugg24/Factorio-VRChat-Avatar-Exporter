@@ -3,7 +3,7 @@ using System.Globalization;
 
 namespace MilkJugg24.FactorioAvatarExporter.Core
 {
-    /// <summary>Paths of the files in a pack, relative to its root folder (docs/avatar-pack-format.md, "Files").</summary>
+    /// <summary>Paths of the files in a pack, relative to its root folder (docs/vrc-avatar-format.md, "Files").</summary>
     public static class PackFiles
     {
         public const string InfoJson = "info.json";
@@ -29,7 +29,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             return fileCount == 1 ? name + ".png" : name + "-" + (fileIndex + 1).ToString(CultureInfo.InvariantCulture) + ".png";
         }
 
-        /// <summary>How the game refers to a pack file: "__avatar-pack-&lt;id&gt;__/&lt;path&gt;".</summary>
+        /// <summary>How the game refers to a pack file: "__vrc-avatar-&lt;id&gt;__/&lt;path&gt;".</summary>
         public static string ModPath(string id, string relativePath) => "__" + PackNaming.ModName(id) + "__/" + relativePath;
 
         /// <summary>

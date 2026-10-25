@@ -57,15 +57,15 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Dragon
 
     internal static class RepoRoot
     {
-        /// <summary>The repository root: the first parent of the test directory with avatar-characters/info.json.</summary>
+        /// <summary>The repository root: the first parent of the test directory with vrc-avatars/info.json.</summary>
         public static string Find()
         {
             var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
-            while (dir != null && !File.Exists(Path.Combine(dir.FullName, "avatar-characters", "info.json")))
+            while (dir != null && !File.Exists(Path.Combine(dir.FullName, "vrc-avatars", "info.json")))
             {
                 dir = dir.Parent;
             }
-            Assert.That(dir, Is.Not.Null, "repository root (with avatar-characters/info.json) not found");
+            Assert.That(dir, Is.Not.Null, "repository root (with vrc-avatars/info.json) not found");
             return dir.FullName;
         }
     }

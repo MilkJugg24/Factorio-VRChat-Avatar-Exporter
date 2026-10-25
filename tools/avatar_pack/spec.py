@@ -1,24 +1,24 @@
-"""Constants of the avatar pack format (docs/avatar-pack-format.md).
+"""Constants of the avatar pack format (docs/vrc-avatar-format.md).
 
-Keep in sync with avatar-characters/scripts/pack-format.lua; tests/run_headless.sh --test-packs
+Keep in sync with vrc-avatars/scripts/pack-format.lua; tests/run_headless.sh --test-packs
 and --broken-packs check that both accept the same packs and reject the same mistakes.
 """
 
 import math
 import re
 
-MAIN_MOD = "avatar-characters"
+MAIN_MOD = "vrc-avatars"
 FACTORIO_VERSION = "2.1"  # info.json factorio_version: Factorio only loads mods made for its own minor version
-DATA_TYPE = "avatar-characters.avatar-pack"
+DATA_TYPE = "vrc-avatars.avatar-pack"
 SUPPORTED_VERSION = 1
-MOD_PREFIX = "avatar-pack-"
+MOD_PREFIX = "vrc-avatar-"
 ID_PATTERN = re.compile(r"[a-z0-9][a-z0-9-]*")
 MAX_ID_LENGTH = 35
 MAX_TITLE_LENGTH = 80
 MAX_SHEET_SIZE = 4096
 MAX_FRAMES = 255  # Factorio's limit for one animation
 MIN_MAIN_VERSION = (0, 1, 0)
-# Avatar bundles: several packs in one mod (docs/avatar-pack-format.md, "Bundles")
+# Avatar bundles: several packs in one mod (docs/vrc-avatar-format.md, "Bundles")
 BUNDLE_PREFIX = "avatar-bundle-"
 MIN_BUNDLE_MAIN_VERSION = (0, 3, 0)
 # Factorio 2.0 aborts on start, without a message, when a mod's info.json title is longer
@@ -48,8 +48,8 @@ DATA_LUA = '''local pack = require("prototypes.avatar-pack")
 data:extend({
   {
     type = "mod-data",
-    name = "avatar-pack-" .. pack.id,
-    data_type = "avatar-characters.avatar-pack",
+    name = "vrc-avatar-" .. pack.id,
+    data_type = "vrc-avatars.avatar-pack",
     data = pack,
   },
 })
@@ -59,7 +59,7 @@ data:extend({
 def bundle_data_lua(bundle_id, ids):
     """The data.lua of a bundle, byte for byte (PackBundler.DataLua in the exporter's Core)."""
     listed = ", ".join(f'"{i}"' for i in sorted(ids))
-    return ('-- An avatar bundle: several avatar packs in one mod (docs/avatar-pack-format.md, "Bundles").\n'
+    return ('-- An avatar bundle: several avatar packs in one mod (docs/vrc-avatar-format.md, "Bundles").\n'
             f'local bundle = "{BUNDLE_PREFIX}{bundle_id}"\n'
             f'for _, id in ipairs({{ {listed} }}) do\n'
             '  local pack = require("characters." .. id .. ".avatar-pack")\n'

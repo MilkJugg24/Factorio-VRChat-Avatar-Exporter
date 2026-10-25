@@ -130,7 +130,7 @@ script.on_configuration_changed(function()
       -- the preference is kept, so reinstalling the pack brings the look back;
       -- tell each player once (offline players see it in the window instead)
       if player.connected and prefs.avatar_gone_notified ~= prefs.avatar then
-        player.print({ "avatar-characters.avatar-pack-gone", prefs.avatar })
+        player.print({ "vrc-avatars.vrc-avatar-gone", prefs.avatar })
         prefs.avatar_gone_notified = prefs.avatar
       end
     else
@@ -212,7 +212,7 @@ script.on_nth_tick(RETRY_INTERVAL, function()
 end)
 
 script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
-  if event.setting == "avatar-characters-show-top-button" and event.player_index then
+  if event.setting == "vrc-avatars-show-top-button" and event.player_index then
     local player = game.get_player(event.player_index)
     if player then
       gui.update_top_button(player)
@@ -230,7 +230,7 @@ script.on_event(defines.events.on_lua_shortcut, function(event)
   end
 end)
 
-script.on_event("avatar-characters-toggle-gui", function(event)
+script.on_event("vrc-avatars-toggle-gui", function(event)
   toggle_gui(game.get_player(event.player_index))
 end)
 
@@ -291,7 +291,7 @@ end)
 -- Commands
 ---------------------------------------------------------------------------
 
-commands.add_command("avatar", { "avatar-characters.command-avatar-help" }, function(command)
+commands.add_command("avatar", { "vrc-avatars.command-avatar-help" }, function(command)
   local player = command.player_index and game.get_player(command.player_index)
   if player then
     toggle_gui(player)
@@ -319,7 +319,7 @@ local function is_known_pack(id)
   return false
 end
 
-commands.add_command("avatar-revert-all", { "avatar-characters.command-revert-help" }, function(command)
+commands.add_command("avatar-revert-all", { "vrc-avatars.command-revert-help" }, function(command)
   local caller = command.player_index and game.get_player(command.player_index)
   local function reply(message)
     if caller then
@@ -329,7 +329,7 @@ commands.add_command("avatar-revert-all", { "avatar-characters.command-revert-he
     end
   end
   if caller and not caller.admin then
-    reply({ "avatar-characters.admin-only" })
+    reply({ "vrc-avatars.admin-only" })
     return
   end
   local ok, pack_id = revert.parse_pack_argument(command.parameter, is_known_pack)
@@ -338,15 +338,15 @@ commands.add_command("avatar-revert-all", { "avatar-characters.command-revert-he
     for _, pack in ipairs(packs.list()) do
       ids[#ids + 1] = pack.id
     end
-    local installed = #ids > 0 and table.concat(ids, ", ") or { "avatar-characters.no-packs" }
-    reply({ "avatar-characters.revert-unknown-pack", command.parameter, installed })
+    local installed = #ids > 0 and table.concat(ids, ", ") or { "vrc-avatars.no-packs" }
+    reply({ "vrc-avatars.revert-unknown-pack", command.parameter, installed })
     return
   end
   local result = revert_all(pack_id)
   if pack_id then
-    reply({ "avatar-characters.revert-pack-done", pack_id, result.corpses, result.remaining })
+    reply({ "vrc-avatars.revert-pack-done", pack_id, result.corpses, result.remaining })
   else
-    reply({ "avatar-characters.revert-done", result.corpses, result.remaining })
+    reply({ "vrc-avatars.revert-done", result.corpses, result.remaining })
   end
 end)
 
@@ -354,7 +354,7 @@ end)
 -- Remote interface for other mods
 ---------------------------------------------------------------------------
 
-remote.add_interface("avatar-characters", {
+remote.add_interface("vrc-avatars", {
   -- Event raised after a player's character entity was replaced:
   -- { player_index, old_character, new_character, old_unit_number, new_unit_number }
   get_on_character_swapped_event = function()

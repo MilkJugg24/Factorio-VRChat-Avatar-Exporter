@@ -1,4 +1,4 @@
-"""Animated previews of an avatar pack (docs/avatar-pack-format.md), so its poses can be checked
+"""Animated previews of an avatar pack (docs/vrc-avatar-format.md), so its poses can be checked
 without starting Factorio or Unity.
 
 Writes one GIF per animation with every direction side by side, drawn the way Factorio places
@@ -6,7 +6,7 @@ the sprites: each frame at its shift from the entity position, the shadow under 
 the mask layer tinted with the player colour, and the animation's speed. Sheet rows are labelled
 with their direction (and the gun/moving pair for run-gun and fly-gun).
 
-    python3 tools/avatar_pack/preview.py path/to/avatar-pack-mika_1.0.0.zip --out build/preview
+    python3 tools/avatar_pack/preview.py path/to/vrc-avatar-mika_1.0.0.zip --out build/preview
     python3 tools/avatar_pack/preview.py path/to/pack --animation run --zoom 2
 """
 
@@ -42,7 +42,7 @@ class Pack:
         self.prefix = f"__{spec.MOD_PREFIX}{self.data['id']}__/"
         self.ppt = self.data.get("pixels_per_tile", 64)
         self.speeds = dict(DEFAULT_SPEEDS)
-        # as avatar-characters does: the default mine speed is for a 12-frame swing
+        # as vrc-avatars does: the default mine speed is for a 12-frame swing
         self.speeds["mine"] *= self.data["animations"]["mine"]["frame_count"] / 12
         self.speeds.update((self.data.get("timing") or {}).get("animation_speed") or {})
         self._sheets = {}

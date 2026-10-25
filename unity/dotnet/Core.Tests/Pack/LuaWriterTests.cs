@@ -28,7 +28,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
                 ("id", "mika"),
                 ("format_version", 1),
                 ("tintable", false),
-                ("icon", Table(("size", 64), ("filename", "__avatar-pack-mika__/graphics/icon.png"))),
+                ("icon", Table(("size", 64), ("filename", "__vrc-avatar-mika__/graphics/icon.png"))),
                 ("animations", Table(("run-gun", Table(("direction_count", 18), ("shift", new List<object> { 0.0, -1.03125 }))))),
                 ("end", new List<object>()),
                 ("empty", Table()));
@@ -44,7 +44,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
                 "  [\"end\"] = {},\n" +
                 "  format_version = 1,\n" +
                 "  icon = {\n" +
-                "    filename = \"__avatar-pack-mika__/graphics/icon.png\",\n" +
+                "    filename = \"__vrc-avatar-mika__/graphics/icon.png\",\n" +
                 "    size = 64,\n" +
                 "  },\n" +
                 "  id = \"mika\",\n" +

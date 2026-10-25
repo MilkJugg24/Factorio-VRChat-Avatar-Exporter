@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace MilkJugg24.FactorioAvatarExporter.Core
 {
-    /// <summary>The pack description, prototypes/avatar-pack.lua (docs/avatar-pack-format.md).</summary>
+    /// <summary>The pack description, prototypes/avatar-pack.lua (docs/vrc-avatar-format.md).</summary>
     public static class PackDescription
     {
         /// <summary>The whole file: a comment naming the generator, then "return" and the table.</summary>

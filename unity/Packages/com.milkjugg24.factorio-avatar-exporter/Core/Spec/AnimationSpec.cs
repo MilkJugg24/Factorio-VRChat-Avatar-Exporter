@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace MilkJugg24.FactorioAvatarExporter.Core
 {
-    /// <summary>One animation of a pack (docs/avatar-pack-format.md, "Animations").</summary>
+    /// <summary>One animation of a pack (docs/vrc-avatar-format.md, "Animations").</summary>
     public sealed class AnimationInfo
     {
         public AnimationInfo(string name, int directionCount, int frameCount, bool loop, double defaultSpeed,
@@ -26,7 +26,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         public int FrameCount { get; }
         /// <summary>Looping animations sample t = frame / frames; one-shot ones frame / (frames - 1).</summary>
         public bool Loop { get; }
-        /// <summary>The animation_speed avatar-characters uses unless the pack overrides it.</summary>
+        /// <summary>The animation_speed vrc-avatars uses unless the pack overrides it.</summary>
         public double DefaultSpeed { get; }
         /// <summary>Part of the flight set (needs <c>flight = true</c>).</summary>
         public bool InAir { get; }

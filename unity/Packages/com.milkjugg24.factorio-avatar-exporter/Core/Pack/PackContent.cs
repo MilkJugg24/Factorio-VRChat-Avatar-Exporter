@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace MilkJugg24.FactorioAvatarExporter.Core
 {
     /// <summary>
-    /// Everything an avatar pack holds (docs/avatar-pack-format.md). <see cref="PackValidator"/> checks
+    /// Everything an avatar pack holds (docs/vrc-avatar-format.md). <see cref="PackValidator"/> checks
     /// it and <see cref="PackWriter"/> writes it.
     /// </summary>
     public sealed class PackContent

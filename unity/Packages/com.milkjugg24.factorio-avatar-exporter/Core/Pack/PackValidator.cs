@@ -5,7 +5,7 @@ using static System.FormattableString;
 namespace MilkJugg24.FactorioAvatarExporter.Core
 {
     /// <summary>
-    /// Checks a <see cref="PackContent"/> against the rules avatar-characters enforces when it loads a
+    /// Checks a <see cref="PackContent"/> against the rules vrc-avatars enforces when it loads a
     /// pack (prototypes/avatar-packs.lua) and those of tools/avatar_pack/check.py, plus what the exporter
     /// itself needs (a permission statement, single-line texts, a 144 x 144 thumbnail).
     /// </summary>

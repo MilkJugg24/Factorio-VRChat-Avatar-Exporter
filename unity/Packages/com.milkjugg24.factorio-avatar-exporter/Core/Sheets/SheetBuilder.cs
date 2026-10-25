@@ -7,7 +7,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
     /// <summary>
     /// Crops the frames of one animation layer and lays them out as sprite sheets, a port of
     /// <c>bbox_union()</c> and <c>write_sheet()</c> in tools/dragon_render/sheets.py, plus the row
-    /// split of docs/avatar-pack-format.md.
+    /// split of docs/vrc-avatar-format.md.
     /// </summary>
     public static class SheetBuilder
     {

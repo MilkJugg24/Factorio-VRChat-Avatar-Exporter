@@ -321,7 +321,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             packTitle = RequiredField(new GUIContent("Name", "Shown in the game's avatar window and mod list."), packTitle);
             string derived = PackNaming.DeriveId(packTitle ?? "");
             string id = RequiredField(new GUIContent("Pack id", "Lowercase letters, digits and -. The mod is " +
-                "called avatar-pack-<id>; keep it the same when you export again, so the new pack replaces the old one."),
+                "called vrc-avatar-<id>; keep it the same when you export again, so the new pack replaces the old one."),
                 string.IsNullOrEmpty(packId) ? derived : packId);
             packId = id == derived ? "" : id;
             author = RequiredField(new GUIContent("Author", "Your name as you'd like it shown with the pack (\"VRC Avatar: " +
@@ -360,7 +360,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
 
         /// <summary>
         /// Asks where to save the pack, under the file name Factorio expects for a mod
-        /// (avatar-pack-&lt;id&gt;_&lt;version&gt;.zip). False when cancelled.
+        /// (vrc-avatar-&lt;id&gt;_&lt;version&gt;.zip). False when cancelled.
         /// </summary>
         private bool ChooseZip(PackOptions options)
         {

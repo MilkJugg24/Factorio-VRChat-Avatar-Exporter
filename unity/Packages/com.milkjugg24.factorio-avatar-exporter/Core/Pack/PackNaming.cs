@@ -4,7 +4,7 @@ using System.Text;
 namespace MilkJugg24.FactorioAvatarExporter.Core
 {
     /// <summary>
-    /// Names of a pack and its files (docs/avatar-pack-format.md, "Names"), and the checks of
+    /// Names of a pack and its files (docs/vrc-avatar-format.md, "Names"), and the checks of
     /// tools/avatar_pack/spec.py on ids, titles and versions.
     /// </summary>
     public static class PackNaming
@@ -119,7 +119,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             return true;
         }
 
-        /// <summary>The pack's mod name, mod-data and character prototype name: "avatar-pack-&lt;id&gt;".</summary>
+        /// <summary>The pack's mod name, mod-data and character prototype name: "vrc-avatar-&lt;id&gt;".</summary>
         public static string ModName(string id)
         {
             if (!IsValidId(id))
@@ -129,7 +129,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             return PackFormat.ModPrefix + id;
         }
 
-        /// <summary>The single folder in the pack's zip: "avatar-pack-&lt;id&gt;_&lt;version&gt;".</summary>
+        /// <summary>The single folder in the pack's zip: "vrc-avatar-&lt;id&gt;_&lt;version&gt;".</summary>
         public static string ZipRootFolder(string id, string version)
         {
             if (!IsValidVersion(version))
@@ -139,7 +139,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             return ModName(id) + "_" + version;
         }
 
-        /// <summary>The file name Factorio expects for the pack's zip: "avatar-pack-&lt;id&gt;_&lt;version&gt;.zip".</summary>
+        /// <summary>The file name Factorio expects for the pack's zip: "vrc-avatar-&lt;id&gt;_&lt;version&gt;.zip".</summary>
         public static string ZipFileName(string id, string version) => ZipRootFolder(id, version) + ".zip";
 
         /// <summary>

@@ -1,18 +1,18 @@
--- Constants of the avatar pack format (docs/avatar-pack-format.md), shared by
+-- Constants of the avatar pack format (docs/vrc-avatar-format.md), shared by
 -- the data stage and the control stage.
 
 local format = {}
 
-format.DATA_TYPE = "avatar-characters.avatar-pack"
+format.DATA_TYPE = "vrc-avatars.avatar-pack"
 format.SUPPORTED_VERSION = 1
 
 -- mod, mod-data and character prototype names are MOD_PREFIX .. id
-format.MOD_PREFIX = "avatar-pack-"
-format.CORPSE_PREFIX = "avatar-pack-corpse-"
-format.SPRITE_PREFIX = "avatar-characters-pack-"
+format.MOD_PREFIX = "vrc-avatar-"
+format.CORPSE_PREFIX = "vrc-avatar-corpse-"
+format.SPRITE_PREFIX = "vrc-avatars-pack-"
 
 -- Avatar bundles hold several packs in one mod; a pack's `mod` field then names
--- the bundle its files are in (docs/avatar-pack-format.md, "Bundles").
+-- the bundle its files are in (docs/vrc-avatar-format.md, "Bundles").
 format.BUNDLE_PREFIX = "avatar-bundle-"
 
 format.ID_PATTERN = "^[a-z0-9][a-z0-9%-]*$"

@@ -1,4 +1,4 @@
--- Headless test for avatar-characters' character swap logic and avatar packs.
+-- Headless test for vrc-avatars' character swap logic and avatar packs.
 -- Run with tests/run_headless.sh; prints "AVATAR-TEST: PASS" or errors.
 --
 -- With the synthetic packs of tests/run_headless.sh --test-packs, the save is
@@ -7,10 +7,10 @@
 -- everything with the packs installed; the second run, after the packs were
 -- removed, checks that the reverted corpse survived with its items.
 
-local swap = require("__avatar-characters__/scripts/swap")
-local appearance = require("__avatar-characters__/scripts/appearance")
-local revert = require("__avatar-characters__/scripts/revert")
-local pack_list = require("__avatar-characters__/scripts/packs")
+local swap = require("__vrc-avatars__/scripts/swap")
+local appearance = require("__vrc-avatars__/scripts/appearance")
+local revert = require("__vrc-avatars__/scripts/revert")
+local pack_list = require("__vrc-avatars__/scripts/packs")
 
 local FIXTURE_CORPSE_POSITION = { 10, 10 }
 local FIXTURE_CHARACTER_POSITION = { -10, -10 }
@@ -51,9 +51,9 @@ local function same_counts(a, b)
 end
 
 local function test_prototypes()
-  check(prototypes.shortcut["avatar-characters-choose"] ~= nil, "missing shortcut")
-  check(prototypes.custom_input["avatar-characters-toggle-gui"] ~= nil, "missing hotkey")
-  check(helpers.is_valid_sprite_path("avatar-characters-icon"), "missing window icon")
+  check(prototypes.shortcut["vrc-avatars-choose"] ~= nil, "missing shortcut")
+  check(prototypes.custom_input["vrc-avatars-toggle-gui"] ~= nil, "missing hotkey")
+  check(helpers.is_valid_sprite_path("vrc-avatars-icon"), "missing window icon")
   check(helpers.is_valid_sprite_path("entity/character"), "the engineer's look button has no sprite")
 end
 
@@ -157,16 +157,16 @@ end
 
 local function test_revert_argument()
   local function known(id)
-    return id == "mika" or id == "avatar-pack-x"
+    return id == "mika" or id == "vrc-avatar-x"
   end
   local cases = {
     { nil, true, nil },
     { "   ", true, nil },
     { "mika", true, "mika" },
     { "  mika ", true, "mika" },
-    { "avatar-pack-mika", true, "mika" },
-    { "avatar-pack-x", true, "avatar-pack-x" },
-    { "avatar-pack-corpse-mika", false, nil },
+    { "vrc-avatar-mika", true, "mika" },
+    { "vrc-avatar-x", true, "vrc-avatar-x" },
+    { "vrc-avatar-corpse-mika", false, nil },
     { "mika now", false, nil },
     { "other", false, nil },
   }
@@ -193,7 +193,7 @@ local function test_corpse(surface, force)
 end
 
 local function call(name, ...)
-  return remote.call("avatar-characters", name, ...)
+  return remote.call("vrc-avatars", name, ...)
 end
 
 local function corpse_at(surface, position)
@@ -215,7 +215,7 @@ local function test_any_packs(surface, force)
     check(character and character.type == "character", label .. "no character prototype")
     local corpse = prototypes.entity[pack.corpse]
     check(corpse and corpse.type == "character-corpse", label .. "no corpse prototype")
-    check(helpers.is_valid_sprite_path("avatar-characters-pack-" .. pack.id), label .. "no GUI sprite")
+    check(helpers.is_valid_sprite_path("vrc-avatars-pack-" .. pack.id), label .. "no GUI sprite")
     check(call("is_avatar_character", pack.character) == pack.id, label .. "is_avatar_character")
     check(call("is_avatar_character", pack.corpse) == nil, label .. "a corpse is not a character")
     check(pack_list.id_of_character(pack.character) == pack.id, label .. "id_of_character")
@@ -256,7 +256,7 @@ local function test_generated_packs(surface, force, packs)
   check(test.title == "Test Avatar" and test.author == "make_test_pack", "pack test: title/author")
   check(small.title == string.rep("竜", 30), "pack small: UTF-8 title")
   check(test.tintable == true and small.tintable == false, "tintable flags")
-  check(test.character == "avatar-pack-test" and test.corpse == "avatar-pack-corpse-test", "pack test: names")
+  check(test.character == "vrc-avatar-test" and test.corpse == "vrc-avatar-corpse-test", "pack test: names")
 
   -- a missing pack falls back to the engineer; no choice is the engineer
   local function exists(name) return prototypes.entity[name] ~= nil end
@@ -268,16 +268,16 @@ local function test_generated_packs(surface, force, packs)
   check(call("is_avatar_character", "character") == nil, "the engineer is not a pack's")
 
   -- reverting one pack converts only its corpses and counts its remaining characters
-  local test_corpse = create_corpse(surface, "avatar-pack-corpse-test", { 20, 20 }, 7)
-  local small_corpse = create_corpse(surface, "avatar-pack-corpse-small", { 22, 20 }, 9)
+  local test_corpse = create_corpse(surface, "vrc-avatar-corpse-test", { 20, 20 }, 7)
+  local small_corpse = create_corpse(surface, "vrc-avatar-corpse-small", { 22, 20 }, 9)
   local engineer_corpse = create_corpse(surface, "character-corpse", { 24, 20 }, 11)
-  local unowned = surface.create_entity({ name = "avatar-pack-small", position = { 26, 20 }, force = force })
+  local unowned = surface.create_entity({ name = "vrc-avatar-small", position = { 26, 20 }, force = force })
   check(call("revert_all", "no-such-pack") == nil, "revert_all of an unknown pack should change nothing")
   check(call("revert_all", "small now") == nil, "revert_all of two words should change nothing")
   check(call("revert_all", 5) == nil, "revert_all of a number should change nothing")
   check(test_corpse.valid and small_corpse.valid and engineer_corpse.valid, "a refused revert_all converted corpses")
   -- the pack's mod name works as well as its id
-  local result = call("revert_all", "avatar-pack-small")
+  local result = call("revert_all", "vrc-avatar-small")
   -- the unowned character above, and the one on_init left for the pack
   check(result.corpses == 1 and result.remaining == 2,
     "revert_all(small): " .. result.corpses .. " corpses, " .. result.remaining .. " remaining")
@@ -328,7 +328,7 @@ local function test_survivors(surface)
   for _, s in ipairs(storage.survivors or {}) do
     local found = surface.find_entities_filtered({ type = "character", position = s.position, radius = 0.5 })[1]
     if pack_list.get(s.id) then
-      check(found and found.name == "avatar-pack-" .. s.id
+      check(found and found.name == "vrc-avatar-" .. s.id
         and found.get_main_inventory().get_item_count("iron-plate") == 17,
         "the character of pack " .. s.id .. " or its items were lost when the save was loaded again")
     else
@@ -341,9 +341,9 @@ script.on_init(function()
   local surface = game.surfaces[1]
   surface.request_to_generate_chunks({ 0, 0 }, 2)
   surface.force_generate_chunk_requests()
-  if script.active_mods["avatar-pack-test"] then
-    create_corpse(surface, "avatar-pack-corpse-test", FIXTURE_CORPSE_POSITION, 42)
-    surface.create_entity({ name = "avatar-pack-test", position = FIXTURE_CHARACTER_POSITION, force = "player" })
+  if script.active_mods["vrc-avatar-test"] then
+    create_corpse(surface, "vrc-avatar-corpse-test", FIXTURE_CORPSE_POSITION, 42)
+    surface.create_entity({ name = "vrc-avatar-test", position = FIXTURE_CHARACTER_POSITION, force = "player" })
     local result = call("revert_all", "test")
     storage.fixture = { corpses = result.corpses, remaining = result.remaining }
   end
@@ -369,7 +369,7 @@ script.on_event(defines.events.on_tick, function(event)
   local packs = test_any_packs(surface, force)
   test_survivors(surface)
   local phase = ""
-  if script.active_mods["avatar-pack-test"] then
+  if script.active_mods["vrc-avatar-test"] then
     test_generated_packs(surface, force, packs)
     phase = " (with avatar packs)"
   elseif storage.fixture then

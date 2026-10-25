@@ -65,7 +65,7 @@ local DIRECTION_NAMES = { [D.north] = "north", [D.east] = "east", [D.south] = "s
 -- the engineer, then every avatar pack character
 local function subjects()
   local list = { { label = "engineer", name = "character" } }
-  local prefix = "avatar-pack-"
+  local prefix = "vrc-avatar-"
   local names = {}
   for name, proto in pairs(prototypes.entity) do
     if proto.type == "character" and name:sub(1, #prefix) == prefix then
@@ -348,12 +348,12 @@ local function window_shot()
   local surface = game.surfaces[SURFACE]
   local character = surface.create_entity({ name = "character", position = { 0, 0 }, force = "player" })
   player.set_controller({ type = defines.controllers.character, character = character })
-  local packs = remote.call("avatar-characters", "get_avatar_packs")
+  local packs = remote.call("vrc-avatars", "get_avatar_packs")
   local status = nil
   if packs[1] then
-    status = remote.call("avatar-characters", "set_appearance", player.index, { avatar = packs[1].id })
+    status = remote.call("vrc-avatars", "set_appearance", player.index, { avatar = packs[1].id })
   end
-  remote.call("avatar-characters", "open_window", player.index)
+  remote.call("vrc-avatars", "open_window", player.index)
   -- the player's own screen size: the GUI is laid out for it, so a smaller picture cuts the window off
   local screen = player.display_resolution
   game.take_screenshot({
@@ -380,7 +380,7 @@ local function finish()
 end
 
 script.on_init(function()
-  -- no intro cutscene: avatar-characters re-applies the player's look after one, which would undo
+  -- no intro cutscene: vrc-avatars re-applies the player's look after one, which would undo
   -- the characters the player takes control of
   if remote.interfaces["freeplay"] then
     remote.call("freeplay", "set_skip_intro", true)

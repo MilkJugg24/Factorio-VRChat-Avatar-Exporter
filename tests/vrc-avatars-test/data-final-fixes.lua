@@ -1,4 +1,4 @@
--- Data stage checks. Runs after avatar-characters' data-final-fixes (this mod
+-- Data stage checks. Runs after vrc-avatars' data-final-fixes (this mod
 -- depends on it), so every character prototype exists by now.
 
 local failures = {}
@@ -63,12 +63,12 @@ local function layer_count(animation)
 end
 
 -- --id test --flight --tint --max-sheet 1024: split sheets, mask layers, custom timing
-if mods["avatar-pack-test"] then
-  local c = data.raw["character"]["avatar-pack-test"]
-  local corpse = data.raw["character-corpse"]["avatar-pack-corpse-test"]
+if mods["vrc-avatar-test"] then
+  local c = data.raw["character"]["vrc-avatar-test"]
+  local corpse = data.raw["character-corpse"]["vrc-avatar-corpse-test"]
   check(c ~= nil, "pack test: no character prototype")
   check(corpse ~= nil, "pack test: no corpse prototype")
-  check(data.raw["sprite"]["avatar-characters-pack-test"] ~= nil, "pack test: no GUI sprite")
+  check(data.raw["sprite"]["vrc-avatars-pack-test"] ~= nil, "pack test: no GUI sprite")
   if c and corpse then
     local anim = c.animations[1]
     local run_gun = anim.running_with_gun
@@ -86,11 +86,11 @@ if mods["avatar-pack-test"] then
     local idle = anim.idle.layers[1]
     check(idle.filename == nil and idle.filenames == nil and idle.stripes and #idle.stripes == 2,
       "pack test: idle (16 frames) not split by frames into 2 stripes")
-    check(idle.stripes and idle.stripes[2].filename == "__avatar-pack-test__/graphics/idle-base-2.png"
+    check(idle.stripes and idle.stripes[2].filename == "__vrc-avatar-test__/graphics/idle-base-2.png"
       and idle.stripes[1].width_in_frames + idle.stripes[2].width_in_frames == 16
       and idle.stripes[1].height_in_frames == 8 and idle.line_length == nil and idle.frame_count == 16,
       "pack test: idle stripes")
-    check(anim.idle_with_gun.layers[1].filename == "__avatar-pack-test__/graphics/idle-gun-base.png",
+    check(anim.idle_with_gun.layers[1].filename == "__vrc-avatar-test__/graphics/idle-gun-base.png",
       "pack test: idle-gun filename")
     check(anim.idle.layers[1].animation_speed == 0.08, "pack test: idle speed override")
     check(anim.running.layers[1].animation_speed == 0.5, "pack test: run speed override")
@@ -102,13 +102,13 @@ if mods["avatar-pack-test"] then
       and diff({ 1, 5 }, c.moving_sound_animation_positions, "") == nil,
       "pack test: a footstep sound on both feet's frames")
     check(c.left_footprint_frames[1] == 1 and c.right_footprint_frames[1] == 5, "pack test: footprint frames")
-    check(c.character_corpse == "avatar-pack-corpse-test", "pack test: corpse link")
-    check(c.icon == "__avatar-pack-test__/graphics/icon.png", "pack test: icon")
+    check(c.character_corpse == "vrc-avatar-corpse-test", "pack test: corpse link")
+    check(c.icon == "__vrc-avatar-test__/graphics/icon.png", "pack test: icon")
     check(c.inventory_size == data.raw["character"]["character"].inventory_size, "pack test: inventory size")
     check(layer_count(corpse.pictures[1]) == 3, "pack test: corpse layers")
     if flight then
       check(anim.flying_with_gun and #anim.flying_with_gun.layers[1].filenames == 3, "pack test: fly-gun split")
-      check(anim.take_off.layers[1].filename == "__avatar-pack-test__/graphics/take-off-base.png",
+      check(anim.take_off.layers[1].filename == "__vrc-avatar-test__/graphics/take-off-base.png",
         "pack test: own take-off")
       check(diff({ 5, 4, 3, 2, 1 }, anim.landing.layers[1].frame_sequence, "") == nil, "pack test: landing reversed")
     else
@@ -119,8 +119,8 @@ end
 
 -- --id small --ppt 32 --default-timing --frames run=6,mine=8: no flight, no
 -- tint, 32 pixels per tile, timing defaults scaled to its frame counts
-if mods["avatar-pack-small"] then
-  local c = data.raw["character"]["avatar-pack-small"]
+if mods["vrc-avatar-small"] then
+  local c = data.raw["character"]["vrc-avatar-small"]
   check(c ~= nil, "pack small: no character prototype")
   if c then
     local anim = c.animations[1]
@@ -144,7 +144,7 @@ end
 
 -- characters of avatar bundles draw their sheets from the bundle's characters/<id>/ folder
 for name, mod_data in pairs(data.raw["mod-data"] or {}) do
-  local d = mod_data.data_type == "avatar-characters.avatar-pack" and mod_data.data or nil
+  local d = mod_data.data_type == "vrc-avatars.avatar-pack" and mod_data.data or nil
   if d and d.mod then
     local folder = "__" .. d.mod .. "__/characters/" .. d.id .. "/"
     local character = data.raw["character"][name]

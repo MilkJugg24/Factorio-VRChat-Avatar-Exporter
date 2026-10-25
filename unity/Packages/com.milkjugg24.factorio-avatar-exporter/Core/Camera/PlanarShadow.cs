@@ -1,7 +1,7 @@
 namespace MilkJugg24.FactorioAvatarExporter.Core
 {
     /// <summary>
-    /// The ground shadow as a projection (docs/avatar-pack-format.md, "Rendering conventions"): every point
+    /// The ground shadow as a projection (docs/vrc-avatar-format.md, "Rendering conventions"): every point
     /// moves along <see cref="Conventions.ShadowLight"/> onto the ground z = 0, so shadows fall east. The
     /// projection is linear, so it works the same in tiles and in meters.
     /// </summary>

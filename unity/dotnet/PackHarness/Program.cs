@@ -15,7 +15,7 @@ namespace MilkJugg24.FactorioAvatarExporter.PackHarness
     ///       [--rig generic|chibi|minimal|dragon] [--height METERS] [--size PERCENT] [--ppt 64|32] [--supersampling N]
     ///       [--no-flight] [--zip]
     ///
-    /// Writes DIR/avatar-pack-ID/ and, with --zip, DIR/avatar-pack-ID_VERSION.zip.
+    /// Writes DIR/vrc-avatar-ID/ and, with --zip, DIR/vrc-avatar-ID_VERSION.zip.
     ///
     ///   dotnet run --project unity/dotnet/PackHarness -- bundle --out DIR --name NAME [--version V] ZIP...
     ///

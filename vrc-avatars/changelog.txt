@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.7.0
+Date: 2026-10-24
+  Changes:
+    - The internal name is now vrc-avatars, the same as the name shown in the game, so the file is
+      vrc-avatars_<version>.zip. Avatar packs are now named vrc-avatar-<id> (the file
+      vrc-avatar-<id>_1.0.0.zip). Packs made before this, and the old avatar-characters mod, don't
+      work with it: remove them and export your avatar again with exporter 0.20.0 or newer.
+      Before updating a save, run /avatar-revert-all in it with the old mods installed.
+---------------------------------------------------------------------------------------------------
 Version: 0.6.0
 Date: 2026-10-24
   Changes:

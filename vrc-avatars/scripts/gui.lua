@@ -7,7 +7,7 @@ local gui = {}
 
 gui.FRAME = "avatar_characters_frame"
 gui.TOP_BUTTON = "avatar_characters_top_button"
-gui.SHORTCUT = "avatar-characters-choose"
+gui.SHORTCUT = "vrc-avatars-choose"
 
 -- the look list shows this many rows before it scrolls (each row is a 72 px button plus 4 px spacing)
 local LOOK_ROWS = 4
@@ -35,7 +35,7 @@ function gui.get_frame(player)
 end
 
 function gui.update_top_button(player)
-  local show = player.mod_settings["avatar-characters-show-top-button"].value
+  local show = player.mod_settings["vrc-avatars-show-top-button"].value
   local top = player.gui.top
   if not show and not (top.mod_gui_top_frame or top.mod_gui_button_flow) then
     -- nothing to remove, and get_button_flow() would create empty frames
@@ -48,8 +48,8 @@ function gui.update_top_button(player)
       type = "sprite-button",
       name = gui.TOP_BUTTON,
       style = mod_gui.button_style,
-      sprite = "avatar-characters-icon",
-      tooltip = { "avatar-characters.top-button-tooltip" },
+      sprite = "vrc-avatars-icon",
+      tooltip = { "vrc-avatars.top-button-tooltip" },
       tags = { avatar_action = "toggle" },
     })
   elseif button and not show then
@@ -93,7 +93,7 @@ local function add_look(looks, id, sprite, title, author)
   name.style.single_line = false
   name.style.maximal_width = 220
   if author and author ~= "" then
-    local by = names.add({ type = "label", caption = { "avatar-characters.by-author", author }, tags = tags })
+    local by = names.add({ type = "label", caption = { "vrc-avatars.by-author", author }, tags = tags })
     by.style.single_line = false
     by.style.maximal_width = 220
     by.style.font_color = { 0.7, 0.7, 0.7 }
@@ -116,7 +116,7 @@ function gui.open(player, prefs)
   titlebar.add({
     type = "label",
     style = "frame_title",
-    caption = { "avatar-characters.window-title" },
+    caption = { "vrc-avatars.window-title" },
     ignored_by_interaction = true,
   })
   local drag = titlebar.add({ type = "empty-widget", style = "draggable_space_header", ignored_by_interaction = true })
@@ -127,7 +127,7 @@ function gui.open(player, prefs)
     type = "sprite-button",
     style = "frame_action_button",
     sprite = "utility/close",
-    tooltip = { "avatar-characters.close" },
+    tooltip = { "vrc-avatars.close" },
     tags = { avatar_action = "close" },
   })
 
@@ -154,18 +154,18 @@ function gui.open(player, prefs)
 
   -- the engineer and every installed avatar pack, a row each with its name (icons alone can't tell
   -- similar avatars apart); whole rows only, so it is clear when the list scrolls
-  options.add({ type = "label", style = "caption_label", caption = { "avatar-characters.look" } })
+  options.add({ type = "label", style = "caption_label", caption = { "vrc-avatars.look" } })
   local pane = options.add({ type = "scroll-pane", horizontal_scroll_policy = "never" })
   pane.style.maximal_height = LOOK_ROWS * LOOK_ROW_HEIGHT - 4
   local looks = pane.add({ type = "flow", name = "avatar_looks", direction = "vertical" })
   looks.style.vertical_spacing = 4
-  add_look(looks, "", "entity/character", { "avatar-characters.look-engineer" }, nil)
+  add_look(looks, "", "entity/character", { "vrc-avatars.look-engineer" }, nil)
   local installed = packs.list()
   for _, pack in ipairs(installed) do
     add_look(looks, pack.id, pack.sprite, pack.title, pack.author)
   end
   if #installed == 0 then
-    local none = options.add({ type = "label", caption = { "avatar-characters.no-packs-installed" } })
+    local none = options.add({ type = "label", caption = { "vrc-avatars.no-packs-installed" } })
     none.style.single_line = false
     none.style.maximal_width = 330
   end
@@ -188,7 +188,7 @@ function gui.open(player, prefs)
   buttons.add({
     type = "button",
     style = "confirm_button",
-    caption = { "avatar-characters.done" },
+    caption = { "vrc-avatars.done" },
     tags = { avatar_action = "close" },
   })
 
@@ -230,17 +230,17 @@ function gui.refresh(player, prefs)
   local chosen = find(frame, "avatar_chosen")
   if chosen then
     if pack then
-      chosen.caption = { "avatar-characters.chosen-pack", pack.title }
+      chosen.caption = { "vrc-avatars.chosen-pack", pack.title }
     else
-      chosen.caption = { "avatar-characters.chosen-engineer" }
+      chosen.caption = { "vrc-avatars.chosen-engineer" }
     end
   end
   local status = find(frame, "avatar_status")
   if status then
     if prefs.status == "avatar-missing" then
-      status.caption = { "avatar-characters.status-avatar-missing", prefs.avatar or "" }
+      status.caption = { "vrc-avatars.status-avatar-missing", prefs.avatar or "" }
     elseif prefs.status then
-      status.caption = { "avatar-characters.status-" .. prefs.status }
+      status.caption = { "vrc-avatars.status-" .. prefs.status }
     else
       status.caption = ""
     end

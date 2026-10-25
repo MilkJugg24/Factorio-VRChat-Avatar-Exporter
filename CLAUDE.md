@@ -7,10 +7,10 @@ The README is for players and avatar makers only. Keep developer and agent mater
 
 | Path | What it is |
 | --- | --- |
-| `avatar-characters/` | The Factorio 2.1 mod (Lua). Turns installed avatar packs into characters; the avatar window; `/avatar-revert-all`. It still loads legacy bundles (several packs in one mod), which the exporter no longer makes; `Core/Pack/PackBundler.cs` and `PackHarness bundle` remain only to test that. |
+| `vrc-avatars/` | The Factorio 2.1 mod (Lua). Turns installed avatar packs into characters; the avatar window; `/avatar-revert-all`. It still loads legacy bundles (several packs in one mod), which the exporter no longer makes; `Core/Pack/PackBundler.cs` and `PackHarness bundle` remain only to test that. |
 | `unity/Packages/com.milkjugg24.factorio-avatar-exporter/` | The Unity package. `Core/` decides everything and writes packs; it has no Unity references and is built and tested outside Unity. `Editor/` is the thin Unity layer (window, stage, camera, renderer). Its `README.md` ships inside the `.unitypackage` as the user guide to the window. |
 | `unity/dotnet/` | Builds and tests `Core/` with .NET, the stick-figure `PackHarness`, and `EditorTypeCheck` (compiles `Editor/` against Unity's assemblies). See its README for Core's layout and C# rules. |
-| `docs/avatar-pack-format.md` | The pack format (the contract between exporter and mod). |
+| `docs/vrc-avatar-format.md` | The pack format (the contract between exporter and mod). |
 | `docs/modding.md` | The mod's prototypes and remote interface, for other mod authors. |
 | `docs/images/` | Screenshots for the README. |
 | `tools/avatar_pack/` | The pack format in Python: `check.py` (validator), `make_test_pack.py`, `preview.py` (GIFs). |
@@ -38,22 +38,22 @@ To look at poses without Unity: `dotnet run --project unity/dotnet/PackHarness -
 
 CI runs on every push. After CI passes on `main`, `.github/workflows/release.yml` publishes a full
 release, marked latest, with two files: `FactorioAvatarExporter_<v>.unitypackage` and
-`avatar-characters_<v>.zip`. Older releases and their tags are deleted, so only the newest is offered.
+`vrc-avatars_<v>.zip`. Older releases and their tags are deleted, so only the newest is offered.
 
 - A new exporter version (`package.json` and `ExporterInfo.Version` in `Editor/PackExport.cs`, kept equal)
   makes a new release.
-- A new mod version alone (`avatar-characters/info.json`, plus an entry in `changelog.txt`) swaps the
+- A new mod version alone (`vrc-avatars/info.json`, plus an entry in `changelog.txt`) swaps the
   mod zip in the current release.
 - When the pack format gains something the mod must understand, raise `PackFormat.MinMainModVersion`
   so packs depend on the new mod, and document it in
-  `docs/avatar-pack-format.md`.
+  `docs/vrc-avatar-format.md`.
 
 ## Conventions
 
 - Never hard-code or auto-fill personal data (names, e-mail addresses, Unity account details). The
   exporter's Author field starts empty and must be filled in (packs are titled "VRC Avatar: <name> by
   <author>").
-- The mod is shown as "VRC Avatars"; its internal name stays `avatar-characters` (packs depend on it,
+- The mod is shown as "VRC Avatars"; its internal name is `vrc-avatars` (packs depend on it,
   saves and zip names use it).
 - In-game screenshots and exported packs of real avatars are private: don't commit them. The repository
   is public. README screenshots are added by the owner.

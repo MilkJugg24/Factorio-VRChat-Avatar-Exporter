@@ -1,9 +1,0 @@
-{
-  "name": "avatar-characters-test",
-  "version": "0.1.0",
-  "title": "VRC Avatars - headless tests",
-  "author": "MilkJugg24",
-  "factorio_version": "2.1",
-  "description": "Development only: exercises the character swap logic of avatar-characters. Not meant to be installed by players.",
-  "dependencies": ["avatar-characters"]
-}

@@ -4,14 +4,14 @@ Plays the in-game screenshot checks in the real game and collects the results. S
 
 .DESCRIPTION
 Starts Factorio with the mod from this repository, the screenshot test mod
-(tests/avatar-characters-screenshots) and avatar packs, in its own temporary folder (your saves, mods
+(tests/vrc-avatars-screenshots) and avatar packs, in its own temporary folder (your saves, mods
 and settings are not touched). The game plays the scenes by itself and closes when they are done,
 in a few minutes. The screenshots, manifest.json, the game log, GIFs and REPORT.md end up in -Out.
 
 .EXAMPLE
 powershell -ExecutionPolicy Bypass -File tests\run_ingame_checks.ps1
 .EXAMPLE
-powershell -ExecutionPolicy Bypass -File tests\run_ingame_checks.ps1 -Pack build\harness\avatar-pack-harness-generic_1.0.0.zip
+powershell -ExecutionPolicy Bypass -File tests\run_ingame_checks.ps1 -Pack build\harness\vrc-avatar-harness-generic_1.0.0.zip
 #>
 param(
     # The Factorio install folder (the one holding bin\ and data\).
@@ -48,8 +48,8 @@ $config = PathOf $work "config" "config.ini"
 "[path]`r`nread-data=__PATH__executable__/../../data`r`nwrite-data=$($work -replace '\\', '/')`r`n" |
     Set-Content -Encoding ASCII $config
 
-Copy-Item -Recurse (Join-Path $repo "avatar-characters") (Join-Path $mods "avatar-characters")
-Copy-Item -Recurse (PathOf $repo "tests" "avatar-characters-screenshots") (Join-Path $mods "avatar-characters-screenshots")
+Copy-Item -Recurse (Join-Path $repo "vrc-avatars") (Join-Path $mods "vrc-avatars")
+Copy-Item -Recurse (PathOf $repo "tests" "vrc-avatars-screenshots") (Join-Path $mods "vrc-avatars-screenshots")
 if ($Pack.Count -gt 0) {
     foreach ($p in $Pack) { Copy-Item -Recurse (Resolve-Path $p) $mods }
 } else {

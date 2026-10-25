@@ -15,14 +15,14 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Imaging
     {
         private static readonly Lazy<string> MissingReason = new Lazy<string>(Probe);
 
-        /// <summary>The repository root: the first ancestor of the test directory holding avatar-characters/info.json.</summary>
+        /// <summary>The repository root: the first ancestor of the test directory holding vrc-avatars/info.json.</summary>
         public static string RepoRoot
         {
             get
             {
                 for (var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory); dir != null; dir = dir.Parent)
                 {
-                    if (File.Exists(Path.Combine(dir.FullName, "avatar-characters", "info.json")))
+                    if (File.Exists(Path.Combine(dir.FullName, "vrc-avatars", "info.json")))
                     {
                         return dir.FullName;
                     }

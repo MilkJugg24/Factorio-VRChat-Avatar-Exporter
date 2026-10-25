@@ -133,7 +133,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
         [Test]
         public void ModPaths()
         {
-            Assert.That(PackFiles.ModPath("mika", PackFiles.Icon), Is.EqualTo("__avatar-pack-mika__/graphics/icon.png"));
+            Assert.That(PackFiles.ModPath("mika", PackFiles.Icon), Is.EqualTo("__vrc-avatar-mika__/graphics/icon.png"));
             Assert.Throws<ArgumentException>(() => PackFiles.ModPath("Mika", PackFiles.Icon));
         }
 

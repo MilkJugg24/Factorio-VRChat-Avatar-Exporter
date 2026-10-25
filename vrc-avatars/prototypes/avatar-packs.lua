@@ -1,4 +1,4 @@
--- Finds and validates avatar packs (docs/avatar-pack-format.md) in the data stage.
+-- Finds and validates avatar packs (docs/vrc-avatar-format.md) in the data stage.
 --
 -- A broken pack stops the game from loading with an error naming the pack and
 -- the problem. Skipping it instead would make Factorio delete every character

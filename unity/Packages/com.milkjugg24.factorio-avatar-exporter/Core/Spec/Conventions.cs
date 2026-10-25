@@ -3,7 +3,7 @@ using System;
 namespace MilkJugg24.FactorioAvatarExporter.Core
 {
     /// <summary>
-    /// How sprites are rendered so packs match the dragon (docs/avatar-pack-format.md,
+    /// How sprites are rendered so packs match the dragon (docs/vrc-avatar-format.md,
     /// "Rendering conventions"; values from tools/dragon_render/render.py).
     ///
     /// Spaces used throughout Core (all right-handed, z up, units are tiles unless a name says

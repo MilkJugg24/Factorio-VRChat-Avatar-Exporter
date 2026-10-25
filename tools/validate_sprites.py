@@ -1,10 +1,10 @@
-"""Checks avatar packs (docs/avatar-pack-format.md), folders or mod zips: everything
-avatar-characters checks when the game loads, plus that every sprite sheet exists and has
+"""Checks avatar packs (docs/vrc-avatar-format.md), folders or mod zips: everything
+vrc-avatars checks when the game loads, plus that every sprite sheet exists and has
 exactly the size Factorio will expect from the pack's metadata.
 
 The headless server does not load graphics, so it can not catch those mistakes.
 
-    python3 tools/validate_sprites.py --pack path/to/avatar-pack-mika_1.0.0.zip [more packs...]
+    python3 tools/validate_sprites.py --pack path/to/vrc-avatar-mika_1.0.0.zip [more packs...]
 """
 
 import argparse

@@ -4,7 +4,7 @@ using System.IO;
 namespace MilkJugg24.FactorioAvatarExporter.Core
 {
     /// <summary>
-    /// Writes a pack as the folder &lt;parent&gt;/avatar-pack-&lt;id&gt;/, which Factorio loads as is
+    /// Writes a pack as the folder &lt;parent&gt;/vrc-avatar-&lt;id&gt;/, which Factorio loads as is
     /// (for example straight from its mods folder).
     /// </summary>
     public sealed class DirectoryPackOutput : IPackOutput

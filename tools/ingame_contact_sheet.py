@@ -3,7 +3,7 @@
 
     python3 tools/ingame_contact_sheet.py ingame-checks/<date>
 
-Reads <folder>/manifest.json (written by tests/avatar-characters-screenshots) and writes, per scene:
+Reads <folder>/manifest.json (written by tests/vrc-avatars-screenshots) and writes, per scene:
 
 - <scene>.gif: the screenshots as an animation at the game's real speed, every subject at once,
   each lane labelled; runs of solo scenes (shooting, mining) are stacked so they play together;
@@ -163,7 +163,7 @@ def main():
         report.append("- " + ", ".join(f"{k}: {v}" for k, v in sorted(window.items())))
         if window.get("window_open") is False:
             report.append("- **problem:** the window did not open")
-        if window.get("pack") and window.get("character") != "avatar-pack-" + window["pack"]:
+        if window.get("pack") and window.get("character") != "vrc-avatar-" + window["pack"]:
             report.append(f"- **problem:** the player is {window.get('character')}, not the pack's character")
         report.append("")
     with open(os.path.join(folder, "REPORT.md"), "w", encoding="utf-8") as f:

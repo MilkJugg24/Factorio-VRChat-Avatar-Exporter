@@ -61,7 +61,7 @@ end
 
 -- The id of the installed pack whose character (or corpse) prototype this is,
 -- or nil. Names only starting like one, such as copies other mods make of
--- every character ("avatar-pack-mika-jetpack"), are not a pack's.
+-- every character ("vrc-avatar-mika-jetpack"), are not a pack's.
 function packs.id_of_character(name)
   local id = format.id_of_character(name)
   return packs.get(id) and id or nil

@@ -1,11 +1,11 @@
 -- Shortcut, hotkey, GUI sprite and styles for the avatar window.
 
-local MOD_PATH = "__avatar-characters__"
+local MOD_PATH = "__vrc-avatars__"
 
 data:extend({
   {
     type = "custom-input",
-    name = "avatar-characters-toggle-gui",
+    name = "vrc-avatars-toggle-gui",
     key_sequence = "CONTROL + SHIFT + A",
     action = "lua",
     consuming = "none",
@@ -13,11 +13,11 @@ data:extend({
   },
   {
     type = "shortcut",
-    name = "avatar-characters-choose",
-    order = "z[avatar-characters]",
+    name = "vrc-avatars-choose",
+    order = "z[vrc-avatars]",
     action = "lua",
     toggleable = true,
-    associated_control_input = "avatar-characters-toggle-gui",
+    associated_control_input = "vrc-avatars-toggle-gui",
     icon = MOD_PATH .. "/graphics/icons/shortcut-x56.png",
     icon_size = 56,
     small_icon = MOD_PATH .. "/graphics/icons/shortcut-x24.png",
@@ -25,8 +25,8 @@ data:extend({
   },
   {
     type = "sprite",
-    name = "avatar-characters-icon",
-    filename = MOD_PATH .. "/graphics/icons/avatar-characters.png",
+    name = "vrc-avatars-icon",
+    filename = MOD_PATH .. "/graphics/icons/vrc-avatars.png",
     size = 64,
     flags = { "gui-icon" },
   },

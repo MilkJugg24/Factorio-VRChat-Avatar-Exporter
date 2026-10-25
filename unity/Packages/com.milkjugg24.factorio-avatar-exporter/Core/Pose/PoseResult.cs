@@ -136,7 +136,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         public const int TailBones = 5;
     }
 
-    /// <summary>Timing values written to the pack (docs/avatar-pack-format.md, "timing").</summary>
+    /// <summary>Timing values written to the pack (docs/vrc-avatar-format.md, "timing").</summary>
     public sealed class PackTiming
     {
         public double DistancePerFrame { get; set; } = 0.238;

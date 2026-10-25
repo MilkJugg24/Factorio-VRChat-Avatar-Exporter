@@ -28,7 +28,7 @@ opening a window. It finds Unity through Unity Hub from the project's version, o
 `-Unity <Unity.exe>`. Add `-SkipImport` if the package is already in the project.
 
 - `-Mode pack` (the default) exports each avatar as **Export Avatar to .zip** does:
-  `<avatar>/avatar-pack-<id>_1.0.0.zip` (its README says it is a test export, not for sharing),
+  `<avatar>/vrc-avatar-<id>_1.0.0.zip` (its README says it is a test export, not for sharing),
   `report.txt` and a preview image per animation.
 - `-Mode poses` renders every animation posed by the exporter, one sheet per animation
   (`<avatar>/<animation>.png`, a row per direction), and a `report.txt` with the rig report and, per

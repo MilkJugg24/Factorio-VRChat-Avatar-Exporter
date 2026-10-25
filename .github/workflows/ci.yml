@@ -67,4 +67,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: mod-zip
-          path: build/avatar-characters_*.zip
+          path: build/vrc-avatars_*.zip

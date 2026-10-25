@@ -36,7 +36,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// <summary>The zip it was read from (as the caller named it), for messages.</summary>
         public string Source { get; }
 
-        /// <summary>How the file paths in its description start where it came from ("__avatar-pack-&lt;id&gt;__/").</summary>
+        /// <summary>How the file paths in its description start where it came from ("__vrc-avatar-&lt;id&gt;__/").</summary>
         internal string PathPrefix { get; }
 
         /// <summary>Its files by path inside its folder: avatar-pack.lua (its description), its graphics, README.txt.</summary>
@@ -53,7 +53,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             Characters = characters;
         }
 
-        /// <summary>The mod's name: avatar-pack-&lt;id&gt; or avatar-bundle-&lt;id&gt;.</summary>
+        /// <summary>The mod's name: vrc-avatar-&lt;id&gt; or avatar-bundle-&lt;id&gt;.</summary>
         public string ModName { get; }
         public string Version { get; }
         public bool IsBundle => ModName.StartsWith(PackBundler.ModPrefix, StringComparison.Ordinal);
@@ -75,7 +75,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
     /// Legacy: the exporter no longer offers bundles (servers install every player's pack instead); this stays
     /// so the tests can still check that VRC Avatars loads bundles made by exporters 0.3.0 to 0.10.0.
     ///
-    /// Avatar bundles (docs/avatar-pack-format.md, "Bundles"): several avatar packs in one mod, so a server
+    /// Avatar bundles (docs/vrc-avatar-format.md, "Bundles"): several avatar packs in one mod, so a server
     /// hands every player one file. Each character keeps its pack id, and so its character prototype names,
     /// whether it comes as a pack or in a bundle: a save keeps its characters when a server switches.
     ///
@@ -88,8 +88,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
     {
         public const string ModPrefix = "avatar-bundle-";
 
-        /// <summary>The first avatar-characters version that loads bundles (and frames_per_file, 0.4.0, and an animation's own pixels_per_tile, 0.5.0).</summary>
-        public const string MinMainModVersion = "0.5.0";
+        /// <summary>The first vrc-avatars version that loads bundles (and frames_per_file, 0.4.0, and an animation's own pixels_per_tile, 0.5.0; 0.7.0 is the first under the name vrc-avatars).</summary>
+        public const string MinMainModVersion = "0.7.0";
 
         public const string Dependency = PackFormat.MainMod + " >= " + MinMainModVersion;
 
@@ -120,7 +120,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         public static string DataLua(string bundleId, IEnumerable<string> ids)
         {
             string list = string.Join(", ", ids.OrderBy(i => i, StringComparer.Ordinal).Select(i => "\"" + i + "\""));
-            return "-- An avatar bundle: several avatar packs in one mod (docs/avatar-pack-format.md, \"Bundles\").\n" +
+            return "-- An avatar bundle: several avatar packs in one mod (docs/vrc-avatar-format.md, \"Bundles\").\n" +
                 "local bundle = \"" + ModName(bundleId) + "\"\n" +
                 "for _, id in ipairs({ " + list + " }) do\n" +
                 "  local pack = require(\"characters.\" .. id .. \".avatar-pack\")\n" +

@@ -3,7 +3,7 @@
 #
 # Runs by itself after CI passes on main, so bumping a version is all a release takes:
 # - a new exporter version (package.json) publishes a new release with both files;
-# - a new mod version (avatar-characters/info.json) alone swaps the new mod zip into the current
+# - a new mod version (vrc-avatars/info.json) alone swaps the new mod zip into the current
 #   release;
 # - nothing new does nothing.
 # It is a full release marked latest, so the repository's front page shows it. Older releases are then
@@ -44,7 +44,7 @@ jobs:
         id: version
         run: |
           exporter=$(python3 -c "import json; print(json.load(open('unity/Packages/com.milkjugg24.factorio-avatar-exporter/package.json'))['version'])")
-          mod=$(python3 -c "import json; print(json.load(open('avatar-characters/info.json'))['version'])")
+          mod=$(python3 -c "import json; print(json.load(open('vrc-avatars/info.json'))['version'])")
           if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "${GITHUB_REF_NAME#exporter-v}" != "$exporter" ]; then
             echo "Tag $GITHUB_REF_NAME does not match package.json version $exporter"
             exit 1
@@ -72,7 +72,7 @@ jobs:
           MOD: ${{ steps.version.outputs.mod }}
         run: |
           package="build/FactorioAvatarExporter_$EXPORTER.unitypackage"
-          zip="build/avatar-characters_$MOD.zip"
+          zip="build/vrc-avatars_$MOD.zip"
           cat > notes.md <<NOTES
           ### Which file do I need?
 
@@ -111,7 +111,7 @@ jobs:
             fi
           done
           # the mod zip of an older mod version
-          for old in $(grep -x 'avatar-characters_.*\.zip' <<< "$assets" | grep -vxF "$(basename "$zip")"); do
+          for old in $(grep -x 'vrc-avatars_.*\.zip' <<< "$assets" | grep -vxF "$(basename "$zip")"); do
             gh release delete-asset "$TAG" "$old" --yes
             echo "removed $old from $TAG"
           done
@@ -135,7 +135,7 @@ jobs:
                 newest=$(printf '%s\n%s\n' "$version" "$current" | sort -V | tail -n 1)
                 [ "$old" != "$TAG" ] && [ "$newest" = "$current" ] || continue
                 ;;
-              avatar-characters-v*) ;; # the mod's own releases, from before both shipped together
+              vrc-avatars-v*) ;; # the mod's own releases, from before both shipped together
               *) continue ;;
             esac
             gh release delete "$old" --yes --cleanup-tag

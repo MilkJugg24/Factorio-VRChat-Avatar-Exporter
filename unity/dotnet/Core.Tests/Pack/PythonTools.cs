@@ -35,13 +35,13 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
         private static readonly Lazy<string> Root = new Lazy<string>(() =>
         {
             var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
-            while (dir != null && !File.Exists(Path.Combine(dir.FullName, "avatar-characters", "info.json")))
+            while (dir != null && !File.Exists(Path.Combine(dir.FullName, "vrc-avatars", "info.json")))
             {
                 dir = dir.Parent;
             }
             if (dir == null)
             {
-                throw new InvalidOperationException("the repository root (with avatar-characters/info.json) was not found");
+                throw new InvalidOperationException("the repository root (with vrc-avatars/info.json) was not found");
             }
             return dir.FullName;
         });

@@ -1,4 +1,4 @@
-"""Writes a synthetic avatar pack (docs/avatar-pack-format.md) for testing avatar-characters
+"""Writes a synthetic avatar pack (docs/vrc-avatar-format.md) for testing vrc-avatars
 without the Unity exporter.
 
 Every frame is a coloured stand-in figure labelled with its direction (row) and frame number,
@@ -9,8 +9,8 @@ pair, so the row order can be checked in the game.
     python3 tools/avatar_pack/make_test_pack.py --out build/packs --id test --flight --tint --zip
     python3 tools/avatar_pack/make_test_pack.py --out build/packs --id broken --broken missing-anim
 
-The pack is written to <out>/avatar-pack-<id>/ (a folder Factorio loads as is), and with
---zip also to <out>/avatar-pack-<id>_<version>.zip. With --broken, the pack has one
+The pack is written to <out>/vrc-avatar-<id>/ (a folder Factorio loads as is), and with
+--zip also to <out>/vrc-avatar-<id>_<version>.zip. With --broken, the pack has one
 deliberate mistake and the expected error is printed as "EXPECTED-ERROR: <text>".
 """
 
@@ -42,7 +42,7 @@ GUN_ROWS = [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2), (1, 3), (2, 0), (2, 
 AIR_HEIGHT = 0.42  # tiles
 SHADOW_ALPHA = 128
 
-# kind -> (description, expected error text from avatar-characters)
+# kind -> (description, expected error text from vrc-avatars)
 BROKEN = {
     "format-version": ("format_version 99", "uses avatar pack format 99"),
     "missing-anim": ("no mine animation", 'is missing the required "mine" animation'),
@@ -276,7 +276,7 @@ def write_icon(path, size, tint, title):
 
 
 def build(args):
-    mod_name = f"avatar-pack-{args.id}"
+    mod_name = f"vrc-avatar-{args.id}"
     flight = args.flight or args.broken == "partial-flight"
     tint = args.tint or args.broken == "missing-mask"
     max_sheet = 1024 if args.broken == "bad-split" else args.max_sheet
@@ -368,7 +368,7 @@ def build(args):
         "author": args.author,
         "factorio_version": FACTORIO_VERSION,
         "description": "Synthetic avatar pack for testing VRC Avatars.",
-        "dependencies": ["avatar-characters >= 0.1.0"],
+        "dependencies": ["vrc-avatars >= 0.1.0"],
     }
     with open(os.path.join(folder, "info.json"), "w", newline="\n") as fh:
         json.dump(info, fh, indent=2)

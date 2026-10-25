@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Plays the in-game screenshot scenes (tests/avatar-characters-screenshots) in a headless Factorio,
+# Plays the in-game screenshot scenes (tests/vrc-avatars-screenshots) in a headless Factorio,
 # which takes no screenshots and has no player, and checks what the scenes did: everyone walked,
 # flew over the water (with Space Age) and left a corpse. Guards the scenes that
 # tests/run_ingame_checks.ps1 plays in the real game.
@@ -14,7 +14,7 @@ WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
 mkdir -p "$WORK/mods" "$WORK/config"
-cp -r "$REPO/avatar-characters" "$REPO/tests/avatar-characters-screenshots" "$WORK/mods/"
+cp -r "$REPO/vrc-avatars" "$REPO/tests/vrc-avatars-screenshots" "$WORK/mods/"
 python3 "$REPO/tools/avatar_pack/make_test_pack.py" --out "$WORK/mods" --id test --flight --tint > /dev/null
 python3 - "$WORK/mods" "$DLC" <<'PY'
 import json, os, sys

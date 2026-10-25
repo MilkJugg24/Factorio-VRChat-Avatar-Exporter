@@ -1,5 +1,5 @@
-"""Checks an avatar pack (a folder or a mod zip) against docs/avatar-pack-format.md: the same
-rules avatar-characters enforces when the game loads, plus the sheet sizes and other things only
+"""Checks an avatar pack (a folder or a mod zip) against docs/vrc-avatar-format.md: the same
+rules vrc-avatars enforces when the game loads, plus the sheet sizes and other things only
 the graphics files can tell. Used by `tools/validate_sprites.py --pack`.
 """
 
@@ -127,11 +127,11 @@ class Checker:
                       f' or "{name}"')
         dependency_ok = False
         for dep in info.get("dependencies") or []:
-            m = re.fullmatch(r"\s*avatar-characters\s*>=\s*(\d+)\.(\d+)\.(\d+)\s*", dep) if isinstance(dep, str) else None
+            m = re.fullmatch(r"\s*vrc-avatars\s*>=\s*(\d+)\.(\d+)\.(\d+)\s*", dep) if isinstance(dep, str) else None
             if m and tuple(int(g) for g in m.groups()) >= minimum:
                 dependency_ok = True
         if not dependency_ok:
-            self.error(f'info.json: dependencies must include "avatar-characters >= {".".join(map(str, minimum))}"')
+            self.error(f'info.json: dependencies must include "vrc-avatars >= {".".join(map(str, minimum))}"')
         return name
 
     def check_data_lua(self):
@@ -140,7 +140,7 @@ class Checker:
             return
         text = self.files.read("data.lua").decode("utf-8", "replace")
         if text.split() != spec.DATA_LUA.split():
-            self.error("data.lua is not the standard one from docs/avatar-pack-format.md")
+            self.error("data.lua is not the standard one from docs/vrc-avatar-format.md")
 
     def image(self, name, what):
         """Opens an image of the pack, or reports it and returns None when it is not a readable image."""
@@ -330,7 +330,7 @@ class Checker:
                     self.error(f"timing.{field} has frame {frame} outside 1..{run_frames}")
 
     def check_description(self, mod_name, path="prototypes/avatar-pack.lua", in_bundle=False):
-        """Checks a pack's description. mod_name is its avatar-pack-<id> name (for a bundle's character
+        """Checks a pack's description. mod_name is its vrc-avatar-<id> name (for a bundle's character
         too: its id must be its folder's)."""
         self.mod_name = mod_name
         if self.files_mod is None:
@@ -437,7 +437,7 @@ class Checker:
         else:
             text = self.files.read("data.lua").decode("utf-8", "replace")
             if text.split() != spec.bundle_data_lua(bundle_name[len(spec.BUNDLE_PREFIX):], ids).split():
-                self.error("data.lua is not the standard bundle one from docs/avatar-pack-format.md")
+                self.error("data.lua is not the standard bundle one from docs/vrc-avatar-format.md")
         for pack_id in ids:
             folder = f"characters/{pack_id}/"
             character = Checker(SubFiles(self.files, folder))

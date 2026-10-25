@@ -70,7 +70,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
         public void ReadsAPack()
         {
             BundleInput input = Read(PackZip("mika", "Mika \"M\" ミカ", "1.2.3"), "mika.zip");
-            Assert.That(input.ModName, Is.EqualTo("avatar-pack-mika"));
+            Assert.That(input.ModName, Is.EqualTo("vrc-avatar-mika"));
             Assert.That(input.IsBundle, Is.False);
             BundleCharacter mika = input.Characters.Single();
             Assert.That(mika.Id, Is.EqualTo("mika"));
@@ -100,14 +100,14 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
                 Assert.That(json.GetProperty("version").GetString(), Is.EqualTo("1.0.3"));
                 Assert.That(json.GetProperty("title").GetString(), Is.EqualTo("Avatar bundle: My Server"));
                 Assert.That(json.GetProperty("factorio_version").GetString(), Is.EqualTo(PackFormat.FactorioVersion));
-                Assert.That(json.GetProperty("dependencies").EnumerateArray().Single().GetString(), Is.EqualTo("avatar-characters >= 0.5.0"));
+                Assert.That(json.GetProperty("dependencies").EnumerateArray().Single().GetString(), Is.EqualTo("vrc-avatars >= 0.7.0"));
                 StringAssert.Contains("Draco, Mika", json.GetProperty("description").GetString());
             }
             foreach (string id in new[] { "draco", "mika" })
             {
                 string folder = root + "characters/" + id + "/";
                 string description = Text(entries[folder + "avatar-pack.lua"]);
-                StringAssert.DoesNotContain("__avatar-pack-" + id + "__", description);
+                StringAssert.DoesNotContain("__vrc-avatar-" + id + "__", description);
                 StringAssert.Contains("\"__avatar-bundle-my-server__/characters/" + id + "/graphics/icon.png\"", description);
                 Assert.That(entries.ContainsKey(folder + "graphics/icon.png"), Is.True);
                 Assert.That(entries.ContainsKey(folder + "graphics/idle-base.png"), Is.True);
@@ -162,7 +162,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
             {
                 string description = Text(entries[root + "characters/" + id + "/avatar-pack.lua"]);
                 StringAssert.DoesNotContain("avatar-bundle-my-server", description);
-                StringAssert.DoesNotContain("__avatar-pack-", description);
+                StringAssert.DoesNotContain("__vrc-avatar-", description);
                 StringAssert.Contains("\"__avatar-bundle-other__/characters/" + id + "/graphics/", description);
             }
             Assert.That(notes, Is.Empty);

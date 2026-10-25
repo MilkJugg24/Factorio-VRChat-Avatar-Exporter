@@ -19,7 +19,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                 "Read README.txt before removing this mod from a save.";
         }
 
-        /// <summary>info.json, as in docs/avatar-pack-format.md, with the title shortened by <see cref="PackNaming.InfoTitle"/>.</summary>
+        /// <summary>info.json, as in docs/vrc-avatar-format.md, with the title shortened by <see cref="PackNaming.InfoTitle"/>.</summary>
         public static string InfoJson(PackContent content)
         {
             CheckContent(content);

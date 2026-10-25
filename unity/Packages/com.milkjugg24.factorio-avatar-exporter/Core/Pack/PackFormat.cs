@@ -4,18 +4,18 @@ using System.Collections.Generic;
 namespace MilkJugg24.FactorioAvatarExporter.Core
 {
     /// <summary>
-    /// Constants of the avatar pack format (docs/avatar-pack-format.md); the same values as
-    /// tools/avatar_pack/spec.py and avatar-characters/scripts/pack-format.lua.
+    /// Constants of the avatar pack format (docs/vrc-avatar-format.md); the same values as
+    /// tools/avatar_pack/spec.py and vrc-avatars/scripts/pack-format.lua.
     /// </summary>
     public static class PackFormat
     {
         public const int FormatVersion = 1;
 
-        /// <summary>Prefix of the pack's mod name and mod-data prototype: "avatar-pack-&lt;id&gt;".</summary>
-        public const string ModPrefix = "avatar-pack-";
+        /// <summary>Prefix of the pack's mod name and mod-data prototype: "vrc-avatar-&lt;id&gt;".</summary>
+        public const string ModPrefix = "vrc-avatar-";
 
         /// <summary>The data_type of every pack's mod-data prototype.</summary>
-        public const string DataType = "avatar-characters.avatar-pack";
+        public const string DataType = "vrc-avatars.avatar-pack";
 
         public const int MaxIdLength = 35;
 
@@ -28,7 +28,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// <summary>Most frames of one animation (Factorio's limit).</summary>
         public const int MaxFrames = 255;
 
-        /// <summary>Largest icon size avatar-characters accepts, px.</summary>
+        /// <summary>Largest icon size vrc-avatars accepts, px.</summary>
         public const int MaxIconSize = 512;
 
         /// <summary>Size of thumbnail.png, the picture in Factorio's mod list, px.</summary>
@@ -40,19 +40,19 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// </summary>
         public const int InfoTitleMaxBytes = 100;
 
-        /// <summary>Largest timing.distance_per_frame avatar-characters accepts, tiles.</summary>
+        /// <summary>Largest timing.distance_per_frame vrc-avatars accepts, tiles.</summary>
         public const double MaxDistancePerFrame = 2.0;
 
         public const string FactorioVersion = "2.1";
 
         /// <summary>The Factorio mod that loads avatar packs.</summary>
-        public const string MainMod = "avatar-characters";
+        public const string MainMod = "vrc-avatars";
 
         /// <summary>Its title in Factorio's mod list.</summary>
         public const string MainModTitle = "VRC Avatars";
 
-        /// <summary>The first avatar-characters version that loads packs of this format (0.4.0 added frames_per_file, 0.5.0 an animation's own pixels_per_tile).</summary>
-        public const string MinMainModVersion = "0.5.0";
+        /// <summary>The first vrc-avatars version that loads packs of this format (0.4.0 added frames_per_file, 0.5.0 an animation's own pixels_per_tile; 0.7.0 is the first under the name vrc-avatars).</summary>
+        public const string MinMainModVersion = "0.7.0";
 
         /// <summary>The info.json dependency every pack declares.</summary>
         public const string Dependency = MainMod + " >= " + MinMainModVersion;
@@ -66,14 +66,14 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             "data:extend({\n" +
             "  {\n" +
             "    type = \"mod-data\",\n" +
-            "    name = \"avatar-pack-\" .. pack.id,\n" +
-            "    data_type = \"avatar-characters.avatar-pack\",\n" +
+            "    name = \"vrc-avatar-\" .. pack.id,\n" +
+            "    data_type = \"vrc-avatars.avatar-pack\",\n" +
             "    data = pack,\n" +
             "  },\n" +
             "})\n";
     }
 
-    /// <summary>Layer names of a pack animation (docs/avatar-pack-format.md, "Layers").</summary>
+    /// <summary>Layer names of a pack animation (docs/vrc-avatar-format.md, "Layers").</summary>
     public static class PackLayers
     {
         /// <summary>The character, straight-alpha RGBA. Required.</summary>

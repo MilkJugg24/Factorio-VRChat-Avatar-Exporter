@@ -3,13 +3,13 @@
 ## Prototypes
 
 - The vanilla `character` prototype stays the engineer.
-- Each pack (and each character of a legacy bundle) adds an `avatar-pack-<id>` character and an
-  `avatar-pack-corpse-<id>` corpse. They are copied from `character` and `character-corpse` in
+- Each pack (and each character of a legacy bundle) adds an `vrc-avatar-<id>` character and an
+  `vrc-avatar-corpse-<id>` corpse. They are copied from `character` and `character-corpse` in
   `data-final-fixes`, so they inherit changes other mods make to those.
 - If another mod temporarily swaps a player's character (a jetpack, for example), VRC Avatars
   leaves it alone and reapplies the player's look once they're back to a normal character.
 
-## Remote interface `avatar-characters`
+## Remote interface `vrc-avatars`
 
 - `get_appearance(player_index)` returns `{avatar = pack id or nil}`.
 - `set_appearance(player_index, {avatar = id or false})` (`false` is the engineer) returns:
@@ -25,5 +25,5 @@
 
 ## Making packs by hand
 
-The pack format is in [avatar-pack-format.md](avatar-pack-format.md). `tools/validate_sprites.py --pack
+The pack format is in [vrc-avatar-format.md](vrc-avatar-format.md). `tools/validate_sprites.py --pack
 <zip or folder>` checks a pack the way the mod does when the game loads.

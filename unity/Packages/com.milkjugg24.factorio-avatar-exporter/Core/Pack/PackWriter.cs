@@ -5,7 +5,7 @@ using System.Text;
 namespace MilkJugg24.FactorioAvatarExporter.Core
 {
     /// <summary>
-    /// Writes a complete avatar pack (docs/avatar-pack-format.md, "Files"): info.json, data.lua,
+    /// Writes a complete avatar pack (docs/vrc-avatar-format.md, "Files"): info.json, data.lua,
     /// prototypes/avatar-pack.lua, the sheets, graphics/icon.png, thumbnail.png, locale/en/locale.cfg
     /// and README.txt. Text files are UTF-8 without a byte order mark, with "\n" line endings.
     /// </summary>

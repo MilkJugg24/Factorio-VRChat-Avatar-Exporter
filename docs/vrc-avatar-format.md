@@ -1,8 +1,8 @@
 # Avatar pack format (version 1)
 
 An **avatar pack** is a small Factorio mod that adds one look to the VRC
-Avatars mod (internal name `avatar-characters`, 0.5.0 or newer). The pack only ships
-sprite sheets and a description of them. `avatar-characters` reads that
+Avatars mod (internal name `vrc-avatars`, 0.7.0 or newer). The pack only ships
+sprite sheets and a description of them. `vrc-avatars` reads that
 description, creates the character and corpse prototypes, and offers the look
 in its avatar window, where each player picks their own.
 
@@ -11,7 +11,7 @@ Anything that follows this document works, including hand-drawn packs. To
 check a pack before loading it in the game:
 
 ```sh
-python3 tools/validate_sprites.py --pack path/to/avatar-pack-<id>_<version>.zip
+python3 tools/validate_sprites.py --pack path/to/vrc-avatar-<id>_<version>.zip
 ```
 
 `tools/avatar_pack/make_test_pack.py` writes a synthetic example pack.
@@ -21,17 +21,17 @@ python3 tools/validate_sprites.py --pack path/to/avatar-pack-<id>_<version>.zip
 | Thing | Name |
 | --- | --- |
 | Pack id | `<id>`: lowercase letters, digits and `-`; starts with a letter or digit; at most 35 characters; must not start with `corpse-` |
-| Mod name (`info.json`) | `avatar-pack-<id>` |
-| Zip file | `avatar-pack-<id>_<version>.zip`, containing one folder `avatar-pack-<id>_<version>/` (or `avatar-pack-<id>/`) |
-| mod-data prototype | `avatar-pack-<id>`, with `data_type = "avatar-characters.avatar-pack"` |
-| Character prototype (created by avatar-characters) | `avatar-pack-<id>` |
-| Corpse prototype (created by avatar-characters) | `avatar-pack-corpse-<id>` |
-| GUI sprite (created by avatar-characters from `icon`) | `avatar-characters-pack-<id>` |
+| Mod name (`info.json`) | `vrc-avatar-<id>` |
+| Zip file | `vrc-avatar-<id>_<version>.zip`, containing one folder `vrc-avatar-<id>_<version>/` (or `vrc-avatar-<id>/`) |
+| mod-data prototype | `vrc-avatar-<id>`, with `data_type = "vrc-avatars.avatar-pack"` |
+| Character prototype (created by vrc-avatars) | `vrc-avatar-<id>` |
+| Corpse prototype (created by vrc-avatars) | `vrc-avatar-corpse-<id>` |
+| GUI sprite (created by vrc-avatars from `icon`) | `vrc-avatars-pack-<id>` |
 
 ## Files
 
 ```
-avatar-pack-<id>_<version>/
+vrc-avatar-<id>_<version>/
   info.json
   data.lua
   prototypes/avatar-pack.lua
@@ -47,13 +47,13 @@ avatar-pack-<id>_<version>/
 
 ```json
 {
-  "name": "avatar-pack-<id>",
+  "name": "vrc-avatar-<id>",
   "version": "1.0.0",
   "title": "Avatar pack: <title>",
   "author": "<author>",
   "factorio_version": "2.1",
   "description": "...",
-  "dependencies": ["avatar-characters >= 0.5.0"]
+  "dependencies": ["vrc-avatars >= 0.7.0"]
 }
 ```
 
@@ -72,8 +72,8 @@ local pack = require("prototypes.avatar-pack")
 data:extend({
   {
     type = "mod-data",
-    name = "avatar-pack-" .. pack.id,
-    data_type = "avatar-characters.avatar-pack",
+    name = "vrc-avatar-" .. pack.id,
+    data_type = "vrc-avatars.avatar-pack",
     data = pack,
   },
 })
@@ -90,7 +90,7 @@ return {
   title = "Mika",                -- shown in the customization window, at most 80 characters
   author = "someone",            -- optional
   generator = { name = "factorio-avatar-exporter", version = "1.0.0" },  -- optional
-  icon = { filename = "__avatar-pack-mika__/graphics/icon.png", size = 64 },
+  icon = { filename = "__vrc-avatar-mika__/graphics/icon.png", size = 64 },
   pixels_per_tile = 64,          -- 64 (sprites drawn at scale 0.5) or 32 (scale 1)
   tintable = false,              -- true: every animation has a "mask" layer tinted with the player colour
   flight = true,                 -- true: the flight animations below are all present
@@ -107,11 +107,11 @@ return {
       frame_count = 8,
       layers = {
         base = {
-          filename = "__avatar-pack-mika__/graphics/idle-base.png",
+          filename = "__vrc-avatar-mika__/graphics/idle-base.png",
           width = 92, height = 150, shift = { 0.0, -1.03125 },
         },
         shadow = {
-          filename = "__avatar-pack-mika__/graphics/idle-shadow.png",
+          filename = "__vrc-avatar-mika__/graphics/idle-shadow.png",
           width = 140, height = 70, shift = { 0.6, 0.05 },
         },
       },
@@ -122,8 +122,8 @@ return {
       layers = {
         base = {
           filenames = {
-            "__avatar-pack-mika__/graphics/run-gun-base-1.png",
-            "__avatar-pack-mika__/graphics/run-gun-base-2.png",
+            "__vrc-avatar-mika__/graphics/run-gun-base-1.png",
+            "__vrc-avatar-mika__/graphics/run-gun-base-2.png",
           },
           lines_per_file = 13,
           width = 110, height = 300, shift = { 0.0, -1.2 },
@@ -232,7 +232,7 @@ to the west.
   `(frame centre - anchor) / pixels_per_tile`, where the anchor is the ground
   point under the character.
 - No file may be larger than 4096 px in either direction.
-- An animation may set its own `pixels_per_tile` (64 or 32; avatar-characters
+- An animation may set its own `pixels_per_tile` (64 or 32; vrc-avatars
   0.5.0 or newer) to be drawn at that resolution instead of the pack's: the
   exporter draws an animation too large for the sheets at 64 at 32, which shows
   it at the same size, a little softer. Its frames, `width`, `height` and file
@@ -244,10 +244,10 @@ to the west.
   be shorter. `#filenames` must be `ceil(direction_count / lines_per_file)`.
 - When instead a row (`frame_count x width`) is more than 4096 px, split the
   sheet by frames: use `filenames` and set `frames_per_file = floor(4096 / width)`
-  (needs `avatar-characters` 0.4.0 or newer). Every file holds all directions;
+  (needs `vrc-avatars` 0.4.0 or newer). Every file holds all directions;
   file *k* holds frames `(k-1) x frames_per_file + 1` onwards, and the last file
   may be narrower. `#filenames` must be `ceil(frame_count / frames_per_file)`.
-  avatar-characters turns this into Factorio's `stripes`.
+  vrc-avatars turns this into Factorio's `stripes`.
 - A layer is split one way only: `lines_per_file` and `frames_per_file` never
   appear together, so a layer too wide and too tall at once does not fit.
 - PNG, RGBA, 8 bits per channel, straight (not premultiplied) alpha, sRGB.
@@ -279,16 +279,16 @@ working.
 
 | Thing | Name |
 | --- | --- |
-| Mod name | `avatar-bundle-<name>`, with `"dependencies": ["avatar-characters >= 0.5.0"]` |
+| Mod name | `avatar-bundle-<name>`, with `"dependencies": ["vrc-avatars >= 0.7.0"]` |
 | Zip file | `avatar-bundle-<name>_<version>.zip` |
 | A character's folder | `characters/<id>/`, holding `avatar-pack.lua` (the pack's description), its graphics, `README.txt` (its source) and `pack.json` (id, title, author and the pack's version) |
-| mod-data, character and corpse prototypes | the same as the pack's: `avatar-pack-<id>`, `avatar-pack-corpse-<id>` |
+| mod-data, character and corpse prototypes | the same as the pack's: `vrc-avatar-<id>`, `vrc-avatar-corpse-<id>` |
 
 A character's file paths point into the bundle, `__avatar-bundle-<name>__/characters/<id>/...`, and the
 bundle's `data.lua` registers each description with a `mod` field naming the bundle:
 
 ```lua
--- An avatar bundle: several avatar packs in one mod (docs/avatar-pack-format.md, "Bundles").
+-- An avatar bundle: several avatar packs in one mod (docs/vrc-avatar-format.md, "Bundles").
 local bundle = "avatar-bundle-<name>"
 for _, id in ipairs({ "<id>", "<id>" }) do
   local pack = require("characters." .. id .. ".avatar-pack")
@@ -296,8 +296,8 @@ for _, id in ipairs({ "<id>", "<id>" }) do
   data:extend({
     {
       type = "mod-data",
-      name = "avatar-pack-" .. id,
-      data_type = "avatar-characters.avatar-pack",
+      name = "vrc-avatar-" .. id,
+      data_type = "vrc-avatars.avatar-pack",
       data = pack,
     },
   })
@@ -313,7 +313,7 @@ separate packs by a bundle holding them, or one bundle version by the next.
 
 ## Validation
 
-`avatar-characters` refuses to load (with an error naming the pack and the
+`vrc-avatars` refuses to load (with an error naming the pack and the
 problem) when a pack:
 
 - has a `format_version` it does not support, or no `format_version`;
@@ -341,6 +341,6 @@ which turns everyone using it back into the engineer.
 ## Versioning
 
 New optional fields do not change `format_version`. A change in meaning bumps
-`format_version` and the minimum `avatar-characters` version in `info.json`, so
-an old `avatar-characters` reports the missing dependency instead of
+`format_version` and the minimum `vrc-avatars` version in `info.json`, so
+an old `vrc-avatars` reports the missing dependency instead of
 misreading the pack.

@@ -6,7 +6,7 @@ using static System.FormattableString;
 namespace MilkJugg24.FactorioAvatarExporter.Core
 {
     /// <summary>
-    /// The sprite sheets of one layer of an animation (docs/avatar-pack-format.md, "Sheets"): one row
+    /// The sprite sheets of one layer of an animation (docs/vrc-avatar-format.md, "Sheets"): one row
     /// per direction, one column per frame, every frame <see cref="FrameWidth"/> x
     /// <see cref="FrameHeight"/> px. A layer too tall for one file is split by rows into several files
     /// of <see cref="LinesPerFile"/> rows each; a layer too wide for one file is split by columns into

@@ -44,6 +44,15 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         // -1.4); each root is a whole wing from its shoulder, and its own hinge
         private readonly Dictionary<Transform, double> restElevation = new Dictionary<Transform, double>();
 
+        // the joints inside each wing (elbow, wrist, fingers: its bones below the root that hold others), parent
+        // first, with the bones each one points at; they straighten as the wing spreads, so a folded wing opens out
+        private readonly Dictionary<Transform, List<(Transform joint, Transform[] next)>> wingJoints =
+            new Dictionary<Transform, List<(Transform, Transform[])>>();
+
+        // how far a spread wing's joints straighten: 1 would line every bone up with the one before it (and close
+        // the fingers); this opens a folded wing and keeps its fingers fanned
+        private const float WingUnfold = 0.75f;
+
         // the tail's bones (named "tail"), root first
         private readonly List<Transform> tail = new List<Transform>();
 
@@ -301,10 +310,20 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 }
                 Vector3 along = centre / chain.Length - Pivot.InverseTransformPoint(root.position);
                 restElevation[root] = Math.Atan2(Vector3.Dot(along, Vector3.up), Vector3.Dot(along, left ? -restRight : restRight));
+                var joints = new List<(Transform, Transform[])>();
+                foreach (Transform t in chain)
+                {
+                    Transform[] next = t.Cast<Transform>().Where(c => skin.Contains(c)).ToArray();
+                    if (t != root && next.Length > 0 && skin.Contains(t))
+                    {
+                        joints.Add((t, next));
+                    }
+                }
+                wingJoints[root] = joints;
             }
             if (wings.Count > 0)
             {
-                Notes.Add("wings that flap and stretch, from their hinge: " + string.Join(", ", wings.Select(w =>
+                Notes.Add("wings that open out, flap and stretch, from their hinge: " + string.Join(", ", wings.Select(w =>
                     $"{w.root.name} ({(w.left ? "left" : "right")}, saved at {restElevation[w.root] * 180 / Math.PI:0} degrees from straight out)")));
             }
             else
@@ -385,9 +404,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         }
 
         /// <summary>
-        /// Turns each wing root (of the body, or the others), a whole wing from its shoulder, about the chest's forward
-        /// axis through itself, from the angle it was saved at towards <see cref="PoseResult.WingElevation"/>, as far
-        /// as its spread says.
+        /// Opens each wing (of the body, or the others) as far as its spread says: its joints straighten towards the
+        /// bone before them (<see cref="WingUnfold"/>). Then turns the whole wing about the chest's forward axis through
+        /// its root (its shoulder), from the angle the opened wing is at towards <see cref="PoseResult.WingElevation"/>.
         /// </summary>
         private void PoseWings(PoseResult pose, bool inBody)
         {
@@ -396,12 +415,31 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             foreach ((Transform root, bool left, bool body) in wings)
             {
                 double spread = left ? pose.LeftWingSpread : pose.RightWingSpread;
-                double lift = spread * (pose.WingElevation - restElevation[root]);
                 if (body != inBody || spread == 0)
                 {
                     continue;
                 }
+                foreach ((Transform joint, Transform[] next) in wingJoints[root])
+                {
+                    Vector3 before = joint.position - joint.parent.position;
+                    Vector3 after = next.Aggregate(Vector3.zero, (sum, c) => sum + c.position) / next.Length - joint.position;
+                    if (before.sqrMagnitude < 1e-10f || after.sqrMagnitude < 1e-10f)
+                    {
+                        continue;
+                    }
+                    Vector3 straighter = Vector3.Slerp(after.normalized, before.normalized, WingUnfold * (float)spread);
+                    joint.rotation = Quaternion.FromToRotation(after, straighter) * joint.rotation;
+                }
                 Vector3 outward = chest * (left ? -restRight : restRight);
+                Vector3 centre = Vector3.zero;
+                Transform[] chain = root.GetComponentsInChildren<Transform>(true);
+                foreach (Transform t in chain)
+                {
+                    centre += t.position;
+                }
+                Vector3 along = centre / chain.Length - root.position;
+                double now = Math.Atan2(Vector3.Dot(along, up), Vector3.Dot(along, outward));
+                double lift = spread * (pose.WingElevation - now);
                 float sign = Vector3.Dot(Quaternion.AngleAxis(1, forward) * outward, up) >= Vector3.Dot(outward, up) ? 1 : -1;
                 root.RotateAround(root.position, forward, sign * (float)(lift * 180 / Math.PI));
             }

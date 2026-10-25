@@ -10,7 +10,7 @@ There are two parts, both on the [Releases](../../releases) page:
 
 | Download | What it is | Who needs it |
 | --- | --- | --- |
-| `avatar-characters_<version>.zip` | The Factorio mod. | **Every player.** |
+| `vrc-avatars_<version>.zip` | The Factorio mod. | **Every player.** |
 | `FactorioAvatarExporter_<version>.unitypackage` | A Unity tool that turns your avatar into an **avatar pack**, a small mod with your character in it. | Only whoever makes an avatar. |
 
 You need Factorio 2.1. Space Age is optional; with it, avatars fly with mech armor.
@@ -20,8 +20,8 @@ You need Factorio 2.1. Space Age is optional; with it, avatars fly with mech arm
 ## Play with an avatar
 
 1. Put these zips into Factorio's `mods` folder, **still zipped**:
-   - `avatar-characters_<version>.zip`;
-   - one or more avatar packs (`avatar-pack-<name>_1.0.0.zip`), as many as you like.
+   - `vrc-avatars_<version>.zip`;
+   - one or more avatar packs (`vrc-avatar-<name>_1.0.0.zip`), as many as you like.
 
    The `mods` folder is:
    - Windows: `%APPDATA%\Factorio\mods` (paste that into the address bar of File Explorer);
@@ -67,7 +67,7 @@ Factorio can't download these mods by itself, so **every player needs exactly th
 server**, same versions too. Each avatar is its own zip, and you can install as many as you like.
 
 1. Every player makes their own avatar pack and sends the zip to whoever runs the server.
-2. The server owner puts `avatar-characters_<version>.zip` and **all** the players' pack zips into the
+2. The server owner puts `vrc-avatars_<version>.zip` and **all** the players' pack zips into the
    server's `mods` folder, and shares the same set of zips with everyone (a shared folder or a zip of
    zips works well).
 3. Every player puts that same set into their own `mods` folder.
@@ -90,7 +90,7 @@ Before removing anything:
 
 1. Make sure everyone using that avatar is online, alive and not in a vehicle.
 2. An admin types `/avatar-revert-all <name>` in chat (the pack's name as in its file name, after
-   `avatar-pack-`). Everyone using it turns back into the engineer, items and all. To remove the whole
+   `vrc-avatar-`). Everyone using it turns back into the engineer, items and all. To remove the whole
    mod, type `/avatar-revert-all` on its own.
 3. Save, then remove the zip.
 
@@ -129,7 +129,7 @@ folder).
 ---
 
 More detail: the [exporter guide](unity/Packages/com.milkjugg24.factorio-avatar-exporter/README.md)
-(lighting, every window option), [making a pack by hand](docs/avatar-pack-format.md), and
+(lighting, every window option), [making a pack by hand](docs/vrc-avatar-format.md), and
 [notes for other mod authors](docs/modding.md). Contributors and coding agents: see [CLAUDE.md](CLAUDE.md).
 
 This project began as the Dragon Character mod, archived on the

@@ -66,7 +66,7 @@ flight animations (hovering and flying with Space Age's mech armor).
   instead (the same size in the game, a little softer); if one is too large even then, it stops and
   says which, before the long render: turn off the part that reaches far out (a long tail, wide
   wings, a big accessory) and export again. Then it renders everything (a few minutes; you can cancel)
-  and saves the pack. Keep the file name `avatar-pack-<id>_1.0.0.zip`, as Factorio expects.
+  and saves the pack. Keep the file name `vrc-avatar-<id>_1.0.0.zip`, as Factorio expects.
 - **Export Selected Animation** (next to Play): saves only the animation in the preview as one image.
   Not needed for the game.
 

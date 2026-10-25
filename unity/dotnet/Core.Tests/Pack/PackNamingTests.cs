@@ -92,9 +92,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
         [Test]
         public void ModAndZipNames()
         {
-            Assert.That(PackNaming.ModName("mika"), Is.EqualTo("avatar-pack-mika"));
-            Assert.That(PackNaming.ZipRootFolder("mika", "1.2.3"), Is.EqualTo("avatar-pack-mika_1.2.3"));
-            Assert.That(PackNaming.ZipFileName("mika", "1.2.3"), Is.EqualTo("avatar-pack-mika_1.2.3.zip"));
+            Assert.That(PackNaming.ModName("mika"), Is.EqualTo("vrc-avatar-mika"));
+            Assert.That(PackNaming.ZipRootFolder("mika", "1.2.3"), Is.EqualTo("vrc-avatar-mika_1.2.3"));
+            Assert.That(PackNaming.ZipFileName("mika", "1.2.3"), Is.EqualTo("vrc-avatar-mika_1.2.3.zip"));
             Assert.Throws<ArgumentException>(() => PackNaming.ModName("Mika"));
             Assert.Throws<ArgumentException>(() => PackNaming.ZipRootFolder("mika", "1.2"));
             Assert.Throws<ArgumentException>(() => PackNaming.ZipFileName("corpse-x", "1.0.0"));
