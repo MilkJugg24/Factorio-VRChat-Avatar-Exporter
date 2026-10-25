@@ -58,9 +58,11 @@ if settings.startup["vrc-avatars-armor-flight"].value and feature_flags["space_t
   if mech then
     check(mech.icon ~= nil, "armor flight: wings added to mech armor, which flew already")
   end
-  for _, set in ipairs(data.raw["character"]["character"].animations) do
-    check(set.flying and set.flying_with_gun and set.idle_in_air and set.idle_with_gun_in_air
-      and set.take_off and set.landing, "armor flight: an engineer animation set without flight animations")
+  for i, set in ipairs(data.raw["character"]["character"].animations) do
+    for air, ground in pairs({ flying = "running", flying_with_gun = "running_with_gun", idle_in_air = "idle",
+        idle_with_gun_in_air = "idle_with_gun", take_off = "idle_with_gun", landing = "idle_with_gun" }) do
+      check(set[air] ~= nil or set[ground] == nil, "armor flight: engineer animation set " .. i .. " has no " .. air)
+    end
   end
 else
   -- off, or without Space Age, where Factorio allows no flying armor

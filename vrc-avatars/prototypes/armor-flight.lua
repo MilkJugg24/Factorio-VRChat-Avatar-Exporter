@@ -36,8 +36,8 @@ for _, armor in pairs(data.raw["armor"] or {}) do
 end
 
 -- Characters (the engineer, other mods' characters) whose animations for some
--- armor have nothing for flying show that armor's own ground animations in the
--- air, so the armor looks the same as on the ground and is never drawn without
+-- armor lack something for flying show that armor's own ground animations for
+-- it in the air, so the armor looks the same as on the ground and is never drawn without
 -- a sprite. Only the item icons change.
 local AIR = {
   idle_in_air = "idle",
@@ -49,11 +49,9 @@ local AIR = {
 }
 for _, character in pairs(data.raw["character"] or {}) do
   for _, set in ipairs(character.animations or {}) do
-    if not set.flying then
-      for air, ground in pairs(AIR) do
-        if set[air] == nil and set[ground] ~= nil then
-          set[air] = table.deepcopy(set[ground])
-        end
+    for air, ground in pairs(AIR) do
+      if set[air] == nil and set[ground] ~= nil then
+        set[air] = table.deepcopy(set[ground])
       end
     end
   end
