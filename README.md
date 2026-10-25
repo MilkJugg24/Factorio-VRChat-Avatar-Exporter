@@ -42,7 +42,7 @@ sprint.
 
 **Flying in any armor (Space Age).** Normally only Space Age's mech armor flies. With Space Age, turn on **Settings ▸ Mod settings ▸
 Startup ▸ Every armor flies (wings, Space Age)** and every armor lets you fly over buildings, cliffs and water, so a
-winged avatar can take to the air. Armor that flies this way has a small pair of wings on its icon. Without
+winged avatar can take to the air. Armor that flies this way has a small feather on its icon. Without
 any armor you still walk. On a server, the host turns it on and players get the same setting when they
 join.
 

@@ -1,7 +1,7 @@
 -- The startup setting "Every armor flies": every armor gets provides_flight,
 -- like Space Age's mech armor, so winged avatars can fly over buildings,
 -- cliffs and water in any armor. Armor that did not fly before gets a small
--- pair of wings on its icon.
+-- feather on its icon.
 -- Runs in data-final-fixes before prototypes/characters.lua, which then gives
 -- every avatar its flight animations.
 -- Factorio only allows flying armor with Space Age (the space_travel feature
@@ -15,7 +15,7 @@ local MOD_PATH = "__vrc-avatars__"
 -- The badge: a quarter of the icon's width, in its top right corner (icon
 -- layer shifts are in pixels of a 32 px icon).
 local BADGE = {
-  icon = MOD_PATH .. "/graphics/icons/armor-wings.png",
+  icon = MOD_PATH .. "/graphics/icons/armor-feather.png",
   icon_size = 64,
   scale = 0.25,
   shift = { 8, -8 },

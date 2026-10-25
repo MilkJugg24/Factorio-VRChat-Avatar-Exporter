@@ -12,7 +12,7 @@
   60 by default, 0 off), and back, when the armor or its equipment changes and nothing is open.
 - With the startup setting `vrc-avatars-armor-flight` and Space Age (the `space_travel` feature flag,
   which Factorio requires for flying armor), every armor prototype gets
-  `provides_flight = true` in `data-final-fixes` (before the characters are made), with a wings badge
+  `provides_flight = true` in `data-final-fixes` (before the characters are made), with a feather badge
   added to the icons of those that didn't fly. Character animation sets without flight animations get
   their own ground ones, so each armor looks the same in the air.
 - If another mod temporarily swaps a player's character (a jetpack, for example), VRC Avatars

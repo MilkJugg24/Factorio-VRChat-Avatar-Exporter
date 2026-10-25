@@ -52,7 +52,7 @@ if settings.startup["vrc-avatars-armor-flight"].value and feature_flags["space_t
   end
   local light = data.raw["armor"]["light-armor"]
   local badge = light.icons and light.icons[#light.icons]
-  check(light.icon == nil and badge and badge.icon == "__vrc-avatars__/graphics/icons/armor-wings.png"
+  check(light.icon == nil and badge and badge.icon == "__vrc-avatars__/graphics/icons/armor-feather.png"
     and light.icons[1].icon:find("light%-armor") ~= nil, "armor flight: no wings on the light armor icon")
   local mech = data.raw["armor"]["mech-armor"]
   if mech then
