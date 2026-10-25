@@ -161,7 +161,7 @@ return {
   the run's). A pack with it gets a second character, `vrc-avatar-sprint-<id>`,
   that runs with it at `sprint_distance_per_frame`; vrc-avatars switches a
   player to it while the movement bonus of their armor's equipment is at least
-  the map setting "Sprint from this armor speed bonus" (60 % by default: two
+  the startup setting "Sprint from this armor speed bonus" (60 % by default: two
   exoskeletons), and back. Everything else, the gun run included, is the
   same as the pack's other character. Without a `sprint` the pack always runs.
 - The flight animations are all present (`flight = true`) or all absent. A pack

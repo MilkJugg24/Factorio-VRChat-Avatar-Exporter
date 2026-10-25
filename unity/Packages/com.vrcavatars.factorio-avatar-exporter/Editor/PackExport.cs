@@ -13,7 +13,7 @@ namespace FactorioAvatarExporter.Editor
     /// <summary>The version of this package, written into every pack (kept equal to package.json by a test).</summary>
     internal static class ExporterInfo
     {
-        public const string Version = "0.23.0";
+        public const string Version = "0.24.0";
     }
 
     /// <summary>What the user chose for a pack.</summary>
@@ -23,7 +23,13 @@ namespace FactorioAvatarExporter.Editor
         public string Id;
         public string Author;
         public string Version = PackContent.DefaultVersion;
-        public int PixelsPerTile = Conventions.DefaultPixelsPerTile;
+        /// <summary>
+        /// "Normal Quality", the window's default: 32 pixels per tile, a quarter of the video memory of "High Quality"
+        /// (64, <see cref="Conventions.DefaultPixelsPerTile"/>), the same size in the game.
+        /// </summary>
+        public const int DefaultPixelsPerTile = 32;
+
+        public int PixelsPerTile = DefaultPixelsPerTile;
         public bool Flight = true;
 
         /// <summary>The file the pack's zip is saved as (the user chooses it; see <see cref="PackNaming.ZipFileName"/>).</summary>

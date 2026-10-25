@@ -47,10 +47,10 @@ local function armor_movement_bonus(player)
   return grid and grid.movement_bonus or 0
 end
 
--- True when the player's armor makes them fast enough to sprint (the map
+-- True when the player's armor makes them fast enough to sprint (the startup
 -- setting, a percent; 0 never).
 local function is_fast(player)
-  local percent = settings.global["vrc-avatars-sprint-bonus"].value
+  local percent = settings.startup["vrc-avatars-sprint-bonus"].value
   return percent > 0 and armor_movement_bonus(player) >= percent / 100 - 1e-9
 end
 
@@ -259,18 +259,6 @@ script.on_nth_tick(RETRY_INTERVAL, function()
   end
 end)
 
-script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
-  if event.setting == "vrc-avatars-sprint-bonus" then
-    for _, player in pairs(game.players) do
-      storage.pending[player.index] = true
-    end
-  elseif event.setting == "vrc-avatars-show-top-button" and event.player_index then
-    local player = game.get_player(event.player_index)
-    if player then
-      gui.update_top_button(player)
-    end
-  end
-end)
 
 ---------------------------------------------------------------------------
 -- Opening the window

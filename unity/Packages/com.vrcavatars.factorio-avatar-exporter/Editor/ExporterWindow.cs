@@ -36,7 +36,7 @@ namespace FactorioAvatarExporter.Editor
         [SerializeField] private string packId;
         // starts empty: the user types the name to show (never filled in from their account)
         [SerializeField] private string author = "";
-        [SerializeField] private int pixelsPerTile = Conventions.DefaultPixelsPerTile;
+        [SerializeField] private int pixelsPerTile = PackOptions.DefaultPixelsPerTile;
         [SerializeField] private string saveFolder;
         private string exported;
 
@@ -141,7 +141,7 @@ namespace FactorioAvatarExporter.Editor
         private void ControlsGUI()
         {
             EditorGUILayout.LabelField("Avatar", EditorStyles.boldLabel);
-            source = (GameObject)EditorGUILayout.ObjectField("Avatar", source, typeof(GameObject), true);
+            source = (GameObject)EditorGUILayout.ObjectField("Choose Avatar", source, typeof(GameObject), true);
             using (new EditorGUI.DisabledScope(source == null))
             {
                 if (GUILayout.Button(preview == null ? "Load avatar" : "Reload avatar"))
@@ -260,13 +260,8 @@ namespace FactorioAvatarExporter.Editor
             EditorGUI.DrawRect(new Rect(anchor.x - 4, anchor.y, 9, 1), Anchor);
             EditorGUI.DrawRect(new Rect(anchor.x, anchor.y - 4, 1, 9), Anchor);
             GUI.EndClip();
-            EditorGUILayout.LabelField("Scroll on the preview to zoom in, drag to move it, double-click to see it all.",
+            EditorGUILayout.LabelField("Scroll to zoom, drag to pan, and double-click to reset zoom.",
                 EditorStyles.wordWrappedMiniLabel);
-            string check = double.IsNaN(shown.JointErrorPixels)
-                ? "pose check: not done for this pose"
-                : $"pose check: bones within {shown.JointErrorPixels:0.0} px of where Core put them" +
-                  (shown.JointErrorPixels > 1 ? " (more than 1 px: please report)" : "");
-            EditorGUILayout.LabelField($"{texture.width} x {texture.height} px; {check}", EditorStyles.wordWrappedMiniLabel);
             if (preview.Retakes > 0 || preview.PlaceholderLeft > 0 || preview.Growths > 0)
             {
                 EditorGUILayout.LabelField($"retaken while shaders compiled: {preview.Retakes}; placeholder pixels " +
@@ -282,7 +277,7 @@ namespace FactorioAvatarExporter.Editor
         {
             EditorGUILayout.LabelField("Lighting", EditorStyles.boldLabel);
             EditorGUI.BeginChangeCheck();
-            lighting.Custom = EditorGUILayout.Popup(new GUIContent("Lighting", "Factorio style lights the avatar like " +
+            lighting.Custom = EditorGUILayout.Popup(new GUIContent("Lighting Style", "Factorio style lights the avatar like " +
                 "the game's own characters. Custom lets you set the lights yourself, for example for a shiny avatar."),
                 lighting.Custom ? 1 : 0, LightingModes) == 1;
             bool reset = false;
@@ -316,12 +311,6 @@ namespace FactorioAvatarExporter.Editor
                     GUI.FocusControl(null);
                 }
             }
-            EditorGUILayout.LabelField(lighting.Custom
-                ? "The lights stay where they are as the avatar turns, so every direction is lit alike. The shadow on " +
-                  "the ground always falls the way the game's shadows do."
-                : "The game's light: from the left and a little in front, above, with soft light all around and a " +
-                  "neutral studio for shiny materials to reflect. The shadow on the ground is drawn separately, the " +
-                  "way the game's shadows fall.", EditorStyles.wordWrappedMiniLabel);
             if ((EditorGUI.EndChangeCheck() || reset) && preview != null)
             {
                 preview.SetLighting(lighting);
@@ -329,8 +318,8 @@ namespace FactorioAvatarExporter.Editor
             }
         }
 
-        private static readonly string[] Resolutions = { "64 pixels per tile (sharp)", "32 pixels per tile (a quarter of the memory)" };
-        private static readonly int[] ResolutionValues = { 64, 32 };
+        private static readonly string[] Resolutions = { "Normal Quality", "High Quality" };
+        private static readonly int[] ResolutionValues = { 32, 64 };
 
         private static readonly Color MissingColor = new Color(0.9f, 0.2f, 0.2f);
 

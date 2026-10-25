@@ -35,7 +35,7 @@ function gui.get_frame(player)
 end
 
 function gui.update_top_button(player)
-  local show = player.mod_settings["vrc-avatars-show-top-button"].value
+  local show = settings.startup["vrc-avatars-show-top-button"].value
   local top = player.gui.top
   if not show and not (top.mod_gui_top_frame or top.mod_gui_button_flow) then
     -- nothing to remove, and get_button_flow() would create empty frames

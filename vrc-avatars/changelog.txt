@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.10.0
+Date: 2026-10-25
+  Changes:
+    - Every armor flies (with Space Age) by default now.
+    - Every setting of the mod is a startup setting now, so they are all on one tab of the mod
+      settings: the avatar button, the sprint threshold and flying armor.
+---------------------------------------------------------------------------------------------------
 Version: 0.9.0
 Date: 2026-10-25
   Features:

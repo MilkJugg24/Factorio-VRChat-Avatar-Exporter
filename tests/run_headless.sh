@@ -11,7 +11,7 @@
 #   --broken-packs  check that each deliberately broken pack stops the game from
 #                   loading with the expected error
 #   --pack PATH     add an avatar pack or bundle (folder or zip) to the test; may be repeated
-#   --armor-flight  turn on the startup setting "Every armor flies (wings)"
+#   --no-armor-flight  turn off the startup setting "Every armor flies (wings)" (on by default)
 #   --swap-to PATH  then load the save again with this pack or bundle instead of the --pack ones,
 #                   as a server does when it moves its players' packs into one bundle
 #
@@ -24,13 +24,13 @@ TEST_PACKS=false
 BROKEN_PACKS=false
 PACKS=()
 SWAP_TO=""
-ARMOR_FLIGHT=false
+ARMOR_FLIGHT=true
 while [ $# -gt 0 ]; do
   case "$1" in
     --space-age) DLC=true ;;
     --test-packs) TEST_PACKS=true ;;
     --broken-packs) BROKEN_PACKS=true ;;
-    --armor-flight) ARMOR_FLIGHT=true ;;
+    --no-armor-flight) ARMOR_FLIGHT=false ;;
     --pack) PACKS+=("$(realpath "$2")"); shift ;;
     --swap-to) SWAP_TO="$(realpath "$2")"; shift ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
@@ -43,7 +43,7 @@ MAKE_PACK="$REPO/tools/avatar_pack/make_test_pack.py"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 if [ "$DLC" = true ]; then LABEL="with Space Age"; else LABEL="base game"; fi
-if [ "$ARMOR_FLIGHT" = true ]; then LABEL="$LABEL, every armor flies"; fi
+if [ "$ARMOR_FLIGHT" = false ]; then LABEL="$LABEL, no flying armor"; fi
 
 fail() {
   echo "$1" >&2
@@ -55,15 +55,15 @@ new_mods_dir() {
   mkdir -p "$1"
   cp -r "$REPO/vrc-avatars" "$1/vrc-avatars"
   cp -r "$REPO/tests/vrc-avatars-test" "$1/vrc-avatars-test"
-  if [ "$ARMOR_FLIGHT" = true ]; then
+  if [ "$ARMOR_FLIGHT" = false ]; then
     # a startup setting can't be set on the command line: a tiny mod changes its default
-    mkdir -p "$1/vrc-avatars-flight-on"
-    cat > "$1/vrc-avatars-flight-on/info.json" <<'JSON'
-{"name": "vrc-avatars-flight-on", "version": "0.1.0", "title": "Every armor flies (test)", "author": "VRC Avatars",
+    mkdir -p "$1/vrc-avatars-flight-off"
+    cat > "$1/vrc-avatars-flight-off/info.json" <<'JSON'
+{"name": "vrc-avatars-flight-off", "version": "0.1.0", "title": "No flying armor (test)", "author": "VRC Avatars",
  "factorio_version": "2.1", "dependencies": ["vrc-avatars"]}
 JSON
-    echo 'data.raw["bool-setting"]["vrc-avatars-armor-flight"].default_value = true' \
-      > "$1/vrc-avatars-flight-on/settings-updates.lua"
+    echo 'data.raw["bool-setting"]["vrc-avatars-armor-flight"].default_value = false' \
+      > "$1/vrc-avatars-flight-off/settings-updates.lua"
   fi
 }
 

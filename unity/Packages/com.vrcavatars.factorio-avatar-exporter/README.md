@@ -11,7 +11,7 @@ Open it with **Tools ▸ Factorio Avatar Exporter**.
 
 ## Avatar
 
-- **Avatar:** the object with the VRChat avatar descriptor (from the Hierarchy), or its prefab. Press
+- **Choose Avatar:** the object with the VRChat avatar descriptor (from the Hierarchy), or its prefab. Press
   **Load avatar**. The exporter works on a copy in a hidden scene; your scene and avatar are not changed.
 - To keep something out of the sprites (a fake ground shadow, a glow, an accessory you don't want), turn
   it off in your avatar (untick it in the Hierarchy) and press **Reload avatar**. The exporter draws the
@@ -22,13 +22,14 @@ Open it with **Tools ▸ Factorio Avatar Exporter**.
 
 ## Preview
 
-The preview is on the right. Pick an animation, a direction and a frame, or press **Play** to see it at the speed the game plays it. Scroll on the preview to zoom in, drag to move around, double-click to see the whole frame again. The yellow cross is where your character
-stands in the game. **Pose check** under the preview should be 0 or close to it; if it's over 1 px, the
-posing doesn't fit your rig exactly (please report it with `report.txt`).
+The preview is on the right. Pick an animation, a direction and a frame, or press **Play** to see it at
+the speed the game plays it. Scroll to zoom, drag to pan, and double-click to reset zoom. The yellow cross
+is where your character stands in the game.
 
 ## Lighting
 
-The avatar is lit in its own hidden scene, the same way for every animation and direction.
+The avatar is lit in its own hidden scene, the same way for every animation and direction. Pick the
+**Lighting Style**:
 
 - **Factorio style** (the default) matches the game's own characters: light from the upper left, soft
   light all around, and a neutral studio for shiny materials to reflect.
@@ -55,8 +56,9 @@ The ground shadow isn't affected by the lighting: it's always drawn the way the 
   <name> by <author>". Any name will do; Factorio needs one.
 - **Version:** always 1.0.0, so a new export of your avatar has the same file name and simply replaces
   the old one, for you and everyone on your server.
-- **Resolution:** 64 pixels per tile is sharp and right for almost everyone. 32 uses a quarter of the
-  video memory, for very large servers or old computers.
+- **Resolution:** **Normal Quality** (the default) suits almost everyone and keeps packs small, which
+  matters on a server where everyone loads everyone's avatar. **High Quality** is sharper when zoomed in
+  and uses four times the video memory. Both are the same size in the game.
 
 Exporting is only possible once the name, pack id and author are filled in; an empty one is outlined
 in red. Every pack includes the
