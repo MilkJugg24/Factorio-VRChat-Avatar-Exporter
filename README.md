@@ -23,12 +23,10 @@ This repository does not contain any VRChat community or other content creator a
 
 There are two parts, both on the [Releases](../../releases) page:
 
-| Download | What it is | Who needs it |
+| File Name | Description |
 | --- | --- | --- |
-| `vrc-avatars_<version>.zip` | The Factorio mod. | **Every player.** |
-| `FactorioAvatarExporter_<version>.unitypackage` | A Unity tool that turns your avatar into an **avatar pack**, a small mod with your character in it. | Only whoever makes an avatar. |
-
-You need Factorio 2.1. Space Age is optional; with it, avatars fly with mech armor.
+| `vrc-avatars_<version>.zip` | The Factorio avatar companion mod. |
+| `FactorioAvatarExporter_<version>.unitypackage` | A Unity tool that turns your avatar into an **avatar pack**, a small mod with your character in it. |
 
 ---
 
