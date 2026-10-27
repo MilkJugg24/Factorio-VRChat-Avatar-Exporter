@@ -12,7 +12,7 @@ Due to some avatars having wings or features that would otherwise allow them to 
 
 ---**AI Disclosure**---
 
-The development of this project was done with the assistance of AI. However, no assets created by the VRChat community and other content creators were directly provided to nor accessed by AI. The rigging and animations system is custom-made to work based on common keywords like hair, tail, wing, etc. Due to this, not every exported avatar will operate like it does in VR, but it will at least be somewhat similar or good enough for gameplay.
+The development of this project was done with the assistance of AI. However, no assets created by the VRChat community and other content creators were directly provided to nor accessed by AI. The rigging and animations system is custom-made to work based on common keywords like hair, tail, wing, etc. Due to this, the exported avatar will not operate identically at it may in Unity or VRChat, but it will at least be somewhat similar or good enough for gameplay.
 
 ---**Usage of Paid Assets Disclosure**---
 
