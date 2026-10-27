@@ -145,22 +145,8 @@ Still stuck? [Open an issue](../../issues) and attach the error log the exporter
 `Assets/FactorioAvatarExporter/ERROR_LOGS` (or, if the export worked, the `report.txt` from the export
 folder).
 
-## Good to know
-
-- **Every avatar is drawn as tall as the engineer**, whatever its size in VRChat.
-- **Wings and tails move** if their bones have "wing" or "tail" in their names: wings flap when flying
-  and stretch now and then while standing, and tails sway. Fingers don't grip the gun or pickaxe yet.
-- **Video memory:** each avatar uses some video memory on every player's computer, usually a few tens of
-  MB; `report.txt` from the export says how much yours needs.
-- **Permission:** many avatars may only be used in VRChat. Only share a pack made from someone else's
-  avatar if its creator allows it.
-
 ---
 
 More detail: the [exporter guide](unity/Packages/com.vrcavatars.factorio-avatar-exporter/README.md)
 (lighting, every window option), [making a pack by hand](docs/vrc-avatar-format.md), and
 [notes for other mod authors](docs/modding.md). Contributors and coding agents: see [CLAUDE.md](CLAUDE.md).
-## License
-
-The mod and the exporter are licensed under the [Apache License 2.0](LICENSE). Avatar packs you export
-are not covered by it: they contain your avatar, which stays under its own creator's terms.
