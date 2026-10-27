@@ -1,10 +1,10 @@
 # Export your VRChat Avatar for Factorio!
 
-This is a two-part Unity Package and Factorio Mod that allows you to export your VRChat avatar, and use it in-game. Simply install the Unity Package on your project, export the avatar as .zip, then place it into the mods folder alongside the "vrc-avatars" mod. You can select your avatar in-game via the in-game UI, and it will show in-place of the default model. This also works in multiplayer, however, each player needs to be given the exported avatar .zip files for you to see them.
+This is a two-part Unity Package and Factorio Mod that allows you to export sprite sheets of your VRChat avatar. Install the Unity Package on your project, export the avatar as .zip, then place it into the mods folder alongside the "vrc-avatars" mod. You can select your avatar in-game using the top-left menu, the hotbar, or CTRL+SHIFT+A. This also works in multiplayer, however, each player needs to be given the exported avatar .zip files for you see them.
 
-**AI Disclosure**: The development of this tool was heavily assisted by the use of AI. However, no assets created by the VRChat community and other content creators were directly provided to nor accessed by AI. The rigging and animation is custom-made to work based on common keywords like tail, wing, cloth, etc. Due to this, not every exported avatar will operate like it does in VR, but it will at least be somewhat similar or good enough for gameplay.
+**AI Disclosure**: The development of this project was done with the assistance of AI. However, no assets created by the VRChat community and other content creators were directly provided to nor accessed by AI. The rigging and animations system is custom-made to work based on common keywords like hair, tail, wing, etc. Due to this, not every exported avatar will operate like it does in VR, but it will at least be somewhat similar or good enough for gameplay.
 
-**Gameplay Changes**: Due to some avatars having wings or features that would allow them to fly, all armor sets in the game by default will allow you to fly. This is only compatible with Space Age DLC, and there is a toggle switch out-of-game to disable this. Simply build any armor, and equip it to gain the ability to float over objects as if you were wearing mech armor.
+**Gameplay Changes**: Due to some avatars having wings or features that would otherwise allow them to fly, all armor sets in the game by default will allow you to fly as if you were wearing mech armor. This is only compatible with Space Age DLC, and there is a toggle switch out-of-game to disable this. Simply build any armor with a feather icon, and equip it to gain the ability to fly.
 
 ---
 ## Overview
