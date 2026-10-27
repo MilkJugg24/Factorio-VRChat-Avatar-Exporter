@@ -16,7 +16,7 @@ The development of this project was done with the assistance of AI. However, no 
 
 ---**Usage of Paid Assets Disclosure**---
 
-This repository does not contain any VRChat community or other content creator assets. Users are solely responsible for ensuring they have the rights to export, distribute, share, or publish any avatars, models, textures, sprite sheets, or other assets generated with this tool. The maintainer claims no ownership of user-generated content produced through use of the software.
+This repository does not contain any VRChat community or other content creator assets. Users are solely responsible for ensuring they have the rights to export, distribute, share, or publish any avatars, models, textures, sprite sheets, or other assets generated with this tool. The maintainer claims no ownership of user-generated content produced through use of the software. This project's license applies only to the exporter software and its source code.
 
 ---
 ## Overview
