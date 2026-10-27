@@ -150,10 +150,6 @@ folder).
 More detail: the [exporter guide](unity/Packages/com.vrcavatars.factorio-avatar-exporter/README.md)
 (lighting, every window option), [making a pack by hand](docs/vrc-avatar-format.md), and
 [notes for other mod authors](docs/modding.md). Contributors and coding agents: see [CLAUDE.md](CLAUDE.md).
-
-This project began as the Dragon Character mod, archived on the
-[`archive/dragon-character`](../../tree/archive/dragon-character) branch.
-
 ## License
 
 The mod and the exporter are licensed under the [Apache License 2.0](LICENSE). Avatar packs you export
