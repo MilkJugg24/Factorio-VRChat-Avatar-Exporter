@@ -26,7 +26,7 @@ There are two parts, both on the [Releases](../../releases) page:
 | File Name | Description |
 | --- | --- |
 | `vrc-avatars_<version>.zip` | The Factorio avatar companion mod. |
-| `FactorioAvatarExporter_<version>.unitypackage` | A Unity tool that turns your avatar into an **avatar pack**, a small mod with your character in it. |
+| `FactorioAvatarExporter_<version>.unitypackage` | A custom Unity Package that generates a .zip file. Place it into the mods folder alongside the companion mod. |
 
 ---
 
