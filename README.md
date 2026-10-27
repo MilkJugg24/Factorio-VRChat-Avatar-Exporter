@@ -153,3 +153,8 @@ More detail: the [exporter guide](unity/Packages/com.vrcavatars.factorio-avatar-
 
 This project began as the Dragon Character mod, archived on the
 [`archive/dragon-character`](../../tree/archive/dragon-character) branch.
+
+## License
+
+The mod and the exporter are licensed under the [Apache License 2.0](LICENSE). Avatar packs you export
+are not covered by it: they contain your avatar, which stays under its own creator's terms.

@@ -13,7 +13,7 @@ namespace FactorioAvatarExporter.Editor
     /// <summary>The version of this package, written into every pack (kept equal to package.json by a test).</summary>
     internal static class ExporterInfo
     {
-        public const string Version = "0.27.1";
+        public const string Version = "0.27.2";
     }
 
     /// <summary>What the user chose for a pack.</summary>
