@@ -1,6 +1,6 @@
 # Export your VRChat Avatar for Factorio!
 
-**This is a two-part Unity Package and Factorio Mod that allows you to export sprite sheets of your VRChat avatar. Install the Unity Package on your project, export the avatar as .zip, then place it into the mods folder alongside the "vrc-avatars" mod. You can select your avatar in-game using the top-left menu, the hotbar, or CTRL+SHIFT+A.**
+**This is a two-part Unity Package and Factorio Mod that allows you to export sprite sheets of your VRChat avatar.  Simply Install the Unity Package on your project, export the avatar as .zip, then place it into the mods folder alongside the "vrc-avatars" mod. You can select your avatar in-game using the top-left menu, the hotbar, or CTRL+SHIFT+A.**
 
 **Multiplayer Compatible**
 This also works in multiplayer, however, each player must have the .zip exported avatars. In the event a .zip folder may be too large, a "Low Quality" one may be generated at a significantly reduced storage space. This will allow your avatar to look normal while fully zoomed out, but pixelated while zoomed-in. It is recommended to therefore use the default "High Quality" avatar export unless there are are concerns regarding memory usage for large player count servers.
