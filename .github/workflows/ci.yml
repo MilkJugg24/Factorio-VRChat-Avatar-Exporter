@@ -29,7 +29,7 @@ jobs:
         run: dotnet build unity/dotnet/EditorTypeCheck
       - name: Build the .unitypackage
         run: python3 tools/make_unitypackage.py
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: unitypackage
           path: build/*.unitypackage
@@ -66,7 +66,7 @@ jobs:
         run: tests/run_avatar_pipeline.sh "$FACTORIO" --space-age
       - name: Build the mod zip
         run: tools/build_mod.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: mod-zip
           path: build/vrc-avatars_*.zip
