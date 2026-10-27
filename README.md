@@ -1,10 +1,14 @@
 # Export your VRChat Avatar for Factorio!
 
-This is a two-part Unity Package and Factorio Mod that allows you to export sprite sheets of your VRChat avatar. Install the Unity Package on your project, export the avatar as .zip, then place it into the mods folder alongside the "vrc-avatars" mod. You can select your avatar in-game using the top-left menu, the hotbar, or CTRL+SHIFT+A. This also works in multiplayer, however, each player needs to be given the exported avatar .zip files for you see them.
+This is a two-part Unity Package and Factorio Mod that allows you to export sprite sheets of your VRChat avatar. Install the Unity Package on your project, export the avatar as .zip, then place it into the mods folder alongside the "vrc-avatars" mod. You can select your avatar in-game using the top-left menu, the hotbar, or CTRL+SHIFT+A.
+
+**Multiplayer Compatible!**: This also works in multiplayer, however, each player must have the .zip exported avatars. In the event a .zip folder may be too large, a "Low Quality" one may be generated at a significantly reduced storage space. This will allow your avatar to look normal while fully zoomed out, but pixelated while zoomed-in. It is recommended to therefore use the default "High Quality" avatar export unless there are are concerns regarding memory usage for large player count servers.
+
+**Minor Gameplay Changes**: Due to some avatars having wings or features that would otherwise allow them to fly, all armor sets in the game by default will allow you to fly as if you were wearing mech armor. This is only compatible with Space Age DLC, and there is a toggle switch out-of-game to disable this. Simply build any armor with a feather icon, and equip it to gain the ability to fly.
 
 **AI Disclosure**: The development of this project was done with the assistance of AI. However, no assets created by the VRChat community and other content creators were directly provided to nor accessed by AI. The rigging and animations system is custom-made to work based on common keywords like hair, tail, wing, etc. Due to this, not every exported avatar will operate like it does in VR, but it will at least be somewhat similar or good enough for gameplay.
 
-**Gameplay Changes**: Due to some avatars having wings or features that would otherwise allow them to fly, all armor sets in the game by default will allow you to fly as if you were wearing mech armor. This is only compatible with Space Age DLC, and there is a toggle switch out-of-game to disable this. Simply build any armor with a feather icon, and equip it to gain the ability to fly.
+**Usage of Paid Assets Disclosure**: This repository does not contain any VRChat community or other content creator assets. Users are solely responsible for ensuring they have the rights to export, distribute, share, or publish any avatars, models, textures, sprite sheets, or other assets generated with this tool. The maintainer claims no ownership of user-generated content produced through use of the software.
 
 ---
 ## Overview
