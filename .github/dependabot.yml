@@ -1,3 +1,10 @@
+# Dependabot: weekly pull requests that update the GitHub Actions the workflows use and the NuGet
+# packages of the .NET projects that build and test the exporter (unity/dotnet). Each PR runs CI.
+#
+# The actions are pinned to commit hashes with the version in a comment
+# (uses: actions/checkout@<sha> # v7.0.1); Dependabot updates both.
+# The Unity package itself has no dependencies, and the Python tools only use numpy and Pillow,
+# which CI installs fresh on every run.
 version: 2
 
 updates:
@@ -5,19 +12,39 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    labels:
-      - "dependencies"
-      - "github-actions"
     commit-message:
       prefix: "ci"
+    # one PR for all the actions that have an update the same week
+    groups:
+      actions:
+        patterns:
+          - "*"
 
   - package-ecosystem: "nuget"
-    directory: "/unity/dotnet"
+    # every project with packages; Core and PackHarness have none of their own
+    directories:
+      - "/unity/dotnet/Core.Tests"
+      - "/unity/dotnet/EditorTypeCheck"
     schedule:
       interval: "weekly"
-    labels:
-      - "dependencies"
-      - "nuget"
     commit-message:
       prefix: "deps"
     open-pull-requests-limit: 5
+    groups:
+      # the test framework's packages together, minor and patch updates only
+      test-framework:
+        patterns:
+          - "Microsoft.NET.Test.Sdk"
+          - "NUnit*"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      # NUnit 4 drops the classic asserts (StringAssert, ...) the tests use: a move to it is done by hand
+      - dependency-name: "NUnit"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "NUnit3TestAdapter"
+        update-types: ["version-update:semver-major"]
+      # Unity's API that EditorTypeCheck compiles the Editor scripts against; it follows the Unity
+      # version the exporter supports (2022.3), not the newest package
+      - dependency-name: "Unity3D.SDK"

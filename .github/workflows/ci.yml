@@ -4,8 +4,13 @@
 name: CI
 
 on:
+  # a change to the README alone needs no checks (and makes no release)
   push:
+    paths-ignore:
+      - "README.md"
   pull_request:
+    paths-ignore:
+      - "README.md"
   workflow_dispatch:
 
 permissions:
@@ -20,8 +25,8 @@ jobs:
     name: Exporter Core
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-dotnet@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: "8.0.x"
       - name: Python packages for the cross-checks
@@ -32,7 +37,7 @@ jobs:
         run: dotnet build unity/dotnet/EditorTypeCheck
       - name: Build the .unitypackage
         run: python3 tools/make_unitypackage.py
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: unitypackage
           path: build/*.unitypackage
@@ -41,8 +46,8 @@ jobs:
     name: Mod in headless Factorio
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-dotnet@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: "8.0.x"
       - name: Python packages
@@ -51,9 +56,17 @@ jobs:
         run: python3 -m unittest discover -s tests -p "test_*.py"
       - name: Download headless Factorio
         run: |
+          # the current stable version, downloaded by its exact name and checked against Factorio's
+          # published SHA-256 sums before it is unpacked
+          version=$(curl -fsSL https://factorio.com/api/latest-releases | python3 -c "import json, sys; print(json.load(sys.stdin)['stable']['headless'])")
+          file="factorio-headless_linux_${version}.tar.xz"
           mkdir -p "$RUNNER_TEMP/factorio-dl"
-          curl -fsSL -o "$RUNNER_TEMP/factorio.tar.xz" "https://factorio.com/get-download/stable/headless/linux64"
-          tar -xJf "$RUNNER_TEMP/factorio.tar.xz" -C "$RUNNER_TEMP/factorio-dl"
+          cd "$RUNNER_TEMP"
+          curl -fsSL -o "$file" "https://factorio.com/get-download/${version}/headless/linux64"
+          curl -fsSL https://factorio.com/download/sha256sums/ | grep -F "  ${file}" > factorio.sha256
+          [ -s factorio.sha256 ] || { echo "No published checksum for $file"; exit 1; }
+          sha256sum -c factorio.sha256
+          tar -xJf "$file" -C "$RUNNER_TEMP/factorio-dl"
           echo "FACTORIO=$RUNNER_TEMP/factorio-dl/factorio" >> "$GITHUB_ENV"
       - name: Base game
         run: tests/run_headless.sh "$FACTORIO" --test-packs
@@ -69,7 +82,7 @@ jobs:
         run: tests/run_avatar_pipeline.sh "$FACTORIO" --space-age
       - name: Build the mod zip
         run: tools/build_mod.sh
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: mod-zip
           path: build/vrc-avatars_*.zip
