@@ -11,8 +11,8 @@ using AnimationInfo = FactorioAvatarExporter.Core.AnimationInfo;
 namespace FactorioAvatarExporter.Editor
 {
     /// <summary>
-    /// Tools > Factorio Avatar Exporter: loads an avatar, reports on its rig, previews it posed in
-    /// every animation, direction and frame of an avatar pack, and exports the pack (Export Avatar to .zip).
+    /// Tools > Factorio Avatar Exporter: loads an avatar, reports on its rig, plays every animation of an avatar pack
+    /// side by side while the animation tuning is adjusted, and exports the pack (Export Avatar to .zip).
     /// </summary>
     public sealed class ExporterWindow : EditorWindow
     {
@@ -22,9 +22,11 @@ namespace FactorioAvatarExporter.Editor
         private static readonly Color Anchor = new Color(1f, 0.85f, 0.2f);
 
         [SerializeField] private GameObject source;
-        [SerializeField] private int animationIndex;
-        [SerializeField] private int row = 4;
-        [SerializeField] private int frame;
+        // the direction every preview faces, 0 north, clockwise; south shows the face
+        [SerializeField] private int direction = 4;
+        // the animation shown large, or empty for all of them side by side
+        [SerializeField] private string focused = "";
+        [SerializeField] private PoseTuning tuning = new PoseTuning();
         // the preview's own zoom, 1 showing the whole frame, and the frame's pixel at the middle of the box
         private float viewZoom = 1;
         private Vector2 viewCentre;
@@ -42,18 +44,21 @@ namespace FactorioAvatarExporter.Editor
 
         private PosePreview preview;
         private string error;
-        private bool playing;
-        private double playClock;
-        private Texture2D texture;
-        private PreviewFrame shown;
+        private bool playing = true;
+        private readonly List<PreviewCell> cells = new List<PreviewCell>();
+        // frames still to render, in the order they are wanted: the first frame of every animation, then the rest
+        private readonly List<(PreviewCell cell, int frame)> pending = new List<(PreviewCell, int)>();
+        // the tuning or lighting sliders moved: applied once they rest, so dragging one doesn't restart the rendering
+        // every step
+        private double tuningChangedAt = -1;
         private Vector2 scroll;
         [SerializeField] private bool showReport;
 
         /// <summary>Width of the column of settings on the left; the preview takes the rest.</summary>
         private const float ControlsWidth = 470;
 
-        /// <summary>The size the window opens at: the settings, and the preview beside them as tall as they are.</summary>
-        private static readonly Vector2 OpenSize = new Vector2(ControlsWidth + 440, 600);
+        /// <summary>The size the window opens at: the settings, and the grid of previews beside them as tall as they are.</summary>
+        private static readonly Vector2 OpenSize = new Vector2(ControlsWidth + 640, 760);
         [MenuItem("Tools/Factorio Avatar Exporter")]
         public static void Open()
         {
@@ -79,15 +84,9 @@ namespace FactorioAvatarExporter.Editor
 
         private void Unload()
         {
-            playing = false;
+            ClearFrames();
             preview?.Dispose();
             preview = null;
-            shown = null;
-            if (texture != null)
-            {
-                DestroyImmediate(texture);
-                texture = null;
-            }
         }
 
         private void Load()
@@ -106,8 +105,10 @@ namespace FactorioAvatarExporter.Editor
                 }
                 preview = PosePreview.Load(source);
                 preview.SetLighting(lighting);
+                preview.SetTuning(tuning);
                 exported = null;
-                Rerender();
+                playing = true;
+                InvalidateFrames();
             }
             catch (Exception e)
             {
@@ -172,34 +173,20 @@ namespace FactorioAvatarExporter.Editor
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Preview", EditorStyles.boldLabel);
-            string[] names = AnimationSpec.All.Select(a => a.Name).ToArray();
-            EditorGUI.BeginChangeCheck();
-            animationIndex = EditorGUILayout.Popup("Animation", Mathf.Clamp(animationIndex, 0, names.Length - 1), names);
-            AnimationInfo info = AnimationSpec.All[animationIndex];
-            row = EditorGUILayout.IntSlider("Direction", Mathf.Clamp(row, 0, info.DirectionCount - 1), 0, info.DirectionCount - 1);
-            EditorGUILayout.LabelField(" ", PosePreview.DirectionName(info.Name, row));
-            frame = EditorGUILayout.IntSlider("Frame", Mathf.Clamp(frame, 0, info.FrameCount - 1), 0, info.FrameCount - 1);
-            bool changed = EditorGUI.EndChangeCheck();
             using (new EditorGUILayout.HorizontalScope())
             {
-                // rarely needed: the pack is what the game uses
-                if (GUILayout.Button(new GUIContent("Export Selected Animation", "Saves only the animation shown as one " +
-                    "image, in the preview folder, to look at it closely. Not needed for the game.")))
+                EditorGUI.BeginChangeCheck();
+                direction = EditorGUILayout.IntSlider("Direction", Mathf.Clamp(direction, 0, 7), 0, 7);
+                if (EditorGUI.EndChangeCheck())
                 {
-                    SaveSheet(info.Name);
-                    EndGUIAfterLongAction();
+                    InvalidateFrames();
                 }
-                bool play = GUILayout.Toggle(playing, playing ? "Pause" : "Play", "Button");
-                if (play && !playing)
-                {
-                    playClock = EditorApplication.timeSinceStartup;
-                }
-                playing = play;
+                playing = GUILayout.Toggle(playing, playing ? "Pause" : "Play", "Button", GUILayout.Width(60));
             }
-            if (changed)
-            {
-                Rerender();
-            }
+            EditorGUILayout.LabelField(" ", PosePreview.DirectionName(AnimationSpec.Idle, direction));
+
+            EditorGUILayout.Space();
+            TuningGUI();
 
             EditorGUILayout.Space();
             LightingGUI();
@@ -208,15 +195,116 @@ namespace FactorioAvatarExporter.Editor
             PackGUI();
         }
 
-        /// <summary>The right column: the frame shown, on the ground, with where the character stands.</summary>
+        /// <summary>
+        /// The right column: every animation side by side, playing, or the one clicked, large, with zoom; each on the
+        /// ground, with where the character stands in the game.
+        /// </summary>
         private void PreviewImageGUI()
         {
-            if (preview == null || texture == null || shown == null)
+            if (preview == null || cells.Count == 0)
             {
                 return;
             }
+            PreviewCell big = cells.FirstOrDefault(c => c.Info.Name == focused);
+            if (big != null)
+            {
+                FocusedGUI(big);
+            }
+            else
+            {
+                GridGUI();
+            }
+            if (pending.Count > 0)
+            {
+                int total = cells.Sum(c => c.Frames.Length);
+                EditorGUILayout.LabelField($"Rendering the previews: {total - pending.Count} of {total} frames",
+                    EditorStyles.wordWrappedMiniLabel);
+            }
+            if (preview.Retakes > 0 || preview.PlaceholderLeft > 0 || preview.Growths > 0)
+            {
+                EditorGUILayout.LabelField($"retaken while shaders compiled: {preview.Retakes}; placeholder pixels " +
+                    $"left: {preview.PlaceholderLeft}; canvas grown to fit: {preview.Growths} times",
+                    EditorStyles.wordWrappedMiniLabel);
+            }
+        }
+
+        /// <summary>Every animation in a grid, all drawn at the same scale; a click shows one large.</summary>
+        private void GridGUI()
+        {
+            Rect area = GUILayoutUtility.GetRect(200, 200, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+            const float label = 16;
+            int count = cells.Count, columns = 1;
+            float best = 0;
+            for (int c = 1; c <= count; c++)
+            {
+                int rows = (count + c - 1) / c;
+                float side = Mathf.Min(area.width / c, area.height / rows - label);
+                if (side > best)
+                {
+                    best = side;
+                    columns = c;
+                }
+            }
+            if (best < 8)
+            {
+                // the layout pass, or a window too small to show anything
+                return;
+            }
+            float cellWidth = area.width / columns, cellHeight = best + label;
+            // one scale for all, so the avatar is the same size in each
+            float scale = float.MaxValue;
+            foreach (PreviewCell cell in cells.Where(c => c.Canvas != null))
+            {
+                scale = Mathf.Min(scale, Mathf.Min(cellWidth / cell.Canvas.Value.Width, best / cell.Canvas.Value.Height));
+            }
+            Event e = Event.current;
+            for (int i = 0; i < count; i++)
+            {
+                PreviewCell cell = cells[i];
+                var box = new Rect(area.x + (i % columns) * cellWidth, area.y + (i / columns) * cellHeight, cellWidth - 2, best);
+                EditorGUI.DrawRect(box, Ground);
+                Texture2D frame = cell.Shown();
+                if (frame != null && cell.Canvas.HasValue && scale < float.MaxValue)
+                {
+                    CanvasSpec canvas = cell.Canvas.Value;
+                    var size = new Vector2(canvas.Width * scale, canvas.Height * scale);
+                    var rect = new Rect(box.center - size / 2, size);
+                    GUI.DrawTexture(rect, frame, ScaleMode.StretchToFill, true);
+                    DrawAnchor(new Vector2(rect.x + canvas.AnchorX * scale, rect.y + canvas.AnchorY * scale));
+                }
+                GUI.Label(new Rect(box.x, box.yMax, box.width, label), cell.Info.Name, EditorStyles.centeredGreyMiniLabel);
+                if (e.type == EventType.MouseDown && box.Contains(e.mousePosition))
+                {
+                    focused = cell.Info.Name;
+                    viewZoom = 1;
+                    e.Use();
+                    Repaint();
+                }
+            }
+            EditorGUILayout.LabelField("Click an animation to see it large.", EditorStyles.wordWrappedMiniLabel);
+        }
+
+        /// <summary>One animation, large: scroll to zoom about the mouse, drag to pan, double-click to reset.</summary>
+        private void FocusedGUI(PreviewCell cell)
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button("Show all animations", GUILayout.Width(150)))
+                {
+                    focused = "";
+                    GUIUtility.ExitGUI();
+                }
+                GUILayout.Label(cell.Info.Name + ", " + PosePreview.DirectionName(cell.Info.Name, cell.Row), EditorStyles.boldLabel);
+            }
             Rect box = GUILayoutUtility.GetRect(200, 200, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
-            var size = new Vector2(texture.width, texture.height);
+            EditorGUI.DrawRect(box, Ground);
+            Texture2D frame = cell.Shown();
+            if (frame == null || !cell.Canvas.HasValue)
+            {
+                return;
+            }
+            CanvasSpec canvas = cell.Canvas.Value;
+            var size = new Vector2(canvas.Width, canvas.Height);
             // zoom 1 fits the whole frame in the box
             float fit = Mathf.Min(box.width / size.x, box.height / size.y);
             if (viewZoom <= 1)
@@ -252,25 +340,68 @@ namespace FactorioAvatarExporter.Editor
             }
             viewCentre = Vector2.Max(Vector2.zero, Vector2.Min(size, viewCentre));
             float scale = fit * viewZoom;
-            EditorGUI.DrawRect(box, Ground);
             GUI.BeginClip(box);
             var rect = new Rect(box.width / 2 - viewCentre.x * scale, box.height / 2 - viewCentre.y * scale,
                 size.x * scale, size.y * scale);
-            GUI.DrawTexture(rect, texture, ScaleMode.StretchToFill, true);
-            // the entity position: where the character stands in the game
-            var anchor = new Vector2(rect.x + shown.Canvas.AnchorX * scale, rect.y + shown.Canvas.AnchorY * scale);
-            EditorGUI.DrawRect(new Rect(anchor.x - 4, anchor.y, 9, 1), Anchor);
-            EditorGUI.DrawRect(new Rect(anchor.x, anchor.y - 4, 1, 9), Anchor);
+            GUI.DrawTexture(rect, frame, ScaleMode.StretchToFill, true);
+            DrawAnchor(new Vector2(rect.x + canvas.AnchorX * scale, rect.y + canvas.AnchorY * scale));
             GUI.EndClip();
             EditorGUILayout.LabelField("Scroll to zoom, drag to pan, and double-click to reset zoom.",
                 EditorStyles.wordWrappedMiniLabel);
-            if (preview.Retakes > 0 || preview.PlaceholderLeft > 0 || preview.Growths > 0)
+        }
+
+        /// <summary>The entity position, where the character stands in the game: a small yellow cross.</summary>
+        private static void DrawAnchor(Vector2 anchor)
+        {
+            EditorGUI.DrawRect(new Rect(anchor.x - 4, anchor.y, 9, 1), Anchor);
+            EditorGUI.DrawRect(new Rect(anchor.x, anchor.y - 4, 1, 9), Anchor);
+        }
+
+        /// <summary>
+        /// The animation tuning (<see cref="PoseTuning"/>): sliders per part of the avatar. The previews follow once a
+        /// slider rests; the export uses them too.
+        /// </summary>
+        private void TuningGUI()
+        {
+            using (new EditorGUILayout.HorizontalScope())
             {
-                EditorGUILayout.LabelField($"retaken while shaders compiled: {preview.Retakes}; placeholder pixels " +
-                    $"left: {preview.PlaceholderLeft}; canvas grown to fit: {preview.Growths} times",
-                    EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.LabelField("Animation tuning", EditorStyles.boldLabel);
+                if (GUILayout.Button("Reset", GUILayout.Width(60)))
+                {
+                    tuning = new PoseTuning();
+                    GUI.FocusControl(null);
+                    tuningChangedAt = EditorApplication.timeSinceStartup;
+                }
+            }
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.LabelField("Body", EditorStyles.miniBoldLabel);
+            tuning.Lean = Slider("Lean", "How far the body leans into running, sprinting and flying.", tuning.Lean, 0, 2);
+            tuning.HeadTilt = Slider("Head tilt", "Degrees; positive looks down, negative up.", tuning.HeadTilt, -30, 30);
+            EditorGUILayout.LabelField("Arms", EditorStyles.miniBoldLabel);
+            tuning.ArmSpread = Slider("Spread", "Arms further out from the body (for wide hips, outfits or wings) or closer in.",
+                tuning.ArmSpread, -1, 1);
+            tuning.ArmSwing = Slider("Swing", "How far the arms swing while running and sprinting.", tuning.ArmSwing, 0, 2);
+            EditorGUILayout.LabelField("Legs", EditorStyles.miniBoldLabel);
+            tuning.Stride = Slider("Stride", "Step length of the run and the sprint. The feet stay planted in the game.",
+                tuning.Stride, 0.5f, 1.5f);
+            EditorGUILayout.LabelField("Wings", EditorStyles.miniBoldLabel);
+            tuning.WingFlap = Slider("Flap", "How far the wings beat.", tuning.WingFlap, 0, 2);
+            tuning.WingRaise = Slider("Raise", "Degrees; the wings held higher or lower.", tuning.WingRaise, -45, 45);
+            EditorGUILayout.LabelField("Arms as wings (the flap animations)", EditorStyles.miniBoldLabel);
+            tuning.ArmWingStroke = Slider("Stroke", "How far the arms stroke.", tuning.ArmWingStroke, 0, 1.5f);
+            tuning.ArmWingRoll = Slider("Roll", "Degrees the arms turn from palms down, the thumb side up; turn it to keep " +
+                "the membranes from clipping.", tuning.ArmWingRoll, -60, 60);
+            EditorGUILayout.LabelField("Tail", EditorStyles.miniBoldLabel);
+            tuning.TailSway = Slider("Sway", "How far the tail sways.", tuning.TailSway, 0, 2);
+            tuning.TailLift = Slider("Lift", "Degrees; the tail held higher or lower.", tuning.TailLift, -45, 45);
+            if (EditorGUI.EndChangeCheck())
+            {
+                tuningChangedAt = EditorApplication.timeSinceStartup;
             }
         }
+
+        private static double Slider(string label, string tooltip, double value, float low, float high) =>
+            EditorGUILayout.Slider(new GUIContent(label, tooltip), (float)value, low, high);
 
         private static readonly string[] LightingModes = { "Factorio style", "Custom" };
 
@@ -316,7 +447,8 @@ namespace FactorioAvatarExporter.Editor
             if ((EditorGUI.EndChangeCheck() || reset) && preview != null)
             {
                 preview.SetLighting(lighting);
-                Rerender();
+                // the previews are drawn again once the sliders rest, as for the tuning
+                tuningChangedAt = EditorApplication.timeSinceStartup;
             }
         }
 
@@ -449,7 +581,6 @@ namespace FactorioAvatarExporter.Editor
 
         private void ExportAll(PackOptions options)
         {
-            playing = false;
             exported = null;
             var cancel = new CancellationTokenSource();
             var console = new List<string>();
@@ -528,70 +659,181 @@ namespace FactorioAvatarExporter.Editor
             return 60 * perTick;
         }
 
+        /// <summary>
+        /// Plays every animation at the game's pace, renders the frames still missing (as many as fit in a short time,
+        /// so the window stays responsive) and applies the tuning once its sliders rest.
+        /// </summary>
         private void Update()
-        {
-            if (!playing || preview == null)
-            {
-                return;
-            }
-            AnimationInfo info = AnimationSpec.All[animationIndex];
-            double fps = GameFramesPerSecond(info), now = EditorApplication.timeSinceStartup;
-            int steps = (int)((now - playClock) * fps);
-            if (steps <= 0)
-            {
-                return;
-            }
-            // frames the editor was too slow to show are skipped, so the animation keeps the game's pace
-            playClock = now - playClock > 1 ? now : playClock + steps / fps;
-            frame = (frame + steps) % info.FrameCount;
-            Rerender();
-            Repaint();
-        }
-
-        private void Rerender()
         {
             if (preview == null)
             {
                 return;
             }
-            try
+            double now = EditorApplication.timeSinceStartup;
+            bool changed = false;
+            if (tuningChangedAt >= 0 && now - tuningChangedAt > 0.3)
             {
-                shown = preview.Render(AnimationSpec.All[animationIndex].Name, row, frame);
-                texture = ToTexture(shown.Image, texture);
+                tuningChangedAt = -1;
+                preview.SetTuning(tuning);
+                InvalidateFrames();
+                changed = true;
             }
-            catch (Exception e)
+            if (playing)
             {
-                Debug.LogException(e);
-                error = e.Message;
-                playing = false;
+                foreach (PreviewCell cell in cells)
+                {
+                    changed |= cell.Advance(now);
+                }
             }
+            changed |= RenderPending(now + 0.04);
+            if (changed)
+            {
+                Repaint();
+            }
+        }
+
+        /// <summary>Renders pending frames until <paramref name="until"/> (at least one); true when any was.</summary>
+        private bool RenderPending(double until)
+        {
+            bool any = false;
+            while (pending.Count > 0 && (!any || EditorApplication.timeSinceStartup < until))
+            {
+                (PreviewCell cell, int frame) = pending[0];
+                pending.RemoveAt(0);
+                any = true;
+                try
+                {
+                    PreviewFrame rendered = preview.Render(cell.Info.Name, cell.Row, frame);
+                    if (cell.Canvas.HasValue && (cell.Canvas.Value.Width != rendered.Canvas.Width
+                        || cell.Canvas.Value.Height != rendered.Canvas.Height))
+                    {
+                        // the canvas grew to fit something: the frames already rendered are drawn again on the new one
+                        for (int f = 0; f < cell.Frames.Length; f++)
+                        {
+                            if (f != frame && cell.Frames[f] != null)
+                            {
+                                DestroyImmediate(cell.Frames[f]);
+                                cell.Frames[f] = null;
+                                pending.Insert(0, (cell, f));
+                            }
+                        }
+                    }
+                    cell.Canvas = rendered.Canvas;
+                    cell.Frames[frame] = ToTexture(rendered.Image, cell.Frames[frame]);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                    error = $"{cell.Info.Name}: {e.Message}" + ErrorLog.Note(ErrorLog.Write("Preview " + cell.Info.Name, e, preview,
+                        null, lighting, null));
+                    pending.RemoveAll(p => p.cell == cell);
+                }
+            }
+            return any;
+        }
+
+        /// <summary>
+        /// Drops every rendered frame (the direction, the lighting or the tuning changed) and queues them all again:
+        /// first the first frame of every animation, so each shows something soon, then the rest in turn.
+        /// </summary>
+        private void InvalidateFrames()
+        {
+            ClearFrames();
+            if (preview == null)
+            {
+                return;
+            }
+            double now = EditorApplication.timeSinceStartup;
+            foreach (AnimationInfo info in AnimationSpec.All)
+            {
+                cells.Add(new PreviewCell(info, PosePreview.RowFor(info.Name, direction), GameFramesPerSecond(info), now));
+            }
+            int most = cells.Max(c => c.Frames.Length);
+            for (int frame = 0; frame < most; frame++)
+            {
+                foreach (PreviewCell cell in cells.Where(c => frame < c.Frames.Length))
+                {
+                    pending.Add((cell, frame));
+                }
+            }
+            Repaint();
+        }
+
+        private void ClearFrames()
+        {
+            foreach (PreviewCell cell in cells)
+            {
+                foreach (Texture2D frame in cell.Frames.Where(f => f != null))
+                {
+                    DestroyImmediate(frame);
+                }
+            }
+            cells.Clear();
+            pending.Clear();
         }
 
         private string PreviewFolder => Path.Combine(Path.GetDirectoryName(Application.dataPath), "FactorioAvatarExport",
             preview.AvatarName, "preview");
 
-        private void SaveSheet(string animation)
+        /// <summary>One animation in the preview: its rendered frames and where it is in its loop.</summary>
+        private sealed class PreviewCell
         {
-            playing = false;
-            try
+            private readonly double framesPerSecond;
+            private double clock;
+
+            public PreviewCell(AnimationInfo info, int row, double framesPerSecond, double now)
             {
-                Image8 sheet = preview.Sheet(animation, out double worst,
-                    p => EditorUtility.DisplayProgressBar("Factorio Avatar Exporter", "Rendering " + animation, p));
-                string folder = PreviewFolder;
-                Directory.CreateDirectory(folder);
-                string path = Path.Combine(folder, animation + ".png");
-                File.WriteAllBytes(path, PngWriter.Encode(sheet));
-                Debug.Log($"Factorio Avatar Exporter: wrote {path} (a row per direction; bones within {worst:0.0} px of Core's joints)");
-                EditorUtility.RevealInFinder(path);
+                Info = info;
+                Row = row;
+                Frames = new Texture2D[info.FrameCount];
+                this.framesPerSecond = framesPerSecond;
+                clock = now;
             }
-            catch (Exception e)
+
+            public AnimationInfo Info { get; }
+
+            /// <summary>The sheet row shown (<see cref="PosePreview.RowFor"/>).</summary>
+            public int Row { get; }
+
+            /// <summary>The rendered frames; null until rendered.</summary>
+            public Texture2D[] Frames { get; }
+
+            /// <summary>The canvas the frames are drawn on (null before the first one).</summary>
+            public CanvasSpec? Canvas { get; set; }
+
+            public int Current { get; private set; }
+
+            /// <summary>Moves on as many frames as the game would have since the last call; true when it moved.</summary>
+            public bool Advance(double now)
             {
-                Debug.LogException(e);
-                error = e.Message;
+                if (Frames.Length < 2)
+                {
+                    clock = now;
+                    return false;
+                }
+                int steps = (int)((now - clock) * framesPerSecond);
+                if (steps <= 0)
+                {
+                    return false;
+                }
+                // frames the editor was too slow to show are skipped, so the animation keeps the game's pace
+                clock = now - clock > 1 ? now : clock + steps / framesPerSecond;
+                Current = (Current + steps) % Frames.Length;
+                return true;
             }
-            finally
+
+            /// <summary>The frame to draw: the current one, or while that is still being rendered, the latest before it.</summary>
+            public Texture2D Shown()
             {
-                EditorUtility.ClearProgressBar();
+                for (int i = 0; i < Frames.Length; i++)
+                {
+                    Texture2D frame = Frames[(Current - i + Frames.Length) % Frames.Length];
+                    if (frame != null)
+                    {
+                        return frame;
+                    }
+                }
+                return null;
             }
         }
 

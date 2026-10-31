@@ -75,8 +75,9 @@ You need Unity 2022.3 with your avatar in a project. Your VRChat avatar project 
    scene are not changed.
 
    *(Screenshot coming: the exporter window with an avatar loaded and the preview showing. File: `docs/images/exporter-loaded.png`)*
-4. **Check the preview.** Pick an animation and a direction, or press **Play**, to see how your avatar
-   will move in the game.
+4. **Check the preview.** Every animation plays on the right, as it will in the game. If something looks
+   off for your avatar (arms through the body, a stride too long), adjust it with the **Animation
+   tuning** sliders while they play.
 5. **Fill in the pack details.** A **Name** (shown in the game) and an **Author** (any name). Leave
    everything else as it is.
 6. **Export.** Press **Export Avatar to .zip** and save the file where you like. Exporting takes a few minutes.

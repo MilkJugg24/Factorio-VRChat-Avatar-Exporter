@@ -22,9 +22,27 @@ Open it with **Tools ▸ Factorio Avatar Exporter**.
 
 ## Preview
 
-The preview is on the right. Pick an animation, a direction and a frame, or press **Play** to see it at
-the speed the game plays it. Scroll to zoom, drag to pan, and double-click to reset zoom. The yellow cross
-is where your character stands in the game.
+The preview on the right plays every animation side by side, at the speed the game plays it. They are
+drawn a frame at a time when the avatar loads (and again after a change), so they fill in over a minute or
+so. **Direction** turns them all; **Pause** stops them. Click an animation to see it large: scroll to zoom,
+drag to pan, double-click to reset zoom; **Show all animations** goes back. The yellow cross is where your
+character stands in the game.
+
+## Animation tuning
+
+Sliders that adjust the animations to your avatar while the previews play; the export uses them too.
+**Reset** puts them all back. The previews update a moment after you let go of a slider.
+
+- **Body:** **Lean** (how far the body leans into running, sprinting and flying) and **Head tilt**.
+- **Arms:** **Spread** (further from the body, for wide hips, outfits or wings, or closer in) and
+  **Swing** (how far they swing while running).
+- **Legs:** **Stride** (step length; the feet stay planted in the game).
+- **Wings:** **Flap** (how far they beat) and **Raise** (held higher or lower).
+- **Arms as wings** (the flap animations, for avatars whose wings are their arms): **Stroke** and
+  **Roll** (turn the arms so the membranes don't clip into each other).
+- **Tail:** **Sway** and **Lift**.
+
+`report.txt` lists the values that differ from the defaults.
 
 ## Lighting
 
@@ -70,8 +88,6 @@ flight animations (hovering and flying with Space Age's mech armor).
   says which, before the long render: turn off the part that reaches far out (a long tail, wide
   wings, a big accessory) and export again. Then it renders everything (a few minutes; you can cancel)
   and saves the pack. Keep the file name `vrc-avatar-<id>_<exporter version>.zip`, as Factorio expects.
-- **Export Selected Animation** (next to Play): saves only the animation in the preview as one image.
-  Not needed for the game.
 
 Every export also writes `FactorioAvatarExport/<avatar>/preview/` next to your project's `Assets`
 folder: a preview image of every animation and `report.txt`, which says what the exporter did, which

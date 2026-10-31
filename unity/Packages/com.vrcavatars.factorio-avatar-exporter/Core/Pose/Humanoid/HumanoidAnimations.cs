@@ -51,9 +51,13 @@ namespace FactorioAvatarExporter.Core
         /// <summary>Pelvis height when standing with the knees slightly bent.</summary>
         private readonly double standingPelvis;
 
-        public HumanoidAnimations(HumanoidRig rig)
+        /// <summary>The adjustments these animations are made with (<see cref="PoseTuning"/>).</summary>
+        private readonly PoseTuning tuning;
+
+        public HumanoidAnimations(HumanoidRig rig, PoseTuning tuning = null)
         {
             this.rig = rig ?? throw new ArgumentNullException(nameof(rig));
+            this.tuning = (tuning ?? new PoseTuning()).Clamped();
             legScale = rig.LegLength / DragonLegLength;
             armScale = rig.ArmLength / DragonArmLength;
             sizeScale = rig.HeadTopHeight / Conventions.DefaultCharacterHeight;
@@ -63,8 +67,10 @@ namespace FactorioAvatarExporter.Core
             {
                 // the game moves distance_per_frame / animation_speed tiles per running frame: one cycle
                 // covers the vanilla engineer's ground, longer for longer legs, like the dragon's 0.238
-                DistancePerFrame = EngineerRunCycle * legScale * run.DefaultSpeed / run.FrameCount,
-                SprintDistancePerFrame = EngineerRunCycle * legScale * run.DefaultSpeed / run.FrameCount * AnimationSpec.SprintCycleScale,
+                // (a longer stride covers more ground in a cycle)
+                DistancePerFrame = EngineerRunCycle * legScale * this.tuning.Stride * run.DefaultSpeed / run.FrameCount,
+                SprintDistancePerFrame = EngineerRunCycle * legScale * this.tuning.Stride * run.DefaultSpeed / run.FrameCount
+                    * AnimationSpec.SprintCycleScale,
             };
         }
 
@@ -76,6 +82,16 @@ namespace FactorioAvatarExporter.Core
             {
                 throw new ArgumentException("t and move must be finite numbers");
             }
+            PoseResult pose = Untuned(animation, t, move);
+            // the wings and the tail, as tuned
+            pose.WingElevation = pose.WingElevation * tuning.WingFlap + MathUtil.Radians(tuning.WingRaise);
+            pose.TailSwing *= tuning.TailSway;
+            pose.TailLift += MathUtil.Radians(tuning.TailLift);
+            return pose;
+        }
+
+        private PoseResult Untuned(string animation, double t, double move)
+        {
             switch (animation)
             {
                 case AnimationSpec.Idle: return Idle(t, false);
@@ -128,7 +144,7 @@ namespace FactorioAvatarExporter.Core
             b.SetPelvis(pelvis, Frame(lean * 0.5, hipTwist, hipRoll));
             b.SetTorso(Frame(lean, twist, chestRoll));
             // the head stays closer to level than the torso and looks where the body goes
-            b.SetHead(Frame(lean * 0.35 + headPitch, twist * 0.5 + headYaw, headRoll));
+            b.SetHead(Frame(lean * 0.35 + headPitch + MathUtil.Radians(tuning.HeadTilt), twist * 0.5 + headYaw, headRoll));
             return b;
         }
 
@@ -155,7 +171,7 @@ namespace FactorioAvatarExporter.Core
             foreach (int side in Sides)
             {
                 Vec3 s = Shoulder(b, side);
-                Vec3 hand = s + chest.Right * (side * (0.055 * armScale + spread * sizeScale))
+                Vec3 hand = s + chest.Right * (side * ((0.055 + ArmSpreadTiles * tuning.ArmSpread) * armScale + spread * sizeScale))
                             + chest.Forward * ((0.04 + swing * side) * armScale)
                             - chest.Up * (rig.ArmLength * 0.9);
                 b.SetArm(side, hand, -chest.Forward + chest.Right * (side * 0.35), null, 0.25);
@@ -419,7 +435,7 @@ namespace FactorioAvatarExporter.Core
             double ph = MathUtil.Tau * t;
             // lowest just after each landing, highest in the air between steps
             double bounce = -Math.Cos(2 * ph - 0.4);
-            double lean = (gun ? 0.12 : 0.35) + 0.02 * bounce;
+            double lean = tuning.Lean * ((gun ? 0.12 : 0.35) + 0.02 * bounce);
             double hipTwist = (gun ? 0.08 : 0.11) * Math.Sin(ph);
             double twist = (gun ? 0.04 : 0.09) * Math.Sin(ph);
             double hipRoll = 0.05 * Math.Sin(ph);
@@ -432,7 +448,7 @@ namespace FactorioAvatarExporter.Core
             foreach ((int side, double phase) in new[] { (-1, t), (1, t + 0.5) })
             {
                 double phi = MathUtil.PositiveModulo(phase, 1.0);
-                double y = 0.02 * legScale + RunStride * legScale * Math.Cos(MathUtil.Tau * phi);
+                double y = 0.02 * legScale + RunStride * tuning.Stride * legScale * Math.Cos(MathUtil.Tau * phi);
                 // in the air the heel kicks up behind first, then the knee drives forward
                 double s = phi > 0.5 ? (phi - 0.5) / 0.5 : 0.0;
                 double swing = s > 0 ? Math.Sin(Math.PI * Math.Pow(s, 0.75)) : 0.0;
@@ -452,10 +468,10 @@ namespace FactorioAvatarExporter.Core
             {
                 foreach ((int side, double phase) in new[] { (-1, t), (1, t + 0.5) })
                 {
-                    double a = Math.Cos(MathUtil.Tau * (phase + 0.5));
+                    double a = tuning.ArmSwing * Math.Cos(MathUtil.Tau * (phase + 0.5));
                     double ahead = Math.Max(a, 0);
                     Vec3 s = Shoulder(b, side);
-                    Vec3 hand = s + chest.Right * (side * (0.08 - 0.05 * ahead) * armScale)
+                    Vec3 hand = s + chest.Right * (side * (0.08 + ArmSpreadTiles * tuning.ArmSpread - 0.05 * ahead) * armScale)
                                 + chest.Forward * ((0.15 + 0.10 * a) * armScale)
                                 - chest.Up * ((0.24 - 0.07 * a) * armScale);
                     // elbows bent about square: swung back, the upper arm points back and the hand hangs under the
@@ -490,7 +506,7 @@ namespace FactorioAvatarExporter.Core
             double ph = MathUtil.Tau * t;
             // lowest as a foot takes the weight, highest in the air between steps
             double bounce = -Math.Cos(2 * ph - 0.6);
-            double lean = 0.5 + 0.03 * bounce;
+            double lean = tuning.Lean * (0.5 + 0.03 * bounce);
             double hipTwist = 0.14 * Math.Sin(ph);
             double twist = 0.10 * Math.Sin(ph);
             double hipRoll = 0.04 * Math.Sin(ph);
@@ -507,7 +523,7 @@ namespace FactorioAvatarExporter.Core
                 {
                     // on the ground: lands ahead, the body passes over it, pushes off behind on the ball
                     double u = phi / SprintStance;
-                    y = SprintStride * legScale * Math.Cos(Math.PI * u);
+                    y = SprintStride * tuning.Stride * legScale * Math.Cos(Math.PI * u);
                     z = 0;
                     heelLift = 0.8 * MathUtil.Smoothstep(0.4, 1.0, u);
                     toe = 0;
@@ -516,7 +532,7 @@ namespace FactorioAvatarExporter.Core
                 {
                     // in the air: the heel kicks up high behind, then the knee drives forward and the foot reaches out
                     double s = (phi - SprintStance) / (1 - SprintStance);
-                    y = -SprintStride * legScale * Math.Cos(Math.PI * s);
+                    y = -SprintStride * tuning.Stride * legScale * Math.Cos(Math.PI * s);
                     z = 0.2 * legScale * Math.Sin(Math.PI * Math.Pow(s, 0.7));
                     heelLift = 0.8 * (1 - MathUtil.Smoothstep(0.1, 0.9, s)) + 0.2 * Math.Sin(Math.PI * s);
                     toe = heelLift;
@@ -529,10 +545,10 @@ namespace FactorioAvatarExporter.Core
             Quat chest = ChestFrame(lean, twist);
             foreach ((int side, double phase) in new[] { (-1, t), (1, t + 0.5) })
             {
-                double a = Math.Cos(MathUtil.Tau * (phase + 0.5));
+                double a = tuning.ArmSwing * Math.Cos(MathUtil.Tau * (phase + 0.5));
                 double ahead = Math.Max(a, 0);
                 Vec3 s = Shoulder(b, side);
-                Vec3 hand = s + chest.Right * (side * (0.08 - 0.05 * ahead) * armScale)
+                Vec3 hand = s + chest.Right * (side * (0.08 + ArmSpreadTiles * tuning.ArmSpread - 0.05 * ahead) * armScale)
                             + chest.Forward * ((0.12 + 0.20 * a) * armScale)
                             - chest.Up * ((0.22 - 0.12 * a) * armScale);
                 b.SetArm(side, hand, -chest.Forward * 0.6 + chest.Right * (side * 0.35) - chest.Up, null, 0.6);
@@ -624,7 +640,7 @@ namespace FactorioAvatarExporter.Core
             }
             else if (flap)
             {
-                SpreadArms(b, chest, HoverSweep(ph), HoverLift(ph), Math.Cos(ph));
+                SpreadArms(b, chest, Stroke * HoverSweep(ph), Stroke * HoverLift(ph), Math.Cos(ph));
             }
             else
             {
@@ -648,6 +664,9 @@ namespace FactorioAvatarExporter.Core
         /// </summary>
         private const double SweepLag = 0.9;
 
+        /// <summary>How far the arms as wings stroke, as tuned (<see cref="PoseTuning.ArmWingStroke"/>).</summary>
+        private double Stroke => tuning.ArmWingStroke;
+
         /// <summary>
         /// The arms as wings while hovering, radians forward of straight out sideways (<see cref="HoverLift"/>:
         /// above it): a stroke goes up and forward, then down and back, slowly.
@@ -668,8 +687,11 @@ namespace FactorioAvatarExporter.Core
         /// </summary>
         private static double Downstroke(double wave, double scale) => wave < 0 ? wave * scale : wave;
 
-        /// <summary>How far the arms as wings are rolled from palms down, radians (30 degrees).</summary>
-        private const double WingArmRoll = Math.PI / 6;
+        /// <summary>How far the arms as wings are rolled from palms down, radians (<see cref="PoseTuning.ArmWingRoll"/>, 30 degrees by default).</summary>
+        private double WingArmRoll => MathUtil.Radians(tuning.ArmWingRoll);
+
+        /// <summary>How far <see cref="PoseTuning.ArmSpread"/> 1 moves the hands out, at dragon size, tiles.</summary>
+        private const double ArmSpreadTiles = 0.06;
 
         /// <summary>
         /// Both arms out to the sides as wings, <paramref name="sweep"/> radians forward of straight out and
@@ -704,7 +726,7 @@ namespace FactorioAvatarExporter.Core
         private PoseResult Fly(double t, bool gun, double move, bool flap = false)
         {
             double ph = MathUtil.Tau * t;
-            const double lean = 0.55;
+            double lean = 0.55 * tuning.Lean;
             var pelvis = new Vec3(0, 0, standingPelvis + Conventions.FlyHeight + 0.03 * legScale * Math.Sin(ph));
             HumanoidPoseBuilder b = Torso(pelvis, lean, hipTwist: -move, headPitch: -0.45);
             Quat chest = ChestFrame(lean);
@@ -714,7 +736,7 @@ namespace FactorioAvatarExporter.Core
             }
             else if (flap)
             {
-                SpreadArms(b, chest, FlySweep(ph), FlyLift(ph), Math.Cos(ph));
+                SpreadArms(b, chest, Stroke * FlySweep(ph), Stroke * FlyLift(ph), Math.Cos(ph));
             }
             else
             {
@@ -752,8 +774,8 @@ namespace FactorioAvatarExporter.Core
                 // from hanging at the sides out to the first hover-flap frame, with one hard stroke up and forward,
                 // then down and back
                 double beat = Math.Sin(2 * Math.PI * MathUtil.Smoothstep(0.3, 1, t));
-                double armLift = -1.3 * (1 - open) + (HoverLift(0) + 0.5 * beat) * open;
-                double sweep = (HoverSweep(0) + 0.5 * beat) * open;
+                double armLift = -1.3 * (1 - open) + Stroke * (HoverLift(0) + 0.5 * beat) * open;
+                double sweep = Stroke * (HoverSweep(0) + 0.5 * beat) * open;
                 SpreadArms(b, ChestFrame(lean), sweep, armLift, t < 0.3 ? 1 : Math.Cos(2 * Math.PI * MathUtil.Smoothstep(0.3, 1, t)));
             }
             else

@@ -67,6 +67,41 @@ namespace FactorioAvatarExporter.Editor
         /// <summary>The pack timing the poses were made with (the run's distance per frame, for the preview's speed).</summary>
         public PackTiming Timing => poses.Timing;
 
+        /// <summary>The animation tuning the poses are made with (the window's sliders), for the preview and the export.</summary>
+        public PoseTuning Tuning { get; private set; } = new PoseTuning();
+
+        /// <summary>Poses the avatar with <paramref name="tuning"/> from now on; frames rendered before are out of date.</summary>
+        public void SetTuning(PoseTuning tuning)
+        {
+            Tuning = (tuning ?? new PoseTuning()).Clamped();
+            poses = new HumanoidAnimations(stage.Rig, Tuning);
+            // the poses decide each animation's canvas
+            bounds.Clear();
+        }
+
+        /// <summary>
+        /// The sheet row of <paramref name="animation"/> facing <paramref name="direction"/> (0 north, clockwise, 8
+        /// directions): the same row for 8-direction animations, the gun-and-moving row facing that way (or its
+        /// mirror image, which the game flips, for the west half) for the 18-direction ones, row 0 for the corpse.
+        /// </summary>
+        public static int RowFor(string animation, int direction)
+        {
+            AnimationInfo info = AnimationSpec.Get(animation);
+            if (info.GunMoveRows)
+            {
+                int facing = direction <= 4 ? direction : 8 - direction;
+                for (int r = 0; r < AnimationSpec.GunMoveDirections.Count; r++)
+                {
+                    if (AnimationSpec.GunMoveDirections[r] == (facing, facing))
+                    {
+                        return r;
+                    }
+                }
+                return 0;
+            }
+            return info.DirectionCount == 8 ? direction : 0;
+        }
+
         /// <summary>Lights the avatar for the preview and the export (<see cref="StageCamera.SetLighting"/>).</summary>
         public void SetLighting(StageLighting lighting) => camera.SetLighting(lighting);
 
@@ -299,8 +334,10 @@ namespace FactorioAvatarExporter.Editor
         {
             using (var renderer = new StageRenderer(stage, camera))
             {
-                return PackExport.Write(options, AvatarName, poses, renderer, Notes.Append(SizeNote).Append(camera.Lighting.Describe()),
-                    progress, cancel);
+                string tuned = Tuning.Describe();
+                IEnumerable<string> notes = Notes.Append(SizeNote).Append(camera.Lighting.Describe())
+                    .Append(tuned.Length > 0 ? "animation tuning: " + tuned : "animation tuning: as designed");
+                return PackExport.Write(options, AvatarName, poses, renderer, notes, progress, cancel);
             }
         }
 
