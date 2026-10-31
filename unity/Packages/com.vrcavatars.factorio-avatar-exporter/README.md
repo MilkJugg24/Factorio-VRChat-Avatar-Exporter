@@ -33,7 +33,8 @@ where your character stands in the game.
 ## Animation tuning
 
 Sliders that adjust the animations to your avatar while the previews play; the export uses them too.
-**Reset** puts them all back. The previews update a moment after you let go of a slider.
+**Reset** puts them all back. The previews update a moment after you let go of a slider. Click the **?** at the
+end of a row to see what it does; click it again to hide that.
 
 - **Body:** **Lean** (how far the body leans into running, sprinting and flying) and **Head tilt**.
 - **Arms:** **Spread** (further from the body, for wide hips, outfits or wings, or closer in) and

@@ -31,6 +31,8 @@ namespace FactorioAvatarExporter.Editor
         // wing and tail bones chosen by hand for the avatar loaded (Advanced)
         [SerializeField] private BoneChoices boneChoices = new BoneChoices();
         [SerializeField] private bool showAdvanced;
+        // the help texts opened with their "?" buttons, by the label of their row
+        private readonly HashSet<string> openHelp = new HashSet<string>();
         // the preview's own zoom, 1 showing the whole frame, and the frame's pixel at the middle of the box
         private float viewZoom = 1;
         private Vector2 viewCentre;
@@ -437,10 +439,10 @@ namespace FactorioAvatarExporter.Editor
         }
 
         /// <summary>A bone of the avatar <paramref name="root"/>, kept as its path below it ("" for none).</summary>
-        private static string BoneField(string label, string tooltip, Transform root, string path)
+        private string BoneField(string label, string help, Transform root, string path)
         {
             Transform current = root != null && !string.IsNullOrEmpty(path) ? root.Find(path) : null;
-            var picked = (Transform)EditorGUILayout.ObjectField(new GUIContent(label, tooltip), current, typeof(Transform), true);
+            var picked = Helped(label, help, r => (Transform)EditorGUI.ObjectField(r, label, current, typeof(Transform), true));
             if (picked == current)
             {
                 return path;
@@ -504,8 +506,44 @@ namespace FactorioAvatarExporter.Editor
             }
         }
 
-        private static double Slider(string label, string tooltip, double value, float low, float high) =>
-            EditorGUILayout.Slider(new GUIContent(label, tooltip), (float)value, low, high);
+        private double Slider(string label, string help, double value, float low, float high) =>
+            Helped(label, help, r => (double)EditorGUI.Slider(r, label, (float)value, low, high));
+
+        private float Slider(string label, string help, float value, float low, float high) =>
+            Helped(label, help, r => EditorGUI.Slider(r, label, value, low, high));
+
+        private const float HelpButtonWidth = 18;
+
+        /// <summary>
+        /// One row of the controls with a "?" button at its end, instead of a tooltip: <paramref name="draw"/> draws
+        /// the control in the rest of the row, and the button shows or hides <paramref name="help"/> under it.
+        /// </summary>
+        private T Helped<T>(string label, string help, Func<Rect, T> draw, float height = 0)
+        {
+            Rect row = EditorGUILayout.GetControlRect(false, height > 0 ? height : EditorGUIUtility.singleLineHeight);
+            var button = new Rect(row.xMax - HelpButtonWidth, row.y, HelpButtonWidth, EditorGUIUtility.singleLineHeight);
+            row.xMax -= HelpButtonWidth + 2;
+            T result = draw(row);
+            // the text follows the state this pass was laid out with; a click shows or hides it from the next one
+            bool open = openHelp.Contains(label);
+            if (GUI.Toggle(button, open, "?", EditorStyles.miniButton) != open)
+            {
+                if (open)
+                {
+                    openHelp.Remove(label);
+                }
+                else
+                {
+                    openHelp.Add(label);
+                }
+                Repaint();
+            }
+            if (open)
+            {
+                EditorGUILayout.HelpBox(help, MessageType.None);
+            }
+            return result;
+        }
 
         private static readonly string[] LightingModes = { "Factorio style", "Custom" };
 
@@ -514,33 +552,32 @@ namespace FactorioAvatarExporter.Editor
         {
             EditorGUILayout.LabelField("Lighting", EditorStyles.boldLabel);
             EditorGUI.BeginChangeCheck();
-            lighting.Custom = EditorGUILayout.Popup(new GUIContent("Lighting Style", "Factorio style lights the avatar like " +
-                "the game's own characters. Custom lets you set the lights yourself, for example for a shiny avatar."),
-                lighting.Custom ? 1 : 0, LightingModes) == 1;
+            lighting.Custom = Helped("Lighting Style", "Factorio style lights the avatar like the game's own characters. " +
+                "Custom lets you set the lights yourself, for example for a shiny avatar.",
+                r => EditorGUI.Popup(r, "Lighting Style", lighting.Custom ? 1 : 0, LightingModes)) == 1;
             bool reset = false;
             if (lighting.Custom)
             {
-                lighting.KeyDirection = EditorGUILayout.Slider(new GUIContent("Key light from", "Where the main light " +
-                    "comes from, in degrees around the avatar as you see it: 0 from behind, 90 from the right, 180 from " +
-                    "the front, 270 from the left. Factorio style: " + Mathf.Round(StageLighting.FactorioKeyDirection) + "."),
-                    lighting.KeyDirection, 0, 360);
-                lighting.KeyHeight = EditorGUILayout.Slider(new GUIContent("Key light height", "Degrees above the " +
-                    "horizon; 90 is straight above. Factorio style: " + Mathf.Round(StageLighting.FactorioKeyHeight) + "."),
-                    lighting.KeyHeight, 0, 90);
+                lighting.KeyDirection = Slider("Key light from", "Where the main light comes from, in degrees around " +
+                    "the avatar as you see it: 0 from behind, 90 from the right, 180 from the front, 270 from the left. " +
+                    "Factorio style: " + Mathf.Round(StageLighting.FactorioKeyDirection) + ".", lighting.KeyDirection, 0, 360);
+                lighting.KeyHeight = Slider("Key light height", "Degrees above the horizon; 90 is straight above. " +
+                    "Factorio style: " + Mathf.Round(StageLighting.FactorioKeyHeight) + ".", lighting.KeyHeight, 0, 90);
                 lighting.KeyStrength = EditorGUILayout.Slider("Key light strength", lighting.KeyStrength, 0, 3);
                 lighting.KeyColor = EditorGUILayout.ColorField("Key light colour", lighting.KeyColor);
-                lighting.FillStrength = EditorGUILayout.Slider(new GUIContent("Fill light", "A softer light from the " +
-                    "opposite side, so the side away from the key light isn't dark."), lighting.FillStrength, 0, 2);
-                lighting.RimStrength = EditorGUILayout.Slider(new GUIContent("Rim light", "A light from behind that " +
-                    "draws bright edges around the avatar."), lighting.RimStrength, 0, 2);
-                lighting.AmbientStrength = EditorGUILayout.Slider(new GUIContent("Ambient light", "Light from every " +
-                    "direction, so nothing is pitch black."), lighting.AmbientStrength, 0, 1.5f);
+                lighting.FillStrength = Slider("Fill light", "A softer light from the opposite side, so the side away " +
+                    "from the key light isn't dark.", lighting.FillStrength, 0, 2);
+                lighting.RimStrength = Slider("Rim light", "A light from behind that draws bright edges around the " +
+                    "avatar.", lighting.RimStrength, 0, 2);
+                lighting.AmbientStrength = Slider("Ambient light", "Light from every direction, so nothing is pitch " +
+                    "black.", lighting.AmbientStrength, 0, 1.5f);
                 lighting.AmbientColor = EditorGUILayout.ColorField("Ambient colour", lighting.AmbientColor);
-                lighting.ReflectionStrength = EditorGUILayout.Slider(new GUIContent("Reflections", "How strongly shiny " +
-                    "and metallic materials reflect their surroundings."), lighting.ReflectionStrength, 0, 2);
-                lighting.Environment = (Cubemap)EditorGUILayout.ObjectField(new GUIContent("Reflected surroundings",
-                    "Optional: a cubemap shiny materials reflect, such as a skybox or an HDRI imported with Texture " +
-                    "Shape: Cube. Empty: a neutral studio, bright above and dark below."), lighting.Environment, typeof(Cubemap), false);
+                lighting.ReflectionStrength = Slider("Reflections", "How strongly shiny and metallic materials reflect " +
+                    "their surroundings.", lighting.ReflectionStrength, 0, 2);
+                lighting.Environment = Helped("Reflected surroundings", "Optional: a cubemap shiny materials reflect, " +
+                    "such as a skybox or an HDRI imported with Texture Shape: Cube. Empty: a neutral studio, bright above " +
+                    "and dark below.", r => (Cubemap)EditorGUI.ObjectField(r, "Reflected surroundings", lighting.Environment,
+                    typeof(Cubemap), false));
                 reset = GUILayout.Button("Reset to Factorio style");
                 if (reset)
                 {
@@ -562,12 +599,16 @@ namespace FactorioAvatarExporter.Editor
         private static readonly Color MissingColor = new Color(0.9f, 0.2f, 0.2f);
 
         /// <summary>A text field that must be filled in before exporting: outlined in red with a note while it's empty.</summary>
-        private static string RequiredField(GUIContent label, string value)
+        private string RequiredField(string label, string help, string value)
         {
-            string result = EditorGUILayout.TextField(label, value);
+            Rect box = default;
+            string result = Helped(label, help, r =>
+            {
+                box = r;
+                return EditorGUI.TextField(r, label, value);
+            });
             if (string.IsNullOrWhiteSpace(result))
             {
-                Rect box = GUILayoutUtility.GetLastRect();
                 box.xMin += EditorGUIUtility.labelWidth + 2;
                 foreach (Rect edge in new[]
                 {
@@ -587,21 +628,24 @@ namespace FactorioAvatarExporter.Editor
         private void PackGUI()
         {
             EditorGUILayout.LabelField("Avatar pack", EditorStyles.boldLabel);
-            packTitle = RequiredField(new GUIContent("Name", "Shown in the game's avatar window and mod list."), packTitle);
+            packTitle = RequiredField("Name", "Shown in the game's avatar window and mod list.", packTitle);
             string derived = PackNaming.DeriveId(packTitle ?? "");
-            string id = RequiredField(new GUIContent("Pack id", "Lowercase letters, digits and -. The mod is " +
-                "called vrc-avatar-<id>; keep it the same when you export again, so the new pack replaces the old one."),
+            string id = RequiredField("Pack id", "Lowercase letters, digits and -. The mod is called vrc-avatar-<id>; " +
+                "keep it the same when you export again, so the new pack replaces the old one.",
                 string.IsNullOrEmpty(packId) ? derived : packId);
             packId = id == derived ? "" : id;
-            author = RequiredField(new GUIContent("Author", "Your name as you'd like it shown with the pack (\"VRC Avatar: " +
-                "<name> by <author>\"). Factorio needs one for every mod; any name will do."), author);
+            author = RequiredField("Author", "Your name as you'd like it shown with the pack (\"VRC Avatar: <name> by " +
+                "<author>\"). Factorio needs one for every mod; any name will do.", author);
             // the exporter's own version, so a pack's file name says which exporter made it
-            using (new EditorGUI.DisabledScope(true))
-            {
-                EditorGUILayout.TextField(new GUIContent("Version", "The version of this exporter (" + ExporterInfo.Version +
-                    "), so the pack's file name shows which exporter made it. An export with a newer exporter gets a " +
-                    "newer version, which Factorio uses instead of the older one."), ExporterInfo.Version);
-            }
+            Helped("Version", "The version of this exporter (" + ExporterInfo.Version + "), so the pack's file name " +
+                "shows which exporter made it. An export with a newer exporter gets a newer version, which Factorio uses " +
+                "instead of the older one.", r =>
+                {
+                    using (new EditorGUI.DisabledScope(true))
+                    {
+                        return EditorGUI.TextField(r, "Version", ExporterInfo.Version);
+                    }
+                });
             pixelsPerTile = EditorGUILayout.IntPopup("Resolution", pixelsPerTile, Resolutions, ResolutionValues);
             if (pixelsPerTile < 64)
             {
@@ -610,17 +654,21 @@ namespace FactorioAvatarExporter.Editor
 
             PackOptions options = Options();
             string problem = options.Problem();
-            using (new EditorGUI.DisabledScope(problem != null))
-            {
-                if (GUILayout.Button(new GUIContent("Export Avatar to .zip", "Asks where to save the avatar pack (a Factorio mod zip), " +
-                    "then renders every animation with its shadow. Takes a few minutes."), GUILayout.Height(28)))
+            bool export = Helped("Export Avatar to .zip", "Asks where to save the avatar pack (a Factorio mod zip), then " +
+                "renders every animation with its shadow. Takes a few minutes.", r =>
                 {
-                    if (ChooseZip(options))
+                    using (new EditorGUI.DisabledScope(problem != null))
                     {
-                        ExportAll(options);
+                        return GUI.Button(r, "Export Avatar to .zip");
                     }
-                    EndGUIAfterLongAction();
+                }, 28);
+            if (export)
+            {
+                if (ChooseZip(options))
+                {
+                    ExportAll(options);
                 }
+                EndGUIAfterLongAction();
             }
             if (problem != null)
             {
