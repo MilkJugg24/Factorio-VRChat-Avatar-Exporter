@@ -27,6 +27,12 @@ namespace FactorioAvatarExporter.Editor
         // the animation shown large, or empty for all of them side by side
         [SerializeField] private string focused = "";
         [SerializeField] private PoseTuning tuning = new PoseTuning();
+        // animations left out of the preview (not rendered), to keep it quick while tuning
+        [SerializeField] private List<string> hiddenAnimations = new List<string>();
+        [SerializeField] private bool showAnimationList;
+        // wing and tail bones chosen by hand for the avatar loaded (Advanced)
+        [SerializeField] private BoneChoices boneChoices = new BoneChoices();
+        [SerializeField] private bool showAdvanced;
         // the preview's own zoom, 1 showing the whole frame, and the frame's pixel at the middle of the box
         private float viewZoom = 1;
         private Vector2 viewCentre;
@@ -102,8 +108,9 @@ namespace FactorioAvatarExporter.Editor
                     packFor = source.name;
                     packTitle = source.name;
                     packId = "";
+                    boneChoices = new BoneChoices();
                 }
-                preview = PosePreview.Load(source);
+                preview = PosePreview.Load(source, choices: boneChoices);
                 preview.SetLighting(lighting);
                 preview.SetTuning(tuning);
                 exported = null;
@@ -184,9 +191,13 @@ namespace FactorioAvatarExporter.Editor
                 playing = GUILayout.Toggle(playing, playing ? "Pause" : "Play", "Button", GUILayout.Width(60));
             }
             EditorGUILayout.LabelField(" ", PosePreview.DirectionName(AnimationSpec.Idle, direction));
+            AnimationListGUI();
 
             EditorGUILayout.Space();
             TuningGUI();
+
+            EditorGUILayout.Space();
+            AdvancedGUI();
 
             EditorGUILayout.Space();
             LightingGUI();
@@ -276,6 +287,10 @@ namespace FactorioAvatarExporter.Editor
                 if (e.type == EventType.MouseDown && box.Contains(e.mousePosition))
                 {
                     focused = cell.Info.Name;
+                    // its frames first
+                    List<(PreviewCell, int)> mine = pending.Where(q => q.cell == cell).ToList();
+                    pending.RemoveAll(q => q.cell == cell);
+                    pending.InsertRange(0, mine);
                     viewZoom = 1;
                     e.Use();
                     Repaint();
@@ -355,6 +370,114 @@ namespace FactorioAvatarExporter.Editor
         {
             EditorGUI.DrawRect(new Rect(anchor.x - 4, anchor.y, 9, 1), Anchor);
             EditorGUI.DrawRect(new Rect(anchor.x, anchor.y - 4, 1, 9), Anchor);
+        }
+
+        /// <summary>
+        /// Which animations the preview shows: hidden ones are not rendered, so the preview keeps up while tuning on a
+        /// slow computer. Every animation is still exported.
+        /// </summary>
+        private void AnimationListGUI()
+        {
+            int shown = AnimationSpec.All.Count(a => !hiddenAnimations.Contains(a.Name));
+            showAnimationList = EditorGUILayout.Foldout(showAnimationList,
+                $"Animations shown ({shown} of {AnimationSpec.All.Count})", true);
+            if (!showAnimationList)
+            {
+                return;
+            }
+            EditorGUI.BeginChangeCheck();
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button("All"))
+                {
+                    hiddenAnimations.Clear();
+                }
+                if (GUILayout.Button("None"))
+                {
+                    hiddenAnimations = AnimationSpec.All.Select(a => a.Name).ToList();
+                }
+            }
+            const int perRow = 3;
+            for (int i = 0; i < AnimationSpec.All.Count; i += perRow)
+            {
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    foreach (AnimationInfo info in AnimationSpec.All.Skip(i).Take(perRow))
+                    {
+                        bool on = !hiddenAnimations.Contains(info.Name);
+                        bool now = EditorGUILayout.ToggleLeft(info.Name, on, GUILayout.Width(ControlsWidth / perRow - 8));
+                        if (now != on)
+                        {
+                            if (now)
+                            {
+                                hiddenAnimations.Remove(info.Name);
+                            }
+                            else
+                            {
+                                hiddenAnimations.Add(info.Name);
+                            }
+                        }
+                    }
+                }
+            }
+            EditorGUILayout.LabelField("Hidden animations aren't drawn, so the preview keeps up while tuning; all of them " +
+                "are still exported.", EditorStyles.wordWrappedMiniLabel);
+            if (EditorGUI.EndChangeCheck())
+            {
+                SyncShownAnimations();
+            }
+        }
+
+        /// <summary>
+        /// Advanced: the wing and tail bones, chosen by hand when the ones found by name aren't right. A change loads
+        /// the avatar again.
+        /// </summary>
+        private void AdvancedGUI()
+        {
+            showAdvanced = EditorGUILayout.Foldout(showAdvanced, "Advanced: wing and tail bones", true);
+            if (!showAdvanced)
+            {
+                return;
+            }
+            EditorGUILayout.LabelField("Normally found by their names (\"wing\", \"tail\"); the Report says which. If they " +
+                "aren't right, drag the bones here from your avatar in the Hierarchy. Empty: found automatically.",
+                EditorStyles.wordWrappedMiniLabel);
+            Transform root = source != null ? source.transform : null;
+            BoneChoices before = boneChoices.Copy();
+            boneChoices.LeftWing = BoneField("Left wing", "The left wing's first bone (its shoulder): the whole wing turns " +
+                "from it.", root, boneChoices.LeftWing);
+            boneChoices.RightWing = BoneField("Right wing", "The right wing's first bone.", root, boneChoices.RightWing);
+            boneChoices.Tail = BoneField("Tail", "The tail's first bone; it sways from there down to its tip.", root, boneChoices.Tail);
+            if (before.LeftWing != boneChoices.LeftWing || before.RightWing != boneChoices.RightWing || before.Tail != boneChoices.Tail)
+            {
+                if (preview != null)
+                {
+                    Load();
+                    EndGUIAfterLongAction();
+                }
+            }
+        }
+
+        /// <summary>A bone of the avatar <paramref name="root"/>, kept as its path below it ("" for none).</summary>
+        private static string BoneField(string label, string tooltip, Transform root, string path)
+        {
+            Transform current = root != null && !string.IsNullOrEmpty(path) ? root.Find(path) : null;
+            var picked = (Transform)EditorGUILayout.ObjectField(new GUIContent(label, tooltip), current, typeof(Transform), true);
+            if (picked == current)
+            {
+                return path;
+            }
+            if (picked == null)
+            {
+                return "";
+            }
+            if (root == null || picked == root || !picked.IsChildOf(root))
+            {
+                Debug.LogWarning($"Factorio Avatar Exporter: {picked.name} is not part of the avatar chosen above; pick one " +
+                    "of its own bones.");
+                return path;
+            }
+            return AnimationUtility.CalculateTransformPath(picked, root);
         }
 
         /// <summary>
@@ -685,7 +808,8 @@ namespace FactorioAvatarExporter.Editor
                     changed |= cell.Advance(now);
                 }
             }
-            changed |= RenderPending(now + 0.04);
+            // a short slice at a time, so the window stays responsive while the previews fill in
+            changed |= RenderPending(now + 0.025);
             if (changed)
             {
                 Repaint();
@@ -744,18 +868,59 @@ namespace FactorioAvatarExporter.Editor
                 return;
             }
             double now = EditorApplication.timeSinceStartup;
-            foreach (AnimationInfo info in AnimationSpec.All)
+            foreach (AnimationInfo info in AnimationSpec.All.Where(a => !hiddenAnimations.Contains(a.Name)))
             {
                 cells.Add(new PreviewCell(info, PosePreview.RowFor(info.Name, direction), GameFramesPerSecond(info), now));
             }
-            int most = cells.Max(c => c.Frames.Length);
+            // the animation shown large first
+            QueueFrames(cells.Where(c => c.Info.Name == focused).ToList());
+            QueueFrames(cells.Where(c => c.Info.Name != focused).ToList());
+            Repaint();
+        }
+
+        /// <summary>Queues every frame of <paramref name="added"/>: first frames first, then the rest in turn.</summary>
+        private void QueueFrames(IReadOnlyList<PreviewCell> added)
+        {
+            int most = added.Count == 0 ? 0 : added.Max(c => c.Frames.Length);
             for (int frame = 0; frame < most; frame++)
             {
-                foreach (PreviewCell cell in cells.Where(c => frame < c.Frames.Length))
+                foreach (PreviewCell cell in added.Where(c => frame < c.Frames.Length))
                 {
                     pending.Add((cell, frame));
                 }
             }
+        }
+
+        /// <summary>
+        /// Brings the preview in line with <see cref="hiddenAnimations"/> without drawing again what is already drawn:
+        /// hidden animations go (with their frames), shown ones that are missing are added and queued.
+        /// </summary>
+        private void SyncShownAnimations()
+        {
+            if (preview == null)
+            {
+                return;
+            }
+            foreach (PreviewCell gone in cells.Where(c => hiddenAnimations.Contains(c.Info.Name)).ToList())
+            {
+                foreach (Texture2D frame in gone.Frames.Where(f => f != null))
+                {
+                    DestroyImmediate(frame);
+                }
+                pending.RemoveAll(q => q.cell == gone);
+                cells.Remove(gone);
+            }
+            double now = EditorApplication.timeSinceStartup;
+            var added = new List<PreviewCell>();
+            foreach (AnimationInfo info in AnimationSpec.All.Where(a => !hiddenAnimations.Contains(a.Name)
+                && cells.All(c => c.Info.Name != a.Name)))
+            {
+                added.Add(new PreviewCell(info, PosePreview.RowFor(info.Name, direction), GameFramesPerSecond(info), now));
+            }
+            cells.AddRange(added);
+            // in the order of the animation list
+            cells.Sort((a, b) => AnimationSpec.All.ToList().IndexOf(a.Info).CompareTo(AnimationSpec.All.ToList().IndexOf(b.Info)));
+            QueueFrames(added);
             Repaint();
         }
 

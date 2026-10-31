@@ -74,6 +74,20 @@ namespace FactorioAvatarExporter.Editor
         private Transform pickHandle;
         private Transform pickHead;
 
+        // wing and tail bones chosen by hand in the window (Load)
+        private BoneChoices choices = new BoneChoices();
+
+        /// <summary>The bone at <paramref name="path"/> below the copied avatar, or null (with a note) when there is none.</summary>
+        private Transform ChosenBone(string path, string what)
+        {
+            Transform bone = Avatar.transform.Find(path);
+            if (bone == null)
+            {
+                Notes.Add($"the {what} chosen by hand ({path}) is not in the avatar: found automatically instead");
+            }
+            return bone;
+        }
+
         private AvatarStage(Scene scene)
         {
             Scene = scene;
@@ -102,10 +116,11 @@ namespace FactorioAvatarExporter.Editor
         /// Paths below <paramref name="source"/> (as <see cref="AnimationUtility.CalculateTransformPath"/> gives
         /// them) of objects to hide in the copy, such as a fake ground shadow.
         /// </param>
+        /// <param name="choices">Wing and tail bones chosen by hand, instead of the ones found by name (null: none).</param>
         public static AvatarStage Load(GameObject source, double heightTiles = Conventions.EngineerHeight,
-            IEnumerable<string> leaveOut = null)
+            IEnumerable<string> leaveOut = null, BoneChoices choices = null)
         {
-            var stage = new AvatarStage(EditorSceneManager.NewPreviewScene()) { HeightTiles = heightTiles };
+            var stage = new AvatarStage(EditorSceneManager.NewPreviewScene()) { HeightTiles = heightTiles, choices = choices ?? new BoneChoices() };
             try
             {
                 stage.Build(source, leaveOut ?? Enumerable.Empty<string>());
@@ -323,6 +338,25 @@ namespace FactorioAvatarExporter.Editor
                     unsided.Add(root.name);
                 }
             }
+            if (choices.ChoosesWings)
+            {
+                // chosen by hand: just these, each its own hinge
+                Transform left = string.IsNullOrEmpty(choices.LeftWing) ? null : ChosenBone(choices.LeftWing, "left wing");
+                Transform right = string.IsNullOrEmpty(choices.RightWing) ? null : ChosenBone(choices.RightWing, "right wing");
+                if (left != null || right != null)
+                {
+                    wings.Clear();
+                    unsided.Clear();
+                    foreach ((Transform root, bool isLeft) in new[] { (left, true), (right, false) })
+                    {
+                        if (root != null)
+                        {
+                            wings.Add((root, isLeft, InBody(root)));
+                        }
+                    }
+                    Notes.Add("wing bones chosen by hand");
+                }
+            }
             // a chain inside another wing chain would turn twice
             wings.RemoveAll(w => wings.Any(o => o.root != w.root && w.root.IsChildOf(o.root)));
             foreach ((Transform root, bool left, bool _) in wings)
@@ -383,6 +417,20 @@ namespace FactorioAvatarExporter.Editor
         {
             Transform hips = bones[HumanBone.Hips];
             List<Transform> best = null;
+            Transform chosen = choices.ChoosesTail ? ChosenBone(choices.Tail, "tail") : null;
+            if (chosen != null)
+            {
+                // chosen by hand: from that bone down through the child with the most bones below it, whatever the names
+                best = new List<Transform>();
+                for (Transform t = chosen; t != null;)
+                {
+                    best.Add(t);
+                    t = t.Cast<Transform>().OrderByDescending(c => c.GetComponentsInChildren<Transform>(true).Length).FirstOrDefault();
+                }
+                tail.AddRange(best);
+                Notes.Add($"tail chosen by hand: {best[0].name} to {best[best.Count - 1].name} ({best.Count} bones)");
+                return;
+            }
             foreach (Transform root in hips.GetComponentsInChildren<Transform>(true).Where(t => Named(t, "tail") && !Named(t.parent, "tail")))
             {
                 var chain = new List<Transform>();

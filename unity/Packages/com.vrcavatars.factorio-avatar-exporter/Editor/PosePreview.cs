@@ -106,9 +106,9 @@ namespace FactorioAvatarExporter.Editor
         public void SetLighting(StageLighting lighting) => camera.SetLighting(lighting);
 
         public static PosePreview Load(GameObject source, double heightTiles = Conventions.EngineerHeight,
-            IEnumerable<string> leaveOut = null)
+            IEnumerable<string> leaveOut = null, BoneChoices choices = null)
         {
-            AvatarStage stage = AvatarStage.Load(source, heightTiles, leaveOut);
+            AvatarStage stage = AvatarStage.Load(source, heightTiles, leaveOut, choices);
             try
             {
                 return new PosePreview(stage);

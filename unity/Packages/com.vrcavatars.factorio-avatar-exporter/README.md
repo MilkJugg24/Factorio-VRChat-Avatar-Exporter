@@ -24,7 +24,10 @@ Open it with **Tools ▸ Factorio Avatar Exporter**.
 
 The preview on the right plays every animation side by side, at the speed the game plays it. They are
 drawn a frame at a time when the avatar loads (and again after a change), so they fill in over a minute or
-so. **Direction** turns them all; **Pause** stops them. Click an animation to see it large: scroll to zoom,
+so. **Direction** turns them all; **Pause** stops them. **Animations shown** lets you
+untick the ones you don't need right now: they aren't drawn, so the preview keeps up while you tune (on a
+slower computer, keep only a few). Every animation is still exported. An animation shown large is drawn
+first. Click an animation to see it large: scroll to zoom,
 drag to pan, double-click to reset zoom; **Show all animations** goes back. The yellow cross is where your
 character stands in the game.
 
@@ -43,6 +46,18 @@ Sliders that adjust the animations to your avatar while the previews play; the e
 - **Tail:** **Sway** and **Lift**.
 
 `report.txt` lists the values that differ from the defaults.
+
+## Advanced: wing and tail bones
+
+Wings and tails are normally found by the names of their bones (see "How your avatar moves"); the
+**Report** says which bones were used. If the wrong ones move, or none do, open **Advanced: wing and tail
+bones** and drag the right bones there from your avatar in the Hierarchy:
+
+- **Left wing** and **Right wing:** each wing's first bone, at the shoulder. The whole wing turns from it,
+  and opens and flaps as described below.
+- **Tail:** the tail's first bone. It sways from there down to its tip.
+
+Leave a field empty to find that part automatically. The avatar loads again after a change.
 
 ## Lighting
 
