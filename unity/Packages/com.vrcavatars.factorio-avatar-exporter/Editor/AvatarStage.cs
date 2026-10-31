@@ -494,7 +494,9 @@ namespace FactorioAvatarExporter.Editor
         /// Opens each wing (of the body, or the others) as far as its spread says: into the shape its mesh was
         /// modelled in (<see cref="wingModelled"/>), or else its joints straighten towards the bone before them
         /// (<see cref="WingUnfold"/>). Then turns the whole wing about the chest's forward axis through
-        /// its root (its shoulder), from the angle the opened wing is at towards <see cref="PoseResult.WingElevation"/>.
+        /// its root (its shoulder), from the angle the opened wing is at towards <see cref="PoseResult.WingElevation"/>
+        /// (a folded wing by <see cref="PoseResult.WingFoldedRaise"/>), and about the chest's up axis by
+        /// <see cref="PoseResult.WingSweep"/>.
         /// </summary>
         private void PoseWings(PoseResult pose, bool inBody)
         {
@@ -503,7 +505,7 @@ namespace FactorioAvatarExporter.Editor
             foreach ((Transform root, bool left, bool body) in wings)
             {
                 double spread = left ? pose.LeftWingSpread : pose.RightWingSpread;
-                if (body != inBody || spread == 0)
+                if (body != inBody || (spread == 0 && pose.WingFoldedRaise == 0 && pose.WingSweep == 0))
                 {
                     continue;
                 }
@@ -531,9 +533,16 @@ namespace FactorioAvatarExporter.Editor
                 }
                 Vector3 along = centre / chain.Length - root.position;
                 double now = Math.Atan2(Vector3.Dot(along, up), Vector3.Dot(along, outward));
-                double lift = spread * (pose.WingElevation - now);
+                // spread wings turn towards their elevation; folded ones by the raise alone
+                double lift = spread * (pose.WingElevation - now) + (1 - spread) * pose.WingFoldedRaise;
                 float sign = Vector3.Dot(Quaternion.AngleAxis(1, forward) * outward, up) >= Vector3.Dot(outward, up) ? 1 : -1;
                 root.RotateAround(root.position, forward, sign * (float)(lift * 180 / Math.PI));
+                if (pose.WingSweep != 0)
+                {
+                    // back: the side pointing outwards turns towards the back
+                    float back = Vector3.Dot(Quaternion.AngleAxis(1, up) * outward, -forward) >= Vector3.Dot(outward, -forward) ? 1 : -1;
+                    root.RotateAround(root.position, up, back * (float)(pose.WingSweep * 180 / Math.PI));
+                }
             }
         }
 

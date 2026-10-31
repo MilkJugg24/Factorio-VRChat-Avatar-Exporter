@@ -23,6 +23,12 @@ namespace FactorioAvatarExporter.Core
         public double ArmSwing = 1;
 
         /// <summary>
+        /// How far the elbows bend while running and sprinting (1 = as designed, about square; 0 = straight arms
+        /// swinging low at the sides, for a more casual look).
+        /// </summary>
+        public double ElbowBend = 1;
+
+        /// <summary>
         /// Stride length of the run and the sprint (1 = as designed). The distance covered per frame follows, so
         /// the feet stay planted in the game.
         /// </summary>
@@ -31,8 +37,14 @@ namespace FactorioAvatarExporter.Core
         /// <summary>How far the wings beat (1 = as designed).</summary>
         public double WingFlap = 1;
 
-        /// <summary>Wings held higher (positive) or lower, degrees.</summary>
+        /// <summary>
+        /// Wings held higher (positive) or lower, degrees: spread wings point higher, folded ones turn up about
+        /// where they join the body.
+        /// </summary>
         public double WingRaise;
+
+        /// <summary>Wings turned back (positive) or forward, degrees, in every animation.</summary>
+        public double WingSweep;
 
         /// <summary>How far arms used as wings stroke (1 = as designed).</summary>
         public double ArmWingStroke = 1;
@@ -53,9 +65,11 @@ namespace FactorioAvatarExporter.Core
             HeadTilt = Clamp(HeadTilt, -30, 30),
             ArmSpread = Clamp(ArmSpread, -1, 1),
             ArmSwing = Clamp(ArmSwing, 0, 2),
+            ElbowBend = Clamp(ElbowBend, 0, 1),
             Stride = Clamp(Stride, 0.5, 1.5),
             WingFlap = Clamp(WingFlap, 0, 2),
             WingRaise = Clamp(WingRaise, -45, 45),
+            WingSweep = Clamp(WingSweep, -45, 45),
             ArmWingStroke = Clamp(ArmWingStroke, 0, 1.5),
             ArmWingRoll = Clamp(ArmWingRoll, -60, 60),
             TailSway = Clamp(TailSway, 0, 2),
@@ -78,9 +92,11 @@ namespace FactorioAvatarExporter.Core
             Add("head tilt", HeadTilt, defaults.HeadTilt);
             Add("arm spread", ArmSpread, defaults.ArmSpread);
             Add("arm swing", ArmSwing, defaults.ArmSwing);
+            Add("elbow bend", ElbowBend, defaults.ElbowBend);
             Add("stride", Stride, defaults.Stride);
             Add("wing flap", WingFlap, defaults.WingFlap);
             Add("wing raise", WingRaise, defaults.WingRaise);
+            Add("wing sweep", WingSweep, defaults.WingSweep);
             Add("arm-wing stroke", ArmWingStroke, defaults.ArmWingStroke);
             Add("arm-wing roll", ArmWingRoll, defaults.ArmWingRoll);
             Add("tail sway", TailSway, defaults.TailSway);

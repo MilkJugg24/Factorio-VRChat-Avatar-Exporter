@@ -115,6 +115,15 @@ namespace FactorioAvatarExporter.Core
         public double WingElevation { get; set; }
 
         /// <summary>
+        /// How far a folded wing is turned up (positive) or down, radians, about the chest's forward axis through its
+        /// hinge; it fades out as the wing spreads (a spread wing follows <see cref="WingElevation"/>).
+        /// </summary>
+        public double WingFoldedRaise { get; set; }
+
+        /// <summary>How far every wing is turned back (positive) or forward, radians, about the chest's up axis.</summary>
+        public double WingSweep { get; set; }
+
+        /// <summary>
         /// The tail's sideways swing, for avatars with tail bones (named "tail"): each tail bone, from the root,
         /// turns <c>TailSwing * sin(TailPhase - TailWaveDelay * index)</c> radians about the hips' up axis
         /// (positive to the avatar's right), so a wave runs down the tail and its tip trails. A tail of more than

@@ -24,12 +24,11 @@ Open it with **Tools ▸ Factorio Avatar Exporter**.
 
 The preview on the right plays every animation side by side, at the speed the game plays it. They are
 drawn a frame at a time when the avatar loads (and again after a change), so they fill in over a minute or
-so. **Direction** turns them all; **Pause** stops them. **Animations shown** lets you
-untick the ones you don't need right now: they aren't drawn, so the preview keeps up while you tune (on a
-slower computer, keep only a few). Every animation is still exported. An animation shown large is drawn
-first. Click an animation to see it large: scroll to zoom,
-drag to pan, double-click to reset zoom; **Show all animations** goes back. The yellow cross is where your
-character stands in the game.
+so. **Direction** turns them all; **Pause** stops them. The ticks under **Animations shown** decide which
+animations the preview draws (all but the corpse at first): untick the ones you don't need right now, so the
+preview keeps up while you tune (on a slower computer, keep only a few). Every animation is still exported.
+Tick just one to see it large: scroll to zoom, drag to pan, double-click to reset zoom. The yellow cross is
+where your character stands in the game.
 
 ## Animation tuning
 
@@ -38,9 +37,11 @@ Sliders that adjust the animations to your avatar while the previews play; the e
 
 - **Body:** **Lean** (how far the body leans into running, sprinting and flying) and **Head tilt**.
 - **Arms:** **Spread** (further from the body, for wide hips, outfits or wings, or closer in) and
-  **Swing** (how far they swing while running).
+  **Swing** (how far they swing while running) and **Elbow bend** (lower it for straighter arms swinging
+  low at the sides, a more casual run).
 - **Legs:** **Stride** (step length; the feet stay planted in the game).
-- **Wings:** **Flap** (how far they beat) and **Raise** (held higher or lower).
+- **Wings:** **Flap** (how far they beat), **Raise** (held higher or lower, folded or spread) and
+  **Sweep** (turned back or forward).
 - **Arms as wings** (the flap animations, for avatars whose wings are their arms): **Stroke** and
   **Roll** (turn the arms so the membranes don't clip into each other).
 - **Tail:** **Sway** and **Lift**.

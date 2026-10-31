@@ -24,12 +24,10 @@ namespace FactorioAvatarExporter.Editor
         [SerializeField] private GameObject source;
         // the direction every preview faces, 0 north, clockwise; south shows the face
         [SerializeField] private int direction = 4;
-        // the animation shown large, or empty for all of them side by side
-        [SerializeField] private string focused = "";
         [SerializeField] private PoseTuning tuning = new PoseTuning();
-        // animations left out of the preview (not rendered), to keep it quick while tuning
-        [SerializeField] private List<string> hiddenAnimations = new List<string>();
-        [SerializeField] private bool showAnimationList;
+        // animations left out of the preview (not rendered), to keep it quick while tuning; the corpse starts hidden
+        [SerializeField] private List<string> hiddenAnimations = new List<string> { AnimationSpec.Corpse };
+        [SerializeField] private bool showAnimationList = true;
         // wing and tail bones chosen by hand for the avatar loaded (Advanced)
         [SerializeField] private BoneChoices boneChoices = new BoneChoices();
         [SerializeField] private bool showAdvanced;
@@ -207,8 +205,8 @@ namespace FactorioAvatarExporter.Editor
         }
 
         /// <summary>
-        /// The right column: every animation side by side, playing, or the one clicked, large, with zoom; each on the
-        /// ground, with where the character stands in the game.
+        /// The right column: the animations ticked under Animations shown, side by side and playing, or the only one
+        /// ticked, large, with zoom; each on the ground, with where the character stands in the game.
         /// </summary>
         private void PreviewImageGUI()
         {
@@ -216,10 +214,9 @@ namespace FactorioAvatarExporter.Editor
             {
                 return;
             }
-            PreviewCell big = cells.FirstOrDefault(c => c.Info.Name == focused);
-            if (big != null)
+            if (cells.Count == 1)
             {
-                FocusedGUI(big);
+                FocusedGUI(cells[0]);
             }
             else
             {
@@ -239,7 +236,7 @@ namespace FactorioAvatarExporter.Editor
             }
         }
 
-        /// <summary>Every animation in a grid, all drawn at the same scale; a click shows one large.</summary>
+        /// <summary>The animations shown, in a grid, all drawn at the same scale.</summary>
         private void GridGUI()
         {
             Rect area = GUILayoutUtility.GetRect(200, 200, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
@@ -268,7 +265,6 @@ namespace FactorioAvatarExporter.Editor
             {
                 scale = Mathf.Min(scale, Mathf.Min(cellWidth / cell.Canvas.Value.Width, best / cell.Canvas.Value.Height));
             }
-            Event e = Event.current;
             for (int i = 0; i < count; i++)
             {
                 PreviewCell cell = cells[i];
@@ -284,33 +280,15 @@ namespace FactorioAvatarExporter.Editor
                     DrawAnchor(new Vector2(rect.x + canvas.AnchorX * scale, rect.y + canvas.AnchorY * scale));
                 }
                 GUI.Label(new Rect(box.x, box.yMax, box.width, label), cell.Info.Name, EditorStyles.centeredGreyMiniLabel);
-                if (e.type == EventType.MouseDown && box.Contains(e.mousePosition))
-                {
-                    focused = cell.Info.Name;
-                    // its frames first
-                    List<(PreviewCell, int)> mine = pending.Where(q => q.cell == cell).ToList();
-                    pending.RemoveAll(q => q.cell == cell);
-                    pending.InsertRange(0, mine);
-                    viewZoom = 1;
-                    e.Use();
-                    Repaint();
-                }
             }
-            EditorGUILayout.LabelField("Click an animation to see it large.", EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("Tick just one animation under Animations shown to see it large, with zoom.",
+                EditorStyles.wordWrappedMiniLabel);
         }
 
         /// <summary>One animation, large: scroll to zoom about the mouse, drag to pan, double-click to reset.</summary>
         private void FocusedGUI(PreviewCell cell)
         {
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                if (GUILayout.Button("Show all animations", GUILayout.Width(150)))
-                {
-                    focused = "";
-                    GUIUtility.ExitGUI();
-                }
-                GUILayout.Label(cell.Info.Name + ", " + PosePreview.DirectionName(cell.Info.Name, cell.Row), EditorStyles.boldLabel);
-            }
+            GUILayout.Label(cell.Info.Name + ", " + PosePreview.DirectionName(cell.Info.Name, cell.Row), EditorStyles.boldLabel);
             Rect box = GUILayoutUtility.GetRect(200, 200, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
             EditorGUI.DrawRect(box, Ground);
             Texture2D frame = cell.Shown();
@@ -420,8 +398,8 @@ namespace FactorioAvatarExporter.Editor
                     }
                 }
             }
-            EditorGUILayout.LabelField("Hidden animations aren't drawn, so the preview keeps up while tuning; all of them " +
-                "are still exported.", EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("Only the ticked animations are drawn, so the preview keeps up while tuning; tick " +
+                "just one to see it large. All of them are still exported.", EditorStyles.wordWrappedMiniLabel);
             if (EditorGUI.EndChangeCheck())
             {
                 SyncShownAnimations();
@@ -504,12 +482,15 @@ namespace FactorioAvatarExporter.Editor
             tuning.ArmSpread = Slider("Spread", "Arms further out from the body (for wide hips, outfits or wings) or closer in.",
                 tuning.ArmSpread, -1, 1);
             tuning.ArmSwing = Slider("Swing", "How far the arms swing while running and sprinting.", tuning.ArmSwing, 0, 2);
+            tuning.ElbowBend = Slider("Elbow bend", "How far the elbows bend while running and sprinting: lower for " +
+                "straighter arms swinging low at the sides, a more casual look.", tuning.ElbowBend, 0, 1);
             EditorGUILayout.LabelField("Legs", EditorStyles.miniBoldLabel);
             tuning.Stride = Slider("Stride", "Step length of the run and the sprint. The feet stay planted in the game.",
                 tuning.Stride, 0.5f, 1.5f);
             EditorGUILayout.LabelField("Wings", EditorStyles.miniBoldLabel);
             tuning.WingFlap = Slider("Flap", "How far the wings beat.", tuning.WingFlap, 0, 2);
-            tuning.WingRaise = Slider("Raise", "Degrees; the wings held higher or lower.", tuning.WingRaise, -45, 45);
+            tuning.WingRaise = Slider("Raise", "Degrees; the wings held higher or lower, folded or spread.", tuning.WingRaise, -45, 45);
+            tuning.WingSweep = Slider("Sweep", "Degrees; the wings turned back (positive) or forward.", tuning.WingSweep, -45, 45);
             EditorGUILayout.LabelField("Arms as wings (the flap animations)", EditorStyles.miniBoldLabel);
             tuning.ArmWingStroke = Slider("Stroke", "How far the arms stroke.", tuning.ArmWingStroke, 0, 1.5f);
             tuning.ArmWingRoll = Slider("Roll", "Degrees the arms turn from palms down, the thumb side up; turn it to keep " +
@@ -872,9 +853,7 @@ namespace FactorioAvatarExporter.Editor
             {
                 cells.Add(new PreviewCell(info, PosePreview.RowFor(info.Name, direction), GameFramesPerSecond(info), now));
             }
-            // the animation shown large first
-            QueueFrames(cells.Where(c => c.Info.Name == focused).ToList());
-            QueueFrames(cells.Where(c => c.Info.Name != focused).ToList());
+            QueueFrames(cells);
             Repaint();
         }
 

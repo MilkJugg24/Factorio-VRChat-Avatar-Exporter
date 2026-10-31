@@ -85,6 +85,8 @@ namespace FactorioAvatarExporter.Core
             PoseResult pose = Untuned(animation, t, move);
             // the wings and the tail, as tuned
             pose.WingElevation = pose.WingElevation * tuning.WingFlap + MathUtil.Radians(tuning.WingRaise);
+            pose.WingFoldedRaise = MathUtil.Radians(tuning.WingRaise);
+            pose.WingSweep = MathUtil.Radians(tuning.WingSweep);
             pose.TailSwing *= tuning.TailSway;
             pose.TailLift += MathUtil.Radians(tuning.TailLift);
             return pose;
@@ -176,6 +178,23 @@ namespace FactorioAvatarExporter.Core
                             - chest.Up * (rig.ArmLength * 0.9);
                 b.SetArm(side, hand, -chest.Forward + chest.Right * (side * 0.35), null, 0.25);
             }
+        }
+
+        /// <summary>
+        /// The hand of a running arm with <see cref="PoseTuning.ElbowBend"/> applied: <paramref name="bent"/> (the
+        /// designed hand, elbow about square) moved towards the hand of a nearly straight arm hanging from the
+        /// shoulder <paramref name="s"/> and swinging with <paramref name="swing"/> (-1 back to 1 forward).
+        /// </summary>
+        private Vec3 Unbent(Vec3 s, Vec3 bent, Quat chest, int side, double swing)
+        {
+            if (tuning.ElbowBend >= 1)
+            {
+                return bent;
+            }
+            double angle = 0.35 * swing;
+            Vec3 straight = s + chest.Right * (side * (0.07 + ArmSpreadTiles * tuning.ArmSpread) * armScale)
+                            + (chest.Forward * Math.Sin(angle) - chest.Up * Math.Cos(angle)) * (rig.ArmLength * 0.93);
+            return straight + (bent - straight) * tuning.ElbowBend;
         }
 
         /// <summary>Both feet flat on the ground on their rest ball points (anims._standing_legs).</summary>
@@ -474,6 +493,7 @@ namespace FactorioAvatarExporter.Core
                     Vec3 hand = s + chest.Right * (side * (0.08 + ArmSpreadTiles * tuning.ArmSpread - 0.05 * ahead) * armScale)
                                 + chest.Forward * ((0.15 + 0.10 * a) * armScale)
                                 - chest.Up * ((0.24 - 0.07 * a) * armScale);
+                    hand = Unbent(s, hand, chest, side, a);
                     // elbows bent about square: swung back, the upper arm points back and the hand hangs under the
                     // shoulder; swung forward, the hand comes up to the chest
                     b.SetArm(side, hand, -chest.Forward * 0.6 + chest.Right * (side * 0.35) - chest.Up, null, 0.6);
@@ -551,6 +571,7 @@ namespace FactorioAvatarExporter.Core
                 Vec3 hand = s + chest.Right * (side * (0.08 + ArmSpreadTiles * tuning.ArmSpread - 0.05 * ahead) * armScale)
                             + chest.Forward * ((0.12 + 0.20 * a) * armScale)
                             - chest.Up * ((0.22 - 0.12 * a) * armScale);
+                hand = Unbent(s, hand, chest, side, a);
                 b.SetArm(side, hand, -chest.Forward * 0.6 + chest.Right * (side * 0.35) - chest.Up, null, 0.6);
             }
             PoseResult pose = b.Build();

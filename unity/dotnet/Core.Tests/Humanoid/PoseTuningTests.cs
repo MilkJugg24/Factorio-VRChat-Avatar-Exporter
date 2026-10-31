@@ -51,12 +51,12 @@ namespace FactorioAvatarExporter.Core.Tests.Humanoid
             HumanoidRig rig = HumanoidRig.Measure(input);
             var low = new PoseTuning
             {
-                Lean = 0, HeadTilt = -30, ArmSpread = -1, ArmSwing = 0, Stride = 0.5, WingFlap = 0, WingRaise = -45,
+                Lean = 0, HeadTilt = -30, ArmSpread = -1, ArmSwing = 0, ElbowBend = 0, Stride = 0.5, WingFlap = 0, WingRaise = -45, WingSweep = -45,
                 ArmWingStroke = 0, ArmWingRoll = -60, TailSway = 0, TailLift = -45,
             };
             var high = new PoseTuning
             {
-                Lean = 2, HeadTilt = 30, ArmSpread = 1, ArmSwing = 2, Stride = 1.5, WingFlap = 2, WingRaise = 45,
+                Lean = 2, HeadTilt = 30, ArmSpread = 1, ArmSwing = 2, ElbowBend = 1, Stride = 1.5, WingFlap = 2, WingRaise = 45, WingSweep = 45,
                 ArmWingStroke = 1.5, ArmWingRoll = 60, TailSway = 2, TailLift = 45,
             };
             foreach (PoseTuning tuning in new[] { low, high })
@@ -82,6 +82,39 @@ namespace FactorioAvatarExporter.Core.Tests.Humanoid
             var longer = new HumanoidAnimations(rig, new PoseTuning { Stride = 1.25 });
             Assert.That(longer.Timing.DistancePerFrame, Is.EqualTo(plain.Timing.DistancePerFrame * 1.25).Within(1e-12));
             Assert.That(longer.Timing.SprintDistancePerFrame, Is.EqualTo(plain.Timing.SprintDistancePerFrame * 1.25).Within(1e-12));
+        }
+
+        /// <summary>Elbow bend 0 leaves the running arms almost straight: the hands hang far from the shoulders.</summary>
+        [TestCaseSource(nameof(Rigs))]
+        public void ElbowBendStraightensTheRunningArms(RigInput input)
+        {
+            HumanoidRig rig = HumanoidRig.Measure(input);
+            var bent = new HumanoidAnimations(rig);
+            var straight = new HumanoidAnimations(rig, new PoseTuning { ElbowBend = 0 });
+            foreach (string animation in new[] { AnimationSpec.Run, AnimationSpec.Sprint })
+            {
+                for (int frame = 0; frame < AnimationSpec.Get(animation).FrameCount; frame++)
+                {
+                    double t = AnimationSpec.FramePhase(animation, frame);
+                    foreach (int side in new[] { -1, 1 })
+                    {
+                        double Reach(PoseResult pose) => (pose.Joints[JointNames.Hand(side)] - pose.Joints[JointNames.Shoulder(side)]).Length;
+                        double reach = Reach(straight.Pose(animation, t, 0));
+                        Assert.That(reach, Is.GreaterThan(rig.ArmLength * 0.85), $"{animation} {frame}");
+                        Assert.That(reach, Is.GreaterThan(Reach(bent.Pose(animation, t, 0))), $"{animation} {frame}");
+                    }
+                }
+            }
+        }
+
+        [Test]
+        public void TheWingRaiseAndSweepReachThePose()
+        {
+            var animations = new HumanoidAnimations(HumanoidRig.Measure(SyntheticRigs.Generic(1.6)),
+                new PoseTuning { WingRaise = 20, WingSweep = -10 });
+            PoseResult pose = animations.Pose(AnimationSpec.Idle, 0, 0);
+            Assert.That(pose.WingFoldedRaise, Is.EqualTo(20 * Math.PI / 180).Within(1e-12));
+            Assert.That(pose.WingSweep, Is.EqualTo(-10 * Math.PI / 180).Within(1e-12));
         }
 
         [Test]
