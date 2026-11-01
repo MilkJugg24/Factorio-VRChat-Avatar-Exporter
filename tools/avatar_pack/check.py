@@ -1,14 +1,23 @@
 """Checks an avatar pack (a folder or a mod zip) against docs/vrc-avatar-format.md: the same
 rules vrc-avatars enforces when the game loads, plus the sheet sizes and other things only
-the graphics files can tell. Used by `tools/validate_sprites.py --pack`.
+the graphics files can tell. Used by `tools/validate_sprites.py --pack`, or on its own:
+
+    python3 tools/avatar_pack/check.py path/to/vrc-avatar-mika_1.0.0.zip [more packs...]
+
+It prints what it checked and exits with 1 when any pack has errors (or nothing could be checked).
 """
 
+import argparse
 import io
 import json
 import math
 import os
 import re
+import sys
 import zipfile
+
+# run as a script: the tools folder holds lua_table and the avatar_pack package
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from PIL import Image
 
@@ -79,6 +88,7 @@ class Checker:
         self.errors = []
         self.warnings = []
         self.sheets = {}  # file name -> (width, height)
+        self.animations = []  # the names in the description, for the report
         self.mod_name = None
         # file paths in the description are "__<files_mod>__/<files_dir><name>" for a file <name> of self.files
         self.files_mod = None
@@ -396,6 +406,7 @@ class Checker:
         if not isinstance(animations, dict):
             self.error("has no animations")
             return
+        self.animations.extend(sorted(str(name) for name in animations))
         for name in spec.REQUIRED:
             if name not in animations:
                 self.error(f'is missing the required "{name}" animation')
@@ -504,6 +515,9 @@ def check(path):
         return checker
     checker = Checker(files)
     checker.run()
+    if not checker.errors and not checker.sheets:
+        # a pass must mean something was checked
+        checker.error("no sprite sheets were found to check")
     return checker
 
 
@@ -519,8 +533,23 @@ def report(path):
         return False
     mb = checker.vram_mb()
     print(f"OK: {label}: {len(checker.sheets)} sprite sheets, {mb:.0f} MB uncompressed"
-          f" (about {mb / 10:.0f} MB of video memory in the game)")
+          f" (about {mb / 10:.0f} MB of video memory in the game); {len(checker.animations)} animations:"
+          f" {', '.join(checker.animations)}")
     if mb > VRAM_WARNING_MB:
         print(f"{label}: warning: more than {VRAM_WARNING_MB} MB uncompressed; consider 32 pixels per tile,"
               " fewer frames or leaving out flight")
     return True
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description="Check avatar packs (folders or mod zips) against the pack format.")
+    parser.add_argument("packs", nargs="+", metavar="PACK", help="avatar pack folders or zips")
+    args = parser.parse_args(argv)
+    failed = sum(0 if report(path) else 1 for path in args.packs)
+    if failed:
+        print(f"{failed} of {len(args.packs)} packs have errors")
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -200,7 +200,7 @@ namespace FactorioAvatarExporter.Editor
             }
             report.AppendLine($"pack: {zip}");
             report.AppendLine($"mod: {PackNaming.ModName(content.Id)} {content.Version}, \"{content.Title}\", " +
-                $"{options.PixelsPerTile} pixels per tile, {(!options.Flight ? "without flight" : options.ArmFlapping ? "with flight and arm flapping" : "with flight")}");
+                $"{options.PixelsPerTile} pixels per tile, {(options.Flight ? "with flight" : "without flight")}");
             long bytes = 0;
             int files = 0;
             Directory.CreateDirectory(options.PreviewFolder);

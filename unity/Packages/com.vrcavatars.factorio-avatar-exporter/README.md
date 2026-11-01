@@ -41,7 +41,8 @@ so. **Direction** turns them all; **Pause** stops them. The ticks under **Animat
 animations the preview draws (all but the corpse at first): untick the ones you don't need right now, so the
 preview keeps up while you tune (on a slower computer, keep only a few). Every animation is still exported.
 The preview shows four at a time, two by two; the arrows under them turn the pages, and the page on show
-is drawn first. Tick just one to see it large: scroll to zoom, drag to pan, double-click to reset zoom. The yellow cross is
+is drawn first. Each view is framed around what the animation draws in the direction shown, at the same scale
+in every view; the exported sprites keep their full size. Tick just one to see it large: scroll to zoom, drag to pan, double-click to reset zoom. The yellow cross is
 where your character stands in the game.
 
 **Guide lines** draw the skeleton over the preview, each part in its own colour: spine orange, head white
@@ -51,7 +52,8 @@ where your character stands in the game.
 
 Sliders that adjust the animations to your avatar while the previews play; the export uses them too.
 **Reset** puts them all back. While you hold a slider, the preview shows only the animations it changes,
-and the guide lines move with it straight away, the part it moves drawn thicker. When you let go, only the
+with a note saying so; the guide lines move with it straight away, the part it moves drawn thicker, and the
+avatar on the page is drawn again as you drag, one view at a time. When you let go, only the
 frames it changed are drawn again. Click the **?** at the
 end of a row to see what it does; click it again to hide that.
 

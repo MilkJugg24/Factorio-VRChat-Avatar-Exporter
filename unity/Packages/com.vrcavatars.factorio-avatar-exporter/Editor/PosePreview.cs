@@ -576,7 +576,8 @@ namespace FactorioAvatarExporter.Editor
             {
                 string tuned = Tuning.Describe();
                 IEnumerable<string> notes = Notes.Append(SizeNote).Append(camera.Lighting.Describe())
-                    .Append(tuned.Length > 0 ? "animation tuning: " + tuned : "animation tuning: as designed");
+                    .Append(tuned.Length > 0 ? "animation tuning: " + tuned : "animation tuning: as designed")
+                    .Append("flight method: " + Tuning.Flight.Describe());
                 return PackExport.Write(options, AvatarName, poses, renderer, notes, progress, cancel);
             }
         }

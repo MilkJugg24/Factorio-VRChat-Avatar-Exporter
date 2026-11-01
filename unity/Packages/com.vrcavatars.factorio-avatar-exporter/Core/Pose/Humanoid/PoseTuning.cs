@@ -82,7 +82,10 @@ namespace FactorioAvatarExporter.Core
             Flight = Flight,
         };
 
-        /// <summary>The values that differ from the defaults, for report.txt; empty when none do.</summary>
+        /// <summary>
+        /// The slider values that differ from the defaults, for report.txt; empty when none do. The flight method has a
+        /// line of its own (<see cref="FlightMethods.Describe"/>).
+        /// </summary>
         public string Describe()
         {
             var defaults = new PoseTuning();
@@ -107,10 +110,6 @@ namespace FactorioAvatarExporter.Core
             Add("arm-wing roll", ArmWingRoll, defaults.ArmWingRoll);
             Add("tail sway", TailSway, defaults.TailSway);
             Add("tail lift", TailLift, defaults.TailLift);
-            if (Flight != defaults.Flight)
-            {
-                parts.Add("flight " + (Flight == FlightMethod.ArmFlapping ? "arm flapping" : "floating"));
-            }
             return string.Join(", ", parts);
         }
 

@@ -18,4 +18,18 @@ namespace FactorioAvatarExporter.Core
         /// <summary>The avatar floats: the arms hang or hold the gun, wing bones stay as saved.</summary>
         Floating,
     }
+
+    public static class FlightMethods
+    {
+        /// <summary>The method as report.txt and the window name it.</summary>
+        public static string Describe(this FlightMethod method)
+        {
+            switch (method)
+            {
+                case FlightMethod.ArmFlapping: return "arm flapping";
+                case FlightMethod.Floating: return "floating";
+                default: return "wing flapping (players can also choose arm flapping in the game)";
+            }
+        }
+    }
 }

@@ -199,7 +199,8 @@ namespace FactorioAvatarExporter.Core.Tests.Humanoid
             Assert.That(AnimationSpec.ForPack(true, false).Select(a => a.Name),
                 Is.EquivalentTo(AnimationSpec.ForPack(true).Select(a => a.Name).Where(n => !AnimationSpec.IsArmFlapping(n))));
             Assert.That(AnimationSpec.ForPack(false, true).Count(), Is.EqualTo(AnimationSpec.ForPack(false, false).Count()));
-            Assert.That(new PoseTuning { Flight = FlightMethod.Floating }.Describe(), Is.EqualTo("flight floating"));
+            Assert.That(new PoseTuning { Flight = FlightMethod.Floating }.Describe(), Is.Empty);
+            Assert.That(FlightMethod.Floating.Describe(), Is.EqualTo("floating"));
             Assert.That(new PoseTuning { Flight = FlightMethod.ArmFlapping }.Clamped().Flight, Is.EqualTo(FlightMethod.ArmFlapping));
         }
 

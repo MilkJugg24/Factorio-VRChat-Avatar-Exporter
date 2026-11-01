@@ -105,6 +105,28 @@ class PackCheckTests(unittest.TestCase):
         self.assertEqual(self.errors(self.source), [])
         self.assertEqual(self.errors(os.path.join(self.work, "vrc-avatar-edge_1.0.0.zip")), [])
 
+    def test_command_line(self):
+        """Run as a command, from any folder: prints what it checked, exits 0 only when packs were checked and pass."""
+        script = os.path.join(REPO, "tools", "avatar_pack", "check.py")
+
+        def run(*paths):
+            return subprocess.run([sys.executable, script, *paths], cwd=self.work, capture_output=True, text=True)
+
+        good = run(os.path.join(self.work, "vrc-avatar-edge_1.0.0.zip"))
+        self.assertEqual(good.returncode, 0, good.stdout + good.stderr)
+        self.assertIn("OK: vrc-avatar-edge_1.0.0.zip", good.stdout)
+        self.assertIn("idle", good.stdout)
+        broken = self.copy()
+        self.edit(broken, lambda d: d["animations"].pop("idle"))
+        result = run(broken)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("error", result.stdout)
+        self.assertEqual(run(os.path.join(self.work, "no-such-pack.zip")).returncode, 1)
+        empty = tempfile.mkdtemp(dir=self.work)
+        self.assertEqual(run(empty).returncode, 1)
+        # nothing to check is a usage error, never a pass
+        self.assertNotEqual(run().returncode, 0)
+
     def test_empty_tables_are_tables(self):
         path = self.copy()
         self.edit(path, lambda d: d.update(timing={}))
