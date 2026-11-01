@@ -138,7 +138,8 @@ Every avatar is drawn as tall as the engineer.
   when it was modelled folded) and beat around straight out sideways, however they were saved (folded down the
   back, or spread); standing,
   one stretches out now and then. The **Report** names each wing's hinge and the angle it was saved at
-  ("wing hinges").
+  ("wing hinges"). Wing bones that move nothing visible (say the wings of an outfit that's switched off)
+  are left still, and the Report lists them as ignored.
 - **Tails** sway when the avatar's own bones below the hips have "tail" in their names. A tail that's
   part of the body mesh works too, as long as it has its own bones. Anything attached to a tail bone,
   like a tuft, moves with it.

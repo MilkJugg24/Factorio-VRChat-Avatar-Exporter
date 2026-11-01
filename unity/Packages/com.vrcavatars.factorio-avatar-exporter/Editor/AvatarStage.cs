@@ -365,6 +365,21 @@ namespace FactorioAvatarExporter.Editor
             }
             // a chain inside another wing chain would turn twice
             wings.RemoveAll(w => wings.Any(o => o.root != w.root && w.root.IsChildOf(o.root)));
+            // wing bones of a part that is switched off (another outfit's wings, say) move nothing that is drawn:
+            // posing them would only cost time
+            List<Transform> unseen = wings.Where(w => !MovesSomethingDrawn(w.root)).Select(w => w.root).ToList();
+            if (choices.ChoosesWings)
+            {
+                if (unseen.Count > 0)
+                {
+                    Notes.Add("warning: the wing bones chosen by hand move no visible mesh: " + string.Join(", ", unseen.Select(t => t.name)));
+                }
+                unseen.Clear();
+            }
+            else
+            {
+                wings.RemoveAll(w => unseen.Contains(w.root));
+            }
             foreach ((Transform root, bool left, bool _) in wings)
             {
                 // the saved angle: from the shoulder to the middle of the wing's bones, in the body's upright crosswise plane
@@ -407,7 +422,12 @@ namespace FactorioAvatarExporter.Editor
             }
             else
             {
-                Notes.Add("no wing bones (named \"wing\") found: nothing flaps");
+                Notes.Add(unseen.Count > 0 ? "no wing bones that move a visible mesh: nothing flaps"
+                    : "no wing bones (named \"wing\") found: nothing flaps");
+            }
+            if (unseen.Count > 0)
+            {
+                Notes.Add("wing bones ignored, they move no visible mesh: " + string.Join(", ", unseen.Select(t => t.name)));
             }
             if (unsided.Count > 0)
             {
@@ -1188,6 +1208,18 @@ namespace FactorioAvatarExporter.Editor
         }
 
         private HashSet<Transform> drawnBones;
+
+        /// <summary>
+        /// Whether turning <paramref name="root"/> moves anything drawn: a bone below it (itself included) is
+        /// weighted on a visible mesh (<see cref="DrawnBones"/>), or a loose part that follows one of them is drawn.
+        /// </summary>
+        private bool MovesSomethingDrawn(Transform root)
+        {
+            HashSet<Transform> drawn = DrawnBones();
+            var chain = new HashSet<Transform>(root.GetComponentsInChildren<Transform>(true));
+            return chain.Any(drawn.Contains)
+                || links.Any(l => chain.Contains(l.bone) && l.part.GetComponentsInChildren<Transform>(true).Any(drawn.Contains));
+        }
 
         /// <summary>
         /// The transforms that move something drawn: those weighted on the meshes of enabled renderers (every bone
