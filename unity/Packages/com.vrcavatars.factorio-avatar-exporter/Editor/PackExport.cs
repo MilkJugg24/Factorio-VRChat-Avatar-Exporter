@@ -13,7 +13,7 @@ namespace FactorioAvatarExporter.Editor
     /// <summary>The version of this package, written into every pack (kept equal to package.json by a test).</summary>
     internal static class ExporterInfo
     {
-        public const string Version = "0.30.0";
+        public const string Version = "0.31.0";
     }
 
     /// <summary>What the user chose for a pack.</summary>
@@ -32,6 +32,9 @@ namespace FactorioAvatarExporter.Editor
 
         public int PixelsPerTile = DefaultPixelsPerTile;
         public bool Flight = true;
+
+        /// <summary>With flight: also the arm-flapping set, for players to choose in the game (wing-flapping packs).</summary>
+        public bool ArmFlapping = true;
 
         /// <summary>The file the pack's zip is saved as (the user chooses it; see <see cref="PackNaming.ZipFileName"/>).</summary>
         public string ZipPath;
@@ -111,6 +114,7 @@ namespace FactorioAvatarExporter.Editor
                 PixelsPerTile = options.PixelsPerTile,
                 Supersampling = StageCamera.Supersampling,
                 Flight = options.Flight,
+                ArmFlapping = options.ArmFlapping,
                 // every avatar is drawn at the engineer's height; an animation too large for the sheets at full
                 // resolution is drawn at half instead of stopping the export
                 HalveWhenTooLarge = true,
@@ -196,7 +200,7 @@ namespace FactorioAvatarExporter.Editor
             }
             report.AppendLine($"pack: {zip}");
             report.AppendLine($"mod: {PackNaming.ModName(content.Id)} {content.Version}, \"{content.Title}\", " +
-                $"{options.PixelsPerTile} pixels per tile, {(options.Flight ? "with" : "without")} flight");
+                $"{options.PixelsPerTile} pixels per tile, {(!options.Flight ? "without flight" : options.ArmFlapping ? "with flight and arm flapping" : "with flight")}");
             long bytes = 0;
             int files = 0;
             Directory.CreateDirectory(options.PreviewFolder);

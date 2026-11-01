@@ -55,9 +55,9 @@ With Space Age, every armor lets you fly over buildings, cliffs and water, as me
 avatar can take to the air. Armor that flies this way has a small feather on its icon. Without any armor
 you still walk.
 
-If your avatar's wings are its arms (a wyvern, for example), tick **Flap my arms as wings when flying** in
-the avatar window, and its arms beat as wings in the air; untick it to float with the arms hanging. The box
-only shows for avatars exported with exporter 0.26.0 or newer.
+How an avatar flies is chosen when it's exported: beating its wings, beating its arms as wings, or floating.
+For an avatar that beats its wings, you can also tick **Flap my arms as wings when flying** in the avatar
+window to beat its arms instead; untick it to go back. The box only shows for avatars that offer it.
 
 The mod's settings are in **Settings ▸ Mod settings ▸ Startup**: the avatar button in the top-left corner,
 how fast you need to be to sprint (or 0 for never), and whether every armor flies. Changing them restarts

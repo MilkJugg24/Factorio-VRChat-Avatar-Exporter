@@ -18,6 +18,12 @@ namespace FactorioAvatarExporter.Core
         /// <summary>Also render the flight animations (Space Age mech armor).</summary>
         public bool Flight { get; set; } = true;
 
+        /// <summary>
+        /// With <see cref="Flight"/>: also render the arm-flapping set, so players can choose it in the game
+        /// (<see cref="FlightMethod.WingFlapping"/> packs).
+        /// </summary>
+        public bool ArmFlapping { get; set; } = true;
+
         /// <summary>Largest sheet file, px; larger sheets are split by rows.</summary>
         public int MaxSheetSize { get; set; } = PackFormat.MaxSheetSize;
 
@@ -160,7 +166,7 @@ namespace FactorioAvatarExporter.Core
         }
 
         /// <summary>The animations this export renders, in order.</summary>
-        public IEnumerable<AnimationInfo> Animations => AnimationSpec.ForPack(settings.Flight);
+        public IEnumerable<AnimationInfo> Animations => AnimationSpec.ForPack(settings.Flight, settings.ArmFlapping);
 
         /// <summary>Renders a frame takes in total (color, shadow and shadow-flipped passes).</summary>
         public int TotalRenders

@@ -98,6 +98,21 @@ namespace FactorioAvatarExporter.Core.Tests.Pack
             yield return Case("InfiniteSpeed", p => p.AnimationSpeeds["run"] = double.PositiveInfinity, "the animation speed of \"run\" must be a positive number");
         }
 
+        /// <summary>The arm-flapping set is optional (packs that already fly another way leave it out) but comes all together.</summary>
+        [Test]
+        public void TheArmFlappingSetIsOptionalButComesAllTogether()
+        {
+            PackContent without = SyntheticPack.Build(true, false);
+            foreach (string name in new[] { AnimationSpec.HoverFlap, AnimationSpec.FlyFlap, AnimationSpec.TakeOffFlap })
+            {
+                without.Animations.Remove(name);
+            }
+            Assert.That(PackValidator.Validate(without), Is.Empty);
+            PackContent part = SyntheticPack.Build(true, false);
+            part.Animations.Remove(AnimationSpec.FlyFlap);
+            Assert.That(PackValidator.Validate(part), Has.Some.Contains("come all together"));
+        }
+
         [TestCaseSource(nameof(Mistakes))]
         public void ReportsMistakes(Action<PackContent> change, string error)
         {

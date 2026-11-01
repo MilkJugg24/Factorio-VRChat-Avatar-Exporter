@@ -20,6 +20,19 @@ Open it with **Tools ▸ Factorio Avatar Exporter**.
   removed from the copy, which loose parts (outfits, accessories) it held on to the body, and which wing
   and tail bones will move.
 
+## Flight
+
+**Flight method** chooses how the avatar flies with Space Age's flying armor:
+
+- **Wing flapping:** the wings beat. The pack also gets a version where the arms beat as wings, which each
+  player can choose in the game's avatar window ("Flap my arms as wings when flying").
+- **Arm flapping:** the arms beat as wings, for avatars whose wings are their arms (wyverns).
+- **Floating:** the avatar floats with its arms down.
+
+With arm flapping and floating, wing bones stay as the avatar was saved, and the pack has no in-game choice.
+An avatar with wing bones starts with wing flapping, one without starts with floating. The preview shows the
+method chosen.
+
 ## Preview
 
 The preview on the right plays every animation side by side, at the speed the game plays it. They are
@@ -128,11 +141,10 @@ Every avatar is drawn as tall as the engineer.
   ground between them, leaning well forward, the arms pumping.
 - **Mining:** the engineer's own swing: the pickaxe raised over the right shoulder, brought down fast,
   the other arm out for balance.
-- **Flying** (mech armor): wings flap; hovering, they beat slowly. Take-off and landing are
-  empty-handed.
-- **Arms as wings:** every pack also has a version of the flight animations where the arms beat as wings,
-  for avatars whose wings are their arms (wyverns). Each player chooses it in the game's avatar window
-  ("Flap my arms as wings when flying").
+- **Flying** (mech armor), as the **Flight method** chooses: wings flap (hovering, they beat slowly), the
+  arms beat as wings, or the avatar floats. Take-off and landing are empty-handed.
+- **Arms as wings:** a wing-flapping pack also has a version of the flight animations where the arms beat
+  as wings. Each player chooses it in the game's avatar window ("Flap my arms as wings when flying").
 - **Wings** move when their bones have "wing" in their names (any case). If no bone does, the bones of
   an object named "wing" (like "Wings") are used. Each wing turns as one piece from its shoulder, even
   when it's made of several bone chains (arm, membrane, fingers). In the air the wings open out (into the shape their mesh was modelled in, or by straightening their joints

@@ -92,6 +92,9 @@ namespace FactorioAvatarExporter.Editor
         /// </summary>
         public bool LooksSame(PoseResult a, PoseResult b) => a.SameAs(b, wings: stage.HasWings, tail: stage.HasTail);
 
+        /// <summary>Whether the avatar has wing bones that move something visible (the flight method's default).</summary>
+        public bool HasWings => stage.HasWings;
+
         /// <summary>The poses the frames are rendered from now, to compare with those of another tuning.</summary>
         public HumanoidAnimations Poses => poses;
 
@@ -566,6 +569,9 @@ namespace FactorioAvatarExporter.Editor
 
         public PackExportResult ExportPack(PackOptions options, Action<ExportProgress> progress, CancellationToken cancel)
         {
+            // the arm-flapping set goes with wing-flapping packs, for players to choose in the game; the other flight
+            // methods already fly that way (or float)
+            options.ArmFlapping = Tuning.Flight == FlightMethod.WingFlapping;
             using (var renderer = new StageRenderer(stage, camera))
             {
                 string tuned = Tuning.Describe();

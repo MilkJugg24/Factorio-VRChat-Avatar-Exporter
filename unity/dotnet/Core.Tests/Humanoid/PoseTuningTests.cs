@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 
 namespace FactorioAvatarExporter.Core.Tests.Humanoid
@@ -163,6 +164,43 @@ namespace FactorioAvatarExporter.Core.Tests.Humanoid
             PoseResult run = plain.Pose(AnimationSpec.Run, 0.25, 0);
             Assert.That(run.LeftWingSpread, Is.EqualTo(0));
             Assert.That(run.SameAs(flap.Pose(AnimationSpec.Run, 0.25, 0)), Is.True);
+        }
+
+        /// <summary>
+        /// The flight method: wing flapping is as designed; arm flapping beats the arms out to the sides; floating
+        /// keeps them down. Neither beats the wings, and the arm-flapping set goes only with wing flapping.
+        /// </summary>
+        [Test]
+        public void TheFlightMethodChoosesHowTheFlightAnimationsFly()
+        {
+            HumanoidRig rig = HumanoidRig.Measure(SyntheticRigs.Generic(1.6));
+            var wings = new HumanoidAnimations(rig);
+            var arms = new HumanoidAnimations(rig, new PoseTuning { Flight = FlightMethod.ArmFlapping });
+            var floating = new HumanoidAnimations(rig, new PoseTuning { Flight = FlightMethod.Floating });
+            foreach (string animation in new[] { AnimationSpec.Hover, AnimationSpec.Fly, AnimationSpec.HoverGun, AnimationSpec.FlyGun, AnimationSpec.TakeOff })
+            {
+                PoseResult winged = wings.Pose(animation, 0.75, 0);
+                Assert.That(winged.LeftWingSpread, Is.GreaterThan(0), animation);
+                foreach (HumanoidAnimations other in new[] { arms, floating })
+                {
+                    PoseResult pose = other.Pose(animation, 0.75, 0);
+                    Assert.That(pose.LeftWingSpread + pose.RightWingSpread, Is.EqualTo(0), animation);
+                }
+            }
+            double HandBelowShoulder(PoseResult pose) => pose.Joints[JointNames.Shoulder(1)].Z - pose.Joints[JointNames.Hand(1)].Z;
+            foreach (string animation in new[] { AnimationSpec.Hover, AnimationSpec.Fly })
+            {
+                Assert.That(HandBelowShoulder(floating.Pose(animation, 0.25, 0)), Is.GreaterThan(rig.ArmLength * 0.6), animation);
+                Assert.That(HandBelowShoulder(arms.Pose(animation, 0.25, 0)), Is.LessThan(rig.ArmLength * 0.3), animation);
+                // the arm-flapping set itself is the same whatever the method
+                PoseResult flap = wings.Pose(AnimationSpec.HoverFlap, 0.25, 0);
+                Assert.That(flap.SameAs(arms.Pose(AnimationSpec.HoverFlap, 0.25, 0)), Is.True);
+            }
+            Assert.That(AnimationSpec.ForPack(true, false).Select(a => a.Name),
+                Is.EquivalentTo(AnimationSpec.ForPack(true).Select(a => a.Name).Where(n => !AnimationSpec.IsArmFlapping(n))));
+            Assert.That(AnimationSpec.ForPack(false, true).Count(), Is.EqualTo(AnimationSpec.ForPack(false, false).Count()));
+            Assert.That(new PoseTuning { Flight = FlightMethod.Floating }.Describe(), Is.EqualTo("flight floating"));
+            Assert.That(new PoseTuning { Flight = FlightMethod.ArmFlapping }.Clamped().Flight, Is.EqualTo(FlightMethod.ArmFlapping));
         }
 
         [Test]

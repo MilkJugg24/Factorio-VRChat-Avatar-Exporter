@@ -10,7 +10,7 @@
   with the sprint and a longer `distance_per_frame`. VRC Avatars swaps a player to it while their
   armor grid's `movement_bonus` is at least the startup setting `vrc-avatars-sprint-bonus` (a percent,
   60 by default, 0 off), and back, when the armor or its equipment changes and nothing is open.
-- A pack with the arm-flapping flight animations also gets `vrc-avatar-flap-<id>` (and
+- A pack with the arm-flapping flight animations (the exporter adds them to wing-flapping packs only) also gets `vrc-avatar-flap-<id>` (and
   `vrc-avatar-sprint-flap-<id>` with a sprint), used for players who tick "Flap my arms as wings when
   flying" (`get_appearance`/`set_appearance` field `flap`).
 - With the startup setting `vrc-avatars-armor-flight` (on by default) and Space Age (the `space_travel` feature flag,

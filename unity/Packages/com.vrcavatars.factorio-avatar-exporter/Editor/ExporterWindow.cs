@@ -164,7 +164,8 @@ namespace FactorioAvatarExporter.Editor
             try
             {
                 EditorUtility.DisplayProgressBar("Factorio Avatar Exporter", "Loading " + source.name, 0.5f);
-                if (packFor != source.name)
+                bool another = packFor != source.name;
+                if (another)
                 {
                     // another avatar: its own name and id
                     packFor = source.name;
@@ -173,6 +174,11 @@ namespace FactorioAvatarExporter.Editor
                     boneChoices = new BoneChoices();
                 }
                 preview = PosePreview.Load(source, choices: boneChoices);
+                if (another)
+                {
+                    // wings beat if it has them; otherwise it floats until the user chooses arm flapping
+                    tuning.Flight = preview.HasWings ? FlightMethod.WingFlapping : FlightMethod.Floating;
+                }
                 preview.SetLighting(lighting);
                 preview.SetTuning(tuning);
                 exported = null;
@@ -240,6 +246,8 @@ namespace FactorioAvatarExporter.Editor
                     EditorGUILayout.LabelField(note, EditorStyles.wordWrappedMiniLabel);
                 }
             }
+
+            FlightGUI();
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Preview", EditorStyles.boldLabel);
@@ -533,14 +541,46 @@ namespace FactorioAvatarExporter.Editor
         }
 
         /// <summary>
+        /// The animations the pack will have: all of them, but the arm-flapping set only with wing flapping (with the
+        /// other flight methods the flight animations already fly that way, or float).
+        /// </summary>
+        private List<AnimationInfo> PackAnimations =>
+            AnimationSpec.ForPack(true, tuning.Flight == FlightMethod.WingFlapping).ToList();
+
+        private static readonly string[] FlightMethods = { "Wing flapping", "Arm flapping", "Floating" };
+
+        /// <summary>
+        /// How the avatar flies (<see cref="FlightMethod"/>): a major choice, near the top. A change poses the flight
+        /// animations again, like a tuning slider, and adds or drops the arm-flapping set.
+        /// </summary>
+        private void FlightGUI()
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Flight", EditorStyles.boldLabel);
+            var chosen = (FlightMethod)Helped("Flight method", "How the avatar flies with Space Age's flying armor. " +
+                "Wing flapping: the wings beat, and players can also choose in the game to flap the arms instead. Arm " +
+                "flapping: the arms beat as wings, for avatars whose wings are their arms. Floating: the avatar floats " +
+                "with its arms down, its wings as saved. Avatars with wing bones start with wing flapping, others with " +
+                "floating.", r => EditorGUI.Popup(r, "Flight method", (int)tuning.Flight, FlightMethods));
+            if (chosen != tuning.Flight)
+            {
+                tuning.Flight = chosen;
+                activePart = null;
+                TuningChanged();
+                SyncShownAnimations();
+            }
+        }
+
+        /// <summary>
         /// Which animations the preview shows: hidden ones are not rendered, so the preview keeps up while tuning on a
         /// slow computer. Every animation is still exported.
         /// </summary>
         private void AnimationListGUI()
         {
-            int shown = AnimationSpec.All.Count(a => !hiddenAnimations.Contains(a.Name));
+            List<AnimationInfo> animations = PackAnimations;
+            int shown = animations.Count(a => !hiddenAnimations.Contains(a.Name));
             showAnimationList = EditorGUILayout.Foldout(showAnimationList,
-                $"Animations shown ({shown} of {AnimationSpec.All.Count})", true);
+                $"Animations shown ({shown} of {animations.Count})", true);
             if (!showAnimationList)
             {
                 return;
@@ -558,11 +598,11 @@ namespace FactorioAvatarExporter.Editor
                 }
             }
             const int perRow = 3;
-            for (int i = 0; i < AnimationSpec.All.Count; i += perRow)
+            for (int i = 0; i < animations.Count; i += perRow)
             {
                 using (new EditorGUILayout.HorizontalScope())
                 {
-                    foreach (AnimationInfo info in AnimationSpec.All.Skip(i).Take(perRow))
+                    foreach (AnimationInfo info in animations.Skip(i).Take(perRow))
                     {
                         bool on = !hiddenAnimations.Contains(info.Name);
                         bool now = EditorGUILayout.ToggleLeft(info.Name, on, GUILayout.Width(ControlsWidth / perRow - 8));
@@ -651,7 +691,7 @@ namespace FactorioAvatarExporter.Editor
                 EditorGUILayout.LabelField("Animation tuning", EditorStyles.boldLabel);
                 if (GUILayout.Button("Reset", GUILayout.Width(60)))
                 {
-                    tuning = new PoseTuning();
+                    tuning = new PoseTuning { Flight = tuning.Flight };
                     GUI.FocusControl(null);
                     activePart = null;
                     TuningChanged();
@@ -1196,7 +1236,7 @@ namespace FactorioAvatarExporter.Editor
                 return;
             }
             double now = EditorApplication.timeSinceStartup;
-            foreach (AnimationInfo info in AnimationSpec.All.Where(a => !hiddenAnimations.Contains(a.Name)))
+            foreach (AnimationInfo info in PackAnimations.Where(a => !hiddenAnimations.Contains(a.Name)))
             {
                 cells.Add(new PreviewCell(info, PosePreview.RowFor(info.Name, direction), GameFramesPerSecond(info), now));
             }
@@ -1227,7 +1267,8 @@ namespace FactorioAvatarExporter.Editor
             {
                 return;
             }
-            foreach (PreviewCell gone in cells.Where(c => hiddenAnimations.Contains(c.Info.Name)).ToList())
+            foreach (PreviewCell gone in cells.Where(c => hiddenAnimations.Contains(c.Info.Name)
+                || PackAnimations.All(a => a.Name != c.Info.Name)).ToList())
             {
                 foreach (Texture2D frame in gone.Frames.Where(f => f != null))
                 {
@@ -1238,7 +1279,7 @@ namespace FactorioAvatarExporter.Editor
             }
             double now = EditorApplication.timeSinceStartup;
             var added = new List<PreviewCell>();
-            foreach (AnimationInfo info in AnimationSpec.All.Where(a => !hiddenAnimations.Contains(a.Name)
+            foreach (AnimationInfo info in PackAnimations.Where(a => !hiddenAnimations.Contains(a.Name)
                 && cells.All(c => c.Info.Name != a.Name)))
             {
                 added.Add(new PreviewCell(info, PosePreview.RowFor(info.Name, direction), GameFramesPerSecond(info), now));

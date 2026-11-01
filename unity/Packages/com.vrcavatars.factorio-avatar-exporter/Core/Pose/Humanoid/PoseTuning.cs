@@ -52,6 +52,11 @@ namespace FactorioAvatarExporter.Core
         /// <summary>How far arms used as wings are turned from palms down, degrees (the thumb side up).</summary>
         public double ArmWingRoll = 30;
 
+        /// <summary>
+        /// How the avatar flies (<see cref="FlightMethod"/>). Not a slider: the window's Reset leaves it as it is.
+        /// </summary>
+        public FlightMethod Flight = FlightMethod.WingFlapping;
+
         /// <summary>How far the tail sways (1 = as designed).</summary>
         public double TailSway = 1;
 
@@ -74,6 +79,7 @@ namespace FactorioAvatarExporter.Core
             ArmWingRoll = Clamp(ArmWingRoll, -60, 60),
             TailSway = Clamp(TailSway, 0, 2),
             TailLift = Clamp(TailLift, -45, 45),
+            Flight = Flight,
         };
 
         /// <summary>The values that differ from the defaults, for report.txt; empty when none do.</summary>
@@ -101,6 +107,10 @@ namespace FactorioAvatarExporter.Core
             Add("arm-wing roll", ArmWingRoll, defaults.ArmWingRoll);
             Add("tail sway", TailSway, defaults.TailSway);
             Add("tail lift", TailLift, defaults.TailLift);
+            if (Flight != defaults.Flight)
+            {
+                parts.Add("flight " + (Flight == FlightMethod.ArmFlapping ? "arm flapping" : "floating"));
+            }
             return string.Join(", ", parts);
         }
 

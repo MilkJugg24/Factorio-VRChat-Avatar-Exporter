@@ -271,6 +271,12 @@ namespace FactorioAvatarExporter.Editor
             {
                 string[] parts = pair.Split('=');
                 FieldInfo field = parts.Length == 2 ? typeof(PoseTuning).GetField(parts[0].Trim()) : null;
+                if (field != null && field.FieldType.IsEnum)
+                {
+                    // Flight=ArmFlapping
+                    field.SetValue(tuning, Enum.Parse(field.FieldType, parts[1].Trim(), true));
+                    continue;
+                }
                 if (field == null || field.FieldType != typeof(double))
                 {
                     throw new ArgumentException("not a tuning value: " + pair);

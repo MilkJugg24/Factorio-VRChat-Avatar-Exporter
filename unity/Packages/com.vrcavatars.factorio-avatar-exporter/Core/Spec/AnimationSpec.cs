@@ -135,17 +135,23 @@ namespace FactorioAvatarExporter.Core
             return info;
         }
 
-        /// <summary>The animations of a pack, with or without the flight set.</summary>
-        public static IEnumerable<AnimationInfo> ForPack(bool flight)
+        /// <summary>
+        /// The animations of a pack, with or without the flight set, and with or without the arm-flapping set
+        /// (<see cref="HoverFlap"/>, <see cref="FlyFlap"/>, <see cref="TakeOffFlap"/>), which comes only with flight.
+        /// </summary>
+        public static IEnumerable<AnimationInfo> ForPack(bool flight, bool armFlapping = true)
         {
             foreach (AnimationInfo a in All)
             {
-                if (a.Required || flight)
+                if (a.Required || (flight && (armFlapping || !IsArmFlapping(a.Name))))
                 {
                     yield return a;
                 }
             }
         }
+
+        /// <summary>Whether <paramref name="name"/> is one of the arm-flapping set.</summary>
+        public static bool IsArmFlapping(string name) => name == HoverFlap || name == FlyFlap || name == TakeOffFlap;
 
         /// <summary>
         /// Rows of the 18-direction gun animations: (gun direction, moving direction) in eighths of a

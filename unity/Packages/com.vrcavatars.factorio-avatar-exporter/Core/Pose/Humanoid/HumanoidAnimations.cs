@@ -83,6 +83,12 @@ namespace FactorioAvatarExporter.Core
                 throw new ArgumentException("t and move must be finite numbers");
             }
             PoseResult pose = Untuned(animation, t, move);
+            if (tuning.Flight != FlightMethod.WingFlapping && MainFlight(animation))
+            {
+                // flying without beating the wings: they stay as the avatar was saved
+                pose.LeftWingSpread = pose.RightWingSpread = 0;
+                pose.WingElevation = 0;
+            }
             // the wings and the tail, as tuned
             pose.WingElevation = pose.WingElevation * tuning.WingFlap + MathUtil.Radians(tuning.WingRaise);
             pose.WingFoldedRaise = MathUtil.Radians(tuning.WingRaise);
@@ -91,6 +97,14 @@ namespace FactorioAvatarExporter.Core
             pose.TailLift += MathUtil.Radians(tuning.TailLift);
             return pose;
         }
+
+        /// <summary>Whether the pack's own flight animations beat the arms as wings (<see cref="FlightMethod.ArmFlapping"/>).</summary>
+        private bool ArmsBeat => tuning.Flight == FlightMethod.ArmFlapping;
+
+        /// <summary>The flight animations the flight method decides (not the arm-flapping set, which is always as it is).</summary>
+        private static bool MainFlight(string animation) =>
+            animation == AnimationSpec.Hover || animation == AnimationSpec.HoverGun || animation == AnimationSpec.Fly
+            || animation == AnimationSpec.FlyGun || animation == AnimationSpec.TakeOff;
 
         private PoseResult Untuned(string animation, double t, double move)
         {
@@ -103,11 +117,11 @@ namespace FactorioAvatarExporter.Core
                 case AnimationSpec.Sprint: return Sprint(t);
                 case AnimationSpec.Mine: return Mine(t);
                 case AnimationSpec.Corpse: return Corpse();
-                case AnimationSpec.Hover: return Hover(t, false, Conventions.FlyHeight, 0);
+                case AnimationSpec.Hover: return Hover(t, false, Conventions.FlyHeight, 0, ArmsBeat);
                 case AnimationSpec.HoverGun: return Hover(t, true, Conventions.FlyHeight, 0);
-                case AnimationSpec.Fly: return Fly(t, false, move);
+                case AnimationSpec.Fly: return Fly(t, false, move, ArmsBeat);
                 case AnimationSpec.FlyGun: return Fly(t, true, move);
-                case AnimationSpec.TakeOff: return TakeOff(t);
+                case AnimationSpec.TakeOff: return TakeOff(t, ArmsBeat);
                 case AnimationSpec.HoverFlap: return Hover(t, false, Conventions.FlyHeight, 0, true);
                 case AnimationSpec.FlyFlap: return Fly(t, false, move, true);
                 case AnimationSpec.TakeOffFlap: return TakeOff(t, true);
@@ -849,7 +863,7 @@ namespace FactorioAvatarExporter.Core
         /// <summary>Every animation's frames, for tests and previews: (animation, row, frame) -> pose.</summary>
         public IEnumerable<(string animation, int row, int frame, PoseResult pose)> AllFrames(bool flight)
         {
-            foreach (AnimationInfo a in AnimationSpec.ForPack(flight))
+            foreach (AnimationInfo a in AnimationSpec.ForPack(flight, tuning.Flight == FlightMethod.WingFlapping))
             {
                 for (int row = 0; row < a.DirectionCount; row++)
                 {

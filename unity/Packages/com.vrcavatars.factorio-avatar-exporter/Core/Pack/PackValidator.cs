@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using static System.FormattableString;
 
 namespace FactorioAvatarExporter.Core
@@ -139,7 +140,7 @@ namespace FactorioAvatarExporter.Core
                 {
                     errors.Add(Invariant($"the required \"{info.Name}\" animation is missing"));
                 }
-                else if (!present && content.Flight)
+                else if (!present && content.Flight && !AnimationSpec.IsArmFlapping(info.Name))
                 {
                     errors.Add(Invariant($"Flight is on, but the \"{info.Name}\" animation is missing (flight animations come all together or not at all)"));
                 }
@@ -155,6 +156,13 @@ namespace FactorioAvatarExporter.Core
                         frameCounts.Add(info.Name, frames.Value);
                     }
                 }
+            }
+            // the arm-flapping set is optional, but comes all together
+            List<string> flapping = AnimationSpec.All.Where(a => AnimationSpec.IsArmFlapping(a.Name)).Select(a => a.Name).ToList();
+            List<string> missingFlap = flapping.Where(n => !content.Animations.ContainsKey(n)).ToList();
+            if (missingFlap.Count > 0 && missingFlap.Count < flapping.Count)
+            {
+                errors.Add(Invariant($"the \"{missingFlap[0]}\" animation is missing (the arm-flapping animations come all together)"));
             }
             foreach (string name in Sorted(content.Animations.Keys))
             {
