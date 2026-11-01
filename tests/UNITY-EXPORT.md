@@ -34,6 +34,22 @@ opening a window. It finds Unity through Unity Hub from the project's version, o
   (`<avatar>/<animation>.png`, a row per direction), and a `report.txt` with the rig report and, per
   animation, how far the bones ended up from where the exporter meant to put them.
 
+  `-Guides` draws the window's guide lines on the sheets, and the report adds, per animation, how far they are
+  from where the camera shows the bones and how many joints land on the avatar (also when mirrored, so a mirrored
+  line would show). `-Tuning "Lean=2,HeadTilt=-30"` sets the animation tuning (the field names of `PoseTuning`),
+  `-Animations "idle,hover"` limits the animations.
+- `-Mode sliders` poses without rendering: `<avatar>/sliders.txt` says how each wing moves per animation, and how
+  far each tuning slider, at both ends of its range, moves each part and in which animations.
+- `-Mode timing` times a full preview, with the parts of a frame, once as just loaded and once as after a tuning
+  change: `<avatar>/timing.txt`, which also compares the preview's quick frames with full ones.
+- `-Mode window` opens Unity with its window (leave it on top and don't click in it) and drives the exporter's
+  window: loads the avatar, drags sliders, opens every "?" and exports, then quits. Screenshots go to the results
+  folder, whatever reached the Console to `window-console.txt`. The screenshots are of that part of the screen.
+
+If Unity reports errors for code that is plainly in the project, it may hold an old compile: packages built before
+file times came from their contents gave every file the same time, so an update could leave scripts uncompiled.
+Update the times of the `.cs` files in `Assets/FactorioAvatarExporter` and run again.
+
 Results go to `unity-export/<date-time>/` in the repository, which git ignores: `summary.txt` (each
 avatar's report or error), the per-avatar folders, and Unity's logs `unity-import.log` and
 `unity-render.log` (errors and exceptions are in here).

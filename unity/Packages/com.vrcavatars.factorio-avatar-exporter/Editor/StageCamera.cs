@@ -32,6 +32,7 @@ namespace FactorioAvatarExporter.Editor
         private readonly bool linear = PlayerSettings.colorSpace == UnityEngine.ColorSpace.Linear;
         private RenderTexture target;
         private Texture2D readback;
+        private Color[] previewPixels;
 
         // targets by size: an export alternates between the character's and its shadow's canvases
         private const int KeptTargets = 4;
@@ -199,7 +200,112 @@ namespace FactorioAvatarExporter.Editor
         public ImageF RenderFrame()
         {
             (ImageF onBlack, ImageF onWhite) = RenderBlackAndWhite();
-            return Downsample.Box(Matting.FromBlackAndWhite(onBlack, onWhite, linear), Supersampling);
+            ImageF matted;
+            using (PreviewTimings.Time("matting"))
+            {
+                matted = Matting.FromBlackAndWhite(onBlack, onWhite, linear);
+            }
+            using (PreviewTimings.Time("downsample"))
+            {
+                return Downsample.Box(matted, Supersampling);
+            }
+        }
+
+        /// <summary>
+        /// A quick frame for the window, which draws it on <paramref name="ground"/>: one render on that colour, so
+        /// see-through parts already show it, with what differs from the plain colour counted as covered. It looks
+        /// as <see cref="RenderFrame"/> does on that ground, without the second render and the matting; not for packs,
+        /// whose sprites must also be right on other backgrounds.
+        /// </summary>
+        public ImageF RenderPreviewFrame(Color ground)
+        {
+            const float sameColour = 0.002f;
+            Color plain = linear ? ground.linear : ground;
+            using (new SynchronousShaders())
+            {
+                for (int attempt = 1; ; attempt++)
+                {
+                    DrawAndRead(ground, stage.Scene);
+                    int w = readback.width, h = readback.height;
+                    if (previewPixels == null || previewPixels.Length != w * h)
+                    {
+                        previewPixels = new Color[w * h];
+                    }
+                    using (PreviewTimings.Time("pixels to ImageF"))
+                    {
+                        readback.GetRawTextureData<Color>().CopyTo(previewPixels);
+                    }
+                    bool placeholder = false;
+                    using (PreviewTimings.Time("placeholder check"))
+                    {
+                        Color[] p = previewPixels;
+                        for (int i = 0; i < p.Length && !placeholder; i++)
+                        {
+                            placeholder = p[i].r < 0.02f && p[i].g > 0.97f && p[i].b > 0.97f;
+                        }
+                    }
+                    if (!placeholder || attempt == RenderAttempts)
+                    {
+                        using (PreviewTimings.Time("cover and downsample"))
+                        {
+                            return Covered(previewPixels, w, h, plain, sameColour);
+                        }
+                    }
+                    Retakes++;
+                    CompileShaders(stage.Avatar);
+                    for (int wait = 0; ShaderUtil.anythingCompiling && wait < 200; wait++)
+                    {
+                        System.Threading.Thread.Sleep(50);
+                    }
+                }
+            }
+        }
+
+        /// <summary>The pixels of a render on <paramref name="plain"/> as a premultiplied linear image, reduced by <see cref="Supersampling"/>.</summary>
+        private ImageF Covered(Color[] pixels, int w, int h, Color plain, float sameColour)
+        {
+            var image = new ImageF(w / Supersampling, h / Supersampling);
+            float[] output = image.Pixels;
+            float weight = 1f / (Supersampling * Supersampling);
+            int o = 0;
+            for (int y = 0; y < image.Height; y++)
+            {
+                for (int x = 0; x < image.Width; x++, o += 4)
+                {
+                    float r = 0, g = 0, b = 0, a = 0;
+                    for (int sy = 0; sy < Supersampling; sy++)
+                    {
+                        int row = (h - 1 - (y * Supersampling + sy)) * w + x * Supersampling;
+                        for (int sx = 0; sx < Supersampling; sx++)
+                        {
+                            Color c = pixels[row + sx];
+                            if (Mathf.Abs(c.r - plain.r) > sameColour || Mathf.Abs(c.g - plain.g) > sameColour
+                                || Mathf.Abs(c.b - plain.b) > sameColour)
+                            {
+                                a += 1;
+                                r += linear ? c.r : Mathf.GammaToLinearSpace(c.r);
+                                g += linear ? c.g : Mathf.GammaToLinearSpace(c.g);
+                                b += linear ? c.b : Mathf.GammaToLinearSpace(c.b);
+                            }
+                        }
+                    }
+                    output[o] = r * weight;
+                    output[o + 1] = g * weight;
+                    output[o + 2] = b * weight;
+                    output[o + 3] = a * weight;
+                }
+            }
+            return image;
+        }
+
+        /// <summary>
+        /// Where the camera, as aimed at <paramref name="canvas"/>, shows a point of the world: canvas pixels, row 0
+        /// at the top. What guide lines are checked against, as it does not go through Core's projection.
+        /// </summary>
+        public (double x, double y) CanvasPixel(Vector3 world, CanvasSpec canvas)
+        {
+            Vector3 view = camera.WorldToViewportPoint(world);
+            return (view.x * canvas.Width, (1 - view.y) * canvas.Height);
         }
 
         /// <summary>True when renders hold linear light (the project's colour space is Linear).</summary>
@@ -263,7 +369,11 @@ namespace FactorioAvatarExporter.Editor
             for (int attempt = 1; ; attempt++)
             {
                 ImageF image = RenderOnce(background, stage.Scene);
-                int placeholder = PlaceholderPixels(image);
+                int placeholder;
+                using (PreviewTimings.Time("placeholder check"))
+                {
+                    placeholder = PlaceholderPixels(image);
+                }
                 if (placeholder == 0)
                 {
                     return image;
@@ -285,6 +395,31 @@ namespace FactorioAvatarExporter.Editor
         /// <summary>Renders <paramref name="scene"/> over a solid background and reads it back with row 0 at the top.</summary>
         private ImageF RenderOnce(Color background, Scene scene)
         {
+            DrawAndRead(background, scene);
+            using (PreviewTimings.Time("pixels to ImageF"))
+            {
+                Color[] pixels = readback.GetPixels();
+                int w = readback.width, h = readback.height;
+                var image = new ImageF(w, h);
+                for (int y = 0; y < h; y++)
+                {
+                    int row = (h - 1 - y) * w;
+                    for (int x = 0; x < w; x++)
+                    {
+                        Color c = pixels[row + x];
+                        image[x, y, 0] = c.r;
+                        image[x, y, 1] = c.g;
+                        image[x, y, 2] = c.b;
+                        image[x, y, 3] = 1;
+                    }
+                }
+                return image;
+            }
+        }
+
+        /// <summary>Renders <paramref name="scene"/> over a solid background into <see cref="readback"/>.</summary>
+        private void DrawAndRead(Color background, Scene scene)
+        {
             camera.backgroundColor = background;
             Unsupported.SetOverrideLightingSettings(scene);
             try
@@ -297,32 +432,22 @@ namespace FactorioAvatarExporter.Editor
                 RenderSettings.customReflection = Surroundings;
 #pragma warning restore 618
                 RenderSettings.reflectionIntensity = lighting.ReflectionStrength;
-                camera.Render();
+                using (PreviewTimings.Time("camera.Render"))
+                {
+                    camera.Render();
+                }
             }
             finally
             {
                 Unsupported.RestoreOverrideLightingSettings();
             }
-            RenderTexture previous = RenderTexture.active;
-            RenderTexture.active = target;
-            readback.ReadPixels(new Rect(0, 0, readback.width, readback.height), 0, 0, false);
-            RenderTexture.active = previous;
-            Color[] pixels = readback.GetPixels();
-            int w = readback.width, h = readback.height;
-            var image = new ImageF(w, h);
-            for (int y = 0; y < h; y++)
+            using (PreviewTimings.Time("GPU readback"))
             {
-                int row = (h - 1 - y) * w;
-                for (int x = 0; x < w; x++)
-                {
-                    Color c = pixels[row + x];
-                    image[x, y, 0] = c.r;
-                    image[x, y, 1] = c.g;
-                    image[x, y, 2] = c.b;
-                    image[x, y, 3] = 1;
-                }
+                RenderTexture previous = RenderTexture.active;
+                RenderTexture.active = target;
+                readback.ReadPixels(new Rect(0, 0, readback.width, readback.height), 0, 0, false);
+                RenderTexture.active = previous;
             }
-            return image;
         }
 
         /// <summary>

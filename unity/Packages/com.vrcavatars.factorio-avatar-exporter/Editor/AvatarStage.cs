@@ -1156,16 +1156,22 @@ namespace FactorioAvatarExporter.Editor
             }
             foreach ((Transform root, _, _) in wings)
             {
-                // the wing's longest line of bones, root to tip
+                // the wing's longest line of bones, root to tip, as far as they move something drawn: an avatar can
+                // hold wing bones of a part that is switched off, which would draw a line in the air
                 var points = new List<Vec3>();
+                int drawn = 0;
                 for (Transform t = root; t != null;
                     t = t.Cast<Transform>().OrderByDescending(c => c.GetComponentsInChildren<Transform>(true).Length).FirstOrDefault())
                 {
                     points.Add(At(t.position));
+                    if (DrawnBones().Contains(t))
+                    {
+                        drawn = points.Count;
+                    }
                 }
-                if (points.Count > 1)
+                if (drawn > 1)
                 {
-                    chains.Add((GuidePart.Wings, points.ToArray()));
+                    chains.Add((GuidePart.Wings, points.Take(drawn).ToArray()));
                 }
             }
             if (tail.Count > 1)
@@ -1173,6 +1179,50 @@ namespace FactorioAvatarExporter.Editor
                 chains.Add((GuidePart.Tail, tail.Where(t => t != null).Select(t => At(t.position)).ToArray()));
             }
             return chains;
+        }
+
+        private HashSet<Transform> drawnBones;
+
+        /// <summary>
+        /// The transforms that move something drawn: those weighted on the meshes of enabled renderers (every bone
+        /// of a mesh whose weights can't be read) and the objects of other enabled renderers.
+        /// </summary>
+        private HashSet<Transform> DrawnBones()
+        {
+            if (drawnBones != null)
+            {
+                return drawnBones;
+            }
+            drawnBones = new HashSet<Transform>();
+            foreach (Renderer renderer in Avatar.GetComponentsInChildren<Renderer>(false).Where(r => r.enabled))
+            {
+                if (!(renderer is SkinnedMeshRenderer skinned))
+                {
+                    drawnBones.Add(renderer.transform);
+                    continue;
+                }
+                Transform[] meshBones = skinned.bones;
+                BoneWeight[] weights = skinned.sharedMesh != null && skinned.sharedMesh.isReadable ? skinned.sharedMesh.boneWeights : new BoneWeight[0];
+                if (weights.Length == 0)
+                {
+                    drawnBones.UnionWith(meshBones.Where(b => b != null));
+                }
+                void Weighted(int index, float weight)
+                {
+                    if (weight > 0 && index < meshBones.Length && meshBones[index] != null)
+                    {
+                        drawnBones.Add(meshBones[index]);
+                    }
+                }
+                foreach (BoneWeight w in weights)
+                {
+                    Weighted(w.boneIndex0, w.weight0);
+                    Weighted(w.boneIndex1, w.weight1);
+                    Weighted(w.boneIndex2, w.weight2);
+                    Weighted(w.boneIndex3, w.weight3);
+                }
+            }
+            return drawnBones;
         }
 
         /// <summary>

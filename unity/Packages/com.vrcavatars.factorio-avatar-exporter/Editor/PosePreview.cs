@@ -108,6 +108,120 @@ namespace FactorioAvatarExporter.Editor
             return stage.GuideChains();
         }
 
+        /// <summary>The colour of each part's guide lines.</summary>
+        public static readonly IReadOnlyDictionary<GuidePart, Color> GuideColors = new Dictionary<GuidePart, Color>
+        {
+            { GuidePart.Spine, new Color(1f, 0.55f, 0.1f) },
+            { GuidePart.Head, new Color(1f, 1f, 1f) },
+            { GuidePart.Arms, new Color(0.2f, 0.85f, 1f) },
+            { GuidePart.Legs, new Color(0.45f, 1f, 0.3f) },
+            { GuidePart.Wings, new Color(1f, 0.35f, 0.9f) },
+            { GuidePart.Tail, new Color(1f, 0.25f, 0.25f) },
+        };
+
+        /// <summary>Where a guide point of a model facing <paramref name="orientation"/> is on <paramref name="canvas"/>, in pixels.</summary>
+        public static (double x, double y) GuidePixel(Vec3 point, double orientation, CanvasSpec canvas) =>
+            FactorioCamera.Project(Conventions.ModelPointToWorld(point, orientation, false), canvas);
+
+        /// <summary>
+        /// Draws the guide lines of a rendered frame onto it, the window's lines on the command line's sheets, and
+        /// adds to <paramref name="check"/> how they agree with the camera and the picture.
+        /// </summary>
+        private void DrawGuides(PreviewFrame frame, string animation, int row, int frameIndex, GuideCheck check)
+        {
+            List<(GuidePart part, Vec3[] points)> chains = Guides(animation, row, frameIndex);
+            double orientation = AnimationSpec.Direction(animation, row).Orientation;
+            stage.SetOrientation(orientation);
+            camera.Aim(frame.Canvas);
+            // read first: the lines drawn must not count as the avatar
+            foreach ((GuidePart part, Vec3[] points) in chains)
+            {
+                foreach (Vec3 point in points)
+                {
+                    (double x, double y) = GuidePixel(point, orientation, frame.Canvas);
+                    Vector3 world = stage.Pivot.TransformPoint(AvatarStage.ToUnity(point, stage.MetersPerTile));
+                    (double cameraX, double cameraY) = camera.CanvasPixel(world, frame.Canvas);
+                    check.CameraPixels = Math.Max(check.CameraPixels, Math.Max(Math.Abs(x - cameraX), Math.Abs(y - cameraY)));
+                    check.Add(part, row, OnAvatar(frame.Image, x, y), OnAvatar(frame.Image, 2 * frame.Canvas.AnchorX - x, y));
+                }
+            }
+            foreach ((GuidePart part, Vec3[] points) in chains)
+            {
+                Color color = GuideColors[part];
+                for (int i = 0; i + 1 < points.Length; i++)
+                {
+                    (double ax, double ay) = GuidePixel(points[i], orientation, frame.Canvas);
+                    (double bx, double by) = GuidePixel(points[i + 1], orientation, frame.Canvas);
+                    int steps = (int)Math.Ceiling(Math.Max(Math.Abs(bx - ax), Math.Abs(by - ay))) + 1;
+                    for (int s = 0; s <= steps; s++)
+                    {
+                        Plot(frame.Image, ax + (bx - ax) * s / steps, ay + (by - ay) * s / steps, color);
+                    }
+                }
+            }
+        }
+
+        /// <summary>True when the picture is drawn on within a pixel of (x, y): bones lie inside the body, a little off an edge at worst.</summary>
+        private static bool OnAvatar(Image8 image, double x, double y)
+        {
+            int px = (int)Math.Floor(x), py = (int)Math.Floor(y);
+            for (int dy = -1; dy <= 1; dy++)
+            {
+                for (int dx = -1; dx <= 1; dx++)
+                {
+                    int ix = px + dx, iy = py + dy;
+                    if (ix >= 0 && iy >= 0 && ix < image.Width && iy < image.Height && image[ix, iy, 3] != 0)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private static void Plot(Image8 image, double x, double y, Color color)
+        {
+            int px = (int)Math.Floor(x), py = (int)Math.Floor(y);
+            if (px >= 0 && py >= 0 && px < image.Width && py < image.Height)
+            {
+                image[px, py, 0] = (byte)(color.r * 255);
+                image[px, py, 1] = (byte)(color.g * 255);
+                image[px, py, 2] = (byte)(color.b * 255);
+                image[px, py, 3] = 255;
+            }
+        }
+
+        /// <summary>How an animation's guide lines agree with the camera and with the picture, for report.txt.</summary>
+        private sealed class GuideCheck
+        {
+            private readonly Dictionary<(GuidePart part, int row), (int on, int mirrored, int all)> counts =
+                new Dictionary<(GuidePart, int), (int, int, int)>();
+
+            /// <summary>The furthest a guide point is from where the camera shows its bone, canvas pixels.</summary>
+            public double CameraPixels { get; set; }
+
+            public void Add(GuidePart part, int row, bool on, bool mirrored)
+            {
+                counts.TryGetValue((part, row), out (int on, int mirrored, int all) c);
+                counts[(part, row)] = (c.on + (on ? 1 : 0), c.mirrored + (mirrored ? 1 : 0), c.all + 1);
+            }
+
+            public string Describe(string animation)
+            {
+                var parts = new List<string>();
+                foreach (IGrouping<GuidePart, KeyValuePair<(GuidePart part, int row), (int on, int mirrored, int all)>> part
+                    in counts.GroupBy(c => c.Key.part).OrderBy(g => g.Key))
+                {
+                    int on = part.Sum(c => c.Value.on), mirrored = part.Sum(c => c.Value.mirrored), all = part.Sum(c => c.Value.all);
+                    var worst = part.OrderBy(c => (double)c.Value.on / c.Value.all).First();
+                    parts.Add($"{part.Key} {100 * on / all}% (mirrored {100 * mirrored / all}%; worst {DirectionName(animation, worst.Key.row)} " +
+                        $"{100 * worst.Value.on / worst.Value.all}%)");
+                }
+                return $"guides: within {CameraPixels:0.00} px of the camera; joints on the avatar: " +
+                    (parts.Count > 0 ? string.Join(", ", parts) : "none drawn");
+            }
+        }
+
         /// <summary>
         /// The sheet row of <paramref name="animation"/> facing <paramref name="direction"/> (0 north, clockwise, 8
         /// directions): the same row for 8-direction animations, the gun-and-moving row facing that way (or its
@@ -152,25 +266,50 @@ namespace FactorioAvatarExporter.Editor
         public PoseResult Pose(string animation, int row, int frame) => Pose(poses, animation, row, frame);
 
         /// <summary>Frame <paramref name="frame"/> of direction <paramref name="row"/> (both from 0).</summary>
-        public PreviewFrame Render(string animation, int row, int frame)
+        public PreviewFrame Render(string animation, int row, int frame) => Render(animation, row, frame, null);
+
+        /// <summary>
+        /// As <see cref="Render(string, int, int)"/>; with <paramref name="quickGround"/>, the quick frame for
+        /// drawing on that colour (<see cref="StageCamera.RenderPreviewFrame"/>).
+        /// </summary>
+        public PreviewFrame Render(string animation, int row, int frame, Color? quickGround)
         {
-            Canvas(animation); // planning poses every frame, so it comes first
-            PoseResult pose = Pose(animation, row, frame);
-            stage.SetOrientation(0);
-            stage.ApplyPose(pose);
-            double error = pose.GroundToLowestPoint ? double.NaN : stage.JointError(pose) * PixelsPerTile;
-            stage.SetOrientation(AnimationSpec.Direction(animation, row).Orientation);
-            for (int growth = 0; ; growth++)
+            using (PreviewTimings.Time("Render (whole frame)"))
             {
-                CanvasSpec canvas = Canvas(animation);
-                camera.Aim(canvas);
-                Image8 image = ImageConvert.ToImage8(camera.RenderFrame());
-                if (!StageCamera.TouchesEdge(image) || growth == MaxGrowth)
+                Canvas(animation); // planning poses every frame, so it comes first
+                PoseResult pose;
+                using (PreviewTimings.Time("core pose"))
                 {
-                    return new PreviewFrame { Image = image, Canvas = canvas, JointErrorPixels = error };
+                    pose = Pose(animation, row, frame);
                 }
-                margins[animation] = Margin(animation) + MarginStep;
-                Growths++;
+                stage.SetOrientation(0);
+                using (PreviewTimings.Time("ApplyPose"))
+                {
+                    stage.ApplyPose(pose);
+                }
+                double error;
+                using (PreviewTimings.Time("JointError"))
+                {
+                    error = pose.GroundToLowestPoint ? double.NaN : stage.JointError(pose) * PixelsPerTile;
+                }
+                stage.SetOrientation(AnimationSpec.Direction(animation, row).Orientation);
+                for (int growth = 0; ; growth++)
+                {
+                    CanvasSpec canvas = Canvas(animation);
+                    camera.Aim(canvas);
+                    ImageF rendered = quickGround.HasValue ? camera.RenderPreviewFrame(quickGround.Value) : camera.RenderFrame();
+                    Image8 image;
+                    using (PreviewTimings.Time("ToImage8"))
+                    {
+                        image = ImageConvert.ToImage8(rendered);
+                    }
+                    if (!StageCamera.TouchesEdge(image) || growth == MaxGrowth)
+                    {
+                        return new PreviewFrame { Image = image, Canvas = canvas, JointErrorPixels = error };
+                    }
+                    margins[animation] = Margin(animation) + MarginStep;
+                    Growths++;
+                }
             }
         }
 
@@ -185,29 +324,69 @@ namespace FactorioAvatarExporter.Editor
         {
             if (!bounds.TryGetValue(animation, out Bounds3 box))
             {
-                AnimationInfo info = AnimationSpec.Get(animation);
-                box = Bounds3.Empty;
-                for (int frame = 0; frame < info.FrameCount; frame++)
+                using (PreviewTimings.Time("canvas planning (animation)"))
                 {
-                    stage.SetOrientation(0);
-                    stage.ApplyPose(Pose(animation, 0, frame));
-                    List<Vector3> points = stage.MeshPoints();
-                    for (int row = 0; row < info.DirectionCount; row++)
+                    AnimationInfo info = AnimationSpec.Get(animation);
+                    box = Bounds3.Empty;
+                    for (int frame = 0; frame < info.FrameCount; frame++)
                     {
-                        Quaternion turn = Quaternion.Euler(0, (float)(360 * AnimationSpec.Direction(animation, row).Orientation), 0);
-                        foreach (Vector3 p in points)
+                        stage.SetOrientation(0);
+                        using (PreviewTimings.Time("planning: ApplyPose"))
                         {
-                            box = box.Encapsulate(AvatarStage.ToCore(turn * p) * stage.Rig.TilesPerMeter);
+                            stage.ApplyPose(Pose(animation, 0, frame));
+                        }
+                        List<Vector3> points;
+                        using (PreviewTimings.Time("planning: MeshPoints"))
+                        {
+                            points = stage.MeshPoints();
+                        }
+                        using (PreviewTimings.Time("planning: turn the points"))
+                        {
+                            for (int row = 0; row < info.DirectionCount; row++)
+                            {
+                                box = TurnedBounds(box, points, Quaternion.Euler(0, (float)(360 * AnimationSpec.Direction(animation, row).Orientation), 0));
+                            }
                         }
                     }
+                    bounds[animation] = box;
                 }
-                bounds[animation] = box;
             }
             return CanvasPlanner.PlanColor(new[] { box }, PixelsPerTile, StageCamera.Supersampling, Margin(animation));
         }
 
+        /// <summary>
+        /// <paramref name="box"/> grown by <paramref name="points"/> (meters) turned about the vertical: only the two
+        /// extreme corners reach the box, as there are many thousands of points to turn for every frame and direction.
+        /// </summary>
+        private Bounds3 TurnedBounds(Bounds3 box, List<Vector3> points, Quaternion turn)
+        {
+            float xx = 1 - 2 * turn.y * turn.y, xz = 2 * turn.w * turn.y;
+            float minX = float.MaxValue, minY = float.MaxValue, minZ = float.MaxValue;
+            float maxX = float.MinValue, maxY = float.MinValue, maxZ = float.MinValue;
+            for (int i = 0; i < points.Count; i++)
+            {
+                Vector3 p = points[i];
+                float x = xx * p.x + xz * p.z, z = xx * p.z - xz * p.x;
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (p.y < minY) minY = p.y;
+                if (p.y > maxY) maxY = p.y;
+                if (z < minZ) minZ = z;
+                if (z > maxZ) maxZ = z;
+            }
+            if (points.Count == 0)
+            {
+                return box;
+            }
+            return box.Encapsulate(AvatarStage.ToCore(new Vector3(minX, minY, minZ)) * stage.Rig.TilesPerMeter)
+                .Encapsulate(AvatarStage.ToCore(new Vector3(maxX, maxY, maxZ)) * stage.Rig.TilesPerMeter);
+        }
+
         /// <summary>Every frame of every direction of an animation in one image: a row per direction.</summary>
-        public Image8 Sheet(string animation, out double worstJointErrorPixels, Action<float> progress = null)
+        public Image8 Sheet(string animation, out double worstJointErrorPixels, Action<float> progress = null) =>
+            Sheet(animation, out worstJointErrorPixels, progress, null);
+
+        private Image8 Sheet(string animation, out double worstJointErrorPixels, Action<float> progress, GuideCheck guides)
         {
             AnimationInfo info = AnimationSpec.Get(animation);
             var frames = new PreviewFrame[info.DirectionCount, info.FrameCount];
@@ -232,6 +411,16 @@ namespace FactorioAvatarExporter.Editor
                 if (Growths == growthsBefore)
                 {
                     break;
+                }
+            }
+            if (guides != null)
+            {
+                for (int row = 0; row < info.DirectionCount; row++)
+                {
+                    for (int frame = 0; frame < info.FrameCount; frame++)
+                    {
+                        DrawGuides(frames[row, frame], animation, row, frame, guides);
+                    }
                 }
             }
             int w = frames[0, 0].Image.Width, h = frames[0, 0].Image.Height;
@@ -261,7 +450,8 @@ namespace FactorioAvatarExporter.Editor
         /// &lt;animation&gt;.png, and report.txt: the notes, and each animation's size and pose check. Returns
         /// the report. <paramref name="progress"/> gets the animation being drawn and the part of all done.
         /// </summary>
-        public string SaveAllSheets(string folder, Action<string, float> progress = null)
+        public string SaveAllSheets(string folder, Action<string, float> progress = null, bool drawGuides = false,
+            ICollection<string> only = null)
         {
             var clock = Stopwatch.StartNew();
             var report = new StringBuilder();
@@ -270,15 +460,25 @@ namespace FactorioAvatarExporter.Editor
             {
                 report.AppendLine(note);
             }
-            IReadOnlyList<AnimationInfo> all = AnimationSpec.All;
+            string tuned = Tuning.Describe();
+            if (tuned.Length > 0)
+            {
+                report.AppendLine("animation tuning: " + tuned);
+            }
+            List<AnimationInfo> all = AnimationSpec.All.Where(a => only == null || only.Contains(a.Name)).ToList();
             for (int i = 0; i < all.Count; i++)
             {
                 AnimationInfo info = all[i];
                 int index = i;
-                Image8 sheet = Sheet(info.Name, out double worst, p => progress?.Invoke(info.Name, (index + p) / all.Count));
+                GuideCheck guides = drawGuides ? new GuideCheck() : null;
+                Image8 sheet = Sheet(info.Name, out double worst, p => progress?.Invoke(info.Name, (index + p) / all.Count), guides);
                 File.WriteAllBytes(Path.Combine(folder, info.Name + ".png"), PngWriter.Encode(sheet));
                 report.AppendLine($"{info.Name}: {info.DirectionCount} directions x {info.FrameCount} frames of " +
                     $"{sheet.Width / info.FrameCount}x{sheet.Height / info.DirectionCount} px; bones within {worst:0.0} px of Core's joints");
+                if (guides != null)
+                {
+                    report.AppendLine("  " + guides.Describe(info.Name));
+                }
             }
             report.AppendLine($"retaken while shaders compiled: {Retakes}; placeholder pixels left: " +
                 $"{PlaceholderLeft}; canvas grown to fit: {Growths} times");

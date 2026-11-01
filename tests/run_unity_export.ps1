@@ -28,8 +28,16 @@ param(
     # Don't import the package (it is already in the project, e.g. imported by hand).
     [switch]$SkipImport,
     # pack: the avatar pack (mod zip) itself, with report.txt and a preview sheet per animation;
-    # poses: every animation posed by the exporter, a sheet each.
-    [ValidateSet("pack", "poses")][string]$Mode = "pack"
+    # poses: every animation posed by the exporter, a sheet each; timing: the parts of a full preview
+    # timed (timing.txt); sliders: how far each tuning slider moves each part, without rendering (sliders.txt);
+    # window: opens Unity with its window and drives the exporter's window (screenshots, window-console.txt).
+    [ValidateSet("pack", "poses", "timing", "sliders", "window")][string]$Mode = "pack",
+    # -Mode poses: draw the window's guide lines on the sheets, and report how they agree with the camera and the picture.
+    [switch]$Guides,
+    # -Mode poses: the animation tuning, e.g. "Lean=2,HeadTilt=-30" (the field names of PoseTuning).
+    [string]$Tuning = "",
+    # -Mode poses: only these animations, e.g. "idle,hover".
+    [string]$Animations = ""
 )
 $ErrorActionPreference = "Stop"
 function Quote([string]$s) { '"' + $s + '"' }
@@ -53,8 +61,12 @@ New-Item -ItemType Directory -Force -Path $Out | Out-Null
 $Out = (Resolve-Path $Out).Path
 
 function Run-Unity([string[]]$arguments, [string]$log) {
-    $all = @("-batchmode", "-projectPath", (Quote $Project), "-logFile", (Quote $log)) + $arguments
-    $p = Start-Process -FilePath $Unity -ArgumentList $all -Wait -PassThru
+    $batch = @(if ($Mode -ne "window" -or $arguments -contains "-importPackage") { "-batchmode" })
+    $all = $batch + @("-projectPath", (Quote $Project), "-logFile", (Quote $log)) + $arguments
+    # not Start-Process -Wait: it also waits for what Unity started, and Unity's licensing client stays running
+    $p = Start-Process -FilePath $Unity -ArgumentList $all -PassThru
+    $null = $p.Handle # keeps the exit code readable afterwards
+    $p.WaitForExit()
     return $p.ExitCode
 }
 
@@ -70,11 +82,15 @@ if (-not $SkipImport) {
 }
 
 Write-Host "== rendering ($Mode; Unity runs without a window; this takes a few minutes)"
-$method = if ($Mode -eq "poses") { "ExporterCommandLine.RenderPoses" } else { "ExporterCommandLine.ExportPacks" }
-$render = @("-executeMethod", "FactorioAvatarExporter.Editor.$method", "-exportOut", (Quote $Out))
+$method = @{ pack = "ExportPacks"; poses = "RenderPoses"; timing = "TimePreview"; sliders = "CheckSliders"; window = "CheckWindow" }[$Mode]
+$render = @("-executeMethod", "FactorioAvatarExporter.Editor.ExporterCommandLine.$method", "-exportOut", (Quote $Out))
 if ($Scene) { $render += @("-exportScene", (Quote $Scene)) }
 if ($Avatar) { $render += @("-exportAvatar", (Quote $Avatar)) }
-$code = Run-Unity ($render + @("-quit")) (PathOf $Out "unity-render.log")
+if ($Guides) { $render += @("-exportGuides") }
+if ($Tuning) { $render += @("-exportTuning", (Quote $Tuning)) }
+if ($Animations) { $render += @("-exportAnimations", (Quote $Animations)) }
+$quit = if ($Mode -eq "window") { @() } else { @("-quit") } # the check quits Unity itself when its steps are done
+$code = Run-Unity ($render + $quit) (PathOf $Out "unity-render.log")
 $summary = PathOf $Out "summary.txt"
 if (Test-Path $summary) { Get-Content $summary | Write-Host }
 if ($code -ne 0 -or -not (Test-Path $summary)) {

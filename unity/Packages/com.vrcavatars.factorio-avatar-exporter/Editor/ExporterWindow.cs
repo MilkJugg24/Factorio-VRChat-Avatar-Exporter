@@ -18,7 +18,7 @@ namespace FactorioAvatarExporter.Editor
     {
         /// <summary>The engineer's running speed, tiles per tick (the game's 0.15).</summary>
         private const double RunningSpeed = 0.15;
-        private static readonly Color Ground = new Color(0.36f, 0.36f, 0.36f);
+        internal static readonly Color Ground = new Color(0.36f, 0.36f, 0.36f);
         private static readonly Color Anchor = new Color(1f, 0.85f, 0.2f);
 
         [SerializeField] private GameObject source;
@@ -96,6 +96,44 @@ namespace FactorioAvatarExporter.Editor
             Unload();
         }
 
+        /// <summary>What the command line's window check asks the next GUI passes to do, as a click would.</summary>
+        internal sealed class CheckRequests
+        {
+            public bool Load;
+            public bool OpenHelp;
+            public string ExportTo;
+
+            /// <summary>Where each row with a "?" button was last drawn, in the scrolled column.</summary>
+            public readonly Dictionary<string, Rect> Rows = new Dictionary<string, Rect>();
+        }
+
+        private readonly CheckRequests check = new CheckRequests();
+
+        internal CheckRequests Check => check;
+
+        internal bool CheckBusy => preview == null || pending.Count > 0 || tuningChangedAt >= 0;
+
+        internal void CheckChoose(GameObject avatar, string author)
+        {
+            source = avatar;
+            this.author = author;
+        }
+
+        /// <summary>True in the GUI pass the check starts with a key event: requests act where a click would, not in layout.</summary>
+        private static bool CheckPass => Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.F15;
+
+        internal void CheckAct() => SendEvent(new Event { type = EventType.KeyDown, keyCode = KeyCode.F15 });
+
+        internal void CheckScrollTo(string label) => scroll.y = Mathf.Max(0, check.Rows[label].y - 100);
+
+        /// <summary>Where a point along a row's slider is in the window, as scrolled now.</summary>
+        internal Vector2 CheckSliderPoint(string label, float along)
+        {
+            Rect row = check.Rows[label];
+            float low = EditorGUIUtility.labelWidth + 8, high = row.width - 60;
+            return new Vector2(row.x + low + (high - low) * along - scroll.x, row.center.y - scroll.y);
+        }
+
         private void Unload()
         {
             ClearFrames();
@@ -160,8 +198,9 @@ namespace FactorioAvatarExporter.Editor
             source = (GameObject)EditorGUILayout.ObjectField("Choose Avatar", source, typeof(GameObject), true);
             using (new EditorGUI.DisabledScope(source == null))
             {
-                if (GUILayout.Button(preview == null ? "Load avatar" : "Reload avatar"))
+                if (GUILayout.Button(preview == null ? "Load avatar" : "Reload avatar") || (check.Load && CheckPass))
                 {
+                    check.Load = false;
                     Load();
                     EndGUIAfterLongAction();
                 }
@@ -273,36 +312,36 @@ namespace FactorioAvatarExporter.Editor
                     columns = c;
                 }
             }
-            if (best < 8)
+            // below this it is the layout pass, or a window too small to show anything; the note under the grid is
+            // laid out either way, as every pass of the GUI must ask for the same controls
+            if (best >= 8)
             {
-                // the layout pass, or a window too small to show anything
-                return;
-            }
-            float cellWidth = area.width / columns, cellHeight = best + label;
-            // one scale for all, so the avatar is the same size in each
-            float scale = float.MaxValue;
-            foreach (PreviewCell cell in cells.Where(c => c.Canvas != null))
-            {
-                scale = Mathf.Min(scale, Mathf.Min(cellWidth / cell.Canvas.Value.Width, best / cell.Canvas.Value.Height));
-            }
-            for (int i = 0; i < count; i++)
-            {
-                PreviewCell cell = cells[i];
-                var box = new Rect(area.x + (i % columns) * cellWidth, area.y + (i / columns) * cellHeight, cellWidth - 2, best);
-                EditorGUI.DrawRect(box, Ground);
-                Texture2D frame = cell.Shown();
-                if (frame != null && cell.Canvas.HasValue && scale < float.MaxValue)
+                float cellWidth = area.width / columns, cellHeight = best + label;
+                // one scale for all, so the avatar is the same size in each
+                float scale = float.MaxValue;
+                foreach (PreviewCell cell in cells.Where(c => c.Canvas != null))
                 {
-                    CanvasSpec canvas = cell.Canvas.Value;
-                    var size = new Vector2(canvas.Width * scale, canvas.Height * scale);
-                    var rect = new Rect(box.center - size / 2, size);
-                    GUI.DrawTexture(rect, frame, ScaleMode.StretchToFill, true);
-                    DrawAnchor(new Vector2(rect.x + canvas.AnchorX * scale, rect.y + canvas.AnchorY * scale));
-                    GUI.BeginClip(box);
-                    DrawGuides(cell, rect.position - box.position, scale);
-                    GUI.EndClip();
+                    scale = Mathf.Min(scale, Mathf.Min(cellWidth / cell.Canvas.Value.Width, best / cell.Canvas.Value.Height));
                 }
-                GUI.Label(new Rect(box.x, box.yMax, box.width, label), cell.Info.Name, EditorStyles.centeredGreyMiniLabel);
+                for (int i = 0; i < count; i++)
+                {
+                    PreviewCell cell = cells[i];
+                    var box = new Rect(area.x + (i % columns) * cellWidth, area.y + (i / columns) * cellHeight, cellWidth - 2, best);
+                    EditorGUI.DrawRect(box, Ground);
+                    Texture2D frame = cell.Shown();
+                    if (frame != null && cell.Canvas.HasValue && scale < float.MaxValue)
+                    {
+                        CanvasSpec canvas = cell.Canvas.Value;
+                        var size = new Vector2(canvas.Width * scale, canvas.Height * scale);
+                        var rect = new Rect(box.center - size / 2, size);
+                        GUI.DrawTexture(rect, frame, ScaleMode.StretchToFill, true);
+                        DrawAnchor(new Vector2(rect.x + canvas.AnchorX * scale, rect.y + canvas.AnchorY * scale));
+                        GUI.BeginClip(box);
+                        DrawGuides(cell, rect.position - box.position, scale);
+                        GUI.EndClip();
+                    }
+                    GUI.Label(new Rect(box.x, box.yMax, box.width, label), cell.Info.Name, EditorStyles.centeredGreyMiniLabel);
+                }
             }
             EditorGUILayout.LabelField("Tick just one animation under Animations shown to see it large, with zoom.",
                 EditorStyles.wordWrappedMiniLabel);
@@ -367,16 +406,6 @@ namespace FactorioAvatarExporter.Editor
                 EditorStyles.wordWrappedMiniLabel);
         }
 
-        private static readonly Dictionary<GuidePart, Color> GuideColors = new Dictionary<GuidePart, Color>
-        {
-            { GuidePart.Spine, new Color(1f, 0.55f, 0.1f) },
-            { GuidePart.Head, new Color(1f, 1f, 1f) },
-            { GuidePart.Arms, new Color(0.2f, 0.85f, 1f) },
-            { GuidePart.Legs, new Color(0.45f, 1f, 0.3f) },
-            { GuidePart.Wings, new Color(1f, 0.35f, 0.9f) },
-            { GuidePart.Tail, new Color(1f, 0.25f, 0.25f) },
-        };
-
         /// <summary>
         /// The guide lines of the frame <paramref name="cell"/> shows, as posed now (so they move with a tuning slider
         /// before the frame is rendered again), drawn over the frame placed at <paramref name="origin"/> and scaled by
@@ -408,7 +437,7 @@ namespace FactorioAvatarExporter.Editor
             Color before = Handles.color;
             foreach ((GuidePart part, Vec3[] points) in chains)
             {
-                Color color = GuideColors[part];
+                Color color = PosePreview.GuideColors[part];
                 bool active = activePart == part;
                 if (activePart.HasValue && !active)
                 {
@@ -416,14 +445,20 @@ namespace FactorioAvatarExporter.Editor
                 }
                 Vector3[] onScreen = points.Select(p =>
                 {
-                    (double x, double y) = FactorioCamera.Project(Conventions.ModelPointToWorld(p, orientation, false), canvas);
+                    (double x, double y) = PosePreview.GuidePixel(p, orientation, canvas);
                     return new Vector3(origin.x + (float)x * scale, origin.y + (float)y * scale, 0);
                 }).ToArray();
+                // thin enough not to hide a small avatar in the grid, thicker when zoomed in
+                float width = Mathf.Clamp(scale * 2, 1, 2.5f) * (active ? 1.6f : 1);
+                float dot = Mathf.Clamp(scale * 3, 0, 3);
                 Handles.color = color;
-                Handles.DrawAAPolyLine(active ? 4f : 2.5f, onScreen);
+                Handles.DrawAAPolyLine(width, onScreen);
                 foreach (Vector3 joint in onScreen)
                 {
-                    EditorGUI.DrawRect(new Rect(joint.x - 1.5f, joint.y - 1.5f, 3, 3), color);
+                    if (dot >= 2)
+                    {
+                        EditorGUI.DrawRect(new Rect(joint.x - dot / 2, joint.y - dot / 2, dot, dot), color);
+                    }
                 }
             }
             Handles.color = before;
@@ -678,9 +713,17 @@ namespace FactorioAvatarExporter.Editor
             Rect row = EditorGUILayout.GetControlRect(false, height > 0 ? height : EditorGUIUtility.singleLineHeight);
             var button = new Rect(row.xMax - HelpButtonWidth, row.y, HelpButtonWidth, EditorGUIUtility.singleLineHeight);
             row.xMax -= HelpButtonWidth + 2;
+            if (Event.current.type == EventType.Repaint)
+            {
+                check.Rows[label] = row;
+            }
             T result = draw(row);
             // the text follows the state this pass was laid out with; a click shows or hides it from the next one
             bool open = openHelp.Contains(label);
+            if (check.OpenHelp && CheckPass)
+            {
+                openHelp.Add(label);
+            }
             if (GUI.Toggle(button, open, "?", EditorStyles.miniButton) != open)
             {
                 if (open)
@@ -817,9 +860,15 @@ namespace FactorioAvatarExporter.Editor
                         return GUI.Button(r, "Export Avatar to .zip");
                     }
                 }, 28);
-            if (export)
+            if (export || (check.ExportTo != null && CheckPass))
             {
-                if (ChooseZip(options))
+                if (check.ExportTo != null)
+                {
+                    options.ZipPath = check.ExportTo;
+                    check.ExportTo = null;
+                    ExportAll(options);
+                }
+                else if (ChooseZip(options))
                 {
                     ExportAll(options);
                 }
@@ -903,7 +952,7 @@ namespace FactorioAvatarExporter.Editor
             {
                 PackExportResult result = preview.ExportPack(options, p =>
                 {
-                    string step = p.Total == 0 ? "Measuring every frame, to check that it all fits" : $"Rendering {p.Animation} ({p.Done} of {p.Total})";
+                    string step = p.Total == 0 ? "Initializing" :$"Rendering {p.Animation} ({p.Done} of {p.Total})";
                     if (EditorUtility.DisplayCancelableProgressBar("Factorio Avatar Exporter", step, p.Total == 0 ? 0 : (float)p.Fraction))
                     {
                         cancel.Cancel();
@@ -1027,7 +1076,7 @@ namespace FactorioAvatarExporter.Editor
                 any = true;
                 try
                 {
-                    PreviewFrame rendered = preview.Render(cell.Info.Name, cell.Row, frame);
+                    PreviewFrame rendered = preview.Render(cell.Info.Name, cell.Row, frame, Ground);
                     if (cell.Canvas.HasValue && (cell.Canvas.Value.Width != rendered.Canvas.Width
                         || cell.Canvas.Value.Height != rendered.Canvas.Height))
                     {
@@ -1217,7 +1266,15 @@ namespace FactorioAvatarExporter.Editor
         }
 
         /// <summary>A Core image as a texture to draw (Unity textures have row 0 at the bottom).</summary>
-        private static Texture2D ToTexture(Image8 image, Texture2D reuse)
+        internal static Texture2D ToTexture(Image8 image, Texture2D reuse)
+        {
+            using (PreviewTimings.Time("ToTexture"))
+            {
+                return FillTexture(image, reuse);
+            }
+        }
+
+        private static Texture2D FillTexture(Image8 image, Texture2D reuse)
         {
             Texture2D texture = reuse;
             if (texture == null || texture.width != image.Width || texture.height != image.Height)
