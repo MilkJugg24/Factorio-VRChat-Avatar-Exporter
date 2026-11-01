@@ -500,6 +500,7 @@ namespace FactorioAvatarExporter.Editor
         {
             using (PosePreview preview = PosePreview.Load(source))
             {
+                preview.SetTuning(ParseTuning(Argument("-exportTuning")));
                 var options = new PackOptions
                 {
                     Title = source.name,
