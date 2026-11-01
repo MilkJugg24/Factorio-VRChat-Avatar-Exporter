@@ -167,5 +167,13 @@ you report a problem. It has no images, and your user name is blanked out of the
 **Window ▸ Package Manager ▸ + ▸ Add package from disk...** on this folder's `package.json` works too.
 Use one way or the other, not both.
 
-Updating from 0.21.0 or older: delete the `Assets/FactorioAvatarExporter` folder first, then import the
-new package. The package was renamed in 0.22.0, and Unity would otherwise keep two copies.
+## Updating
+
+Close the exporter's window, delete the `Core` and `Editor` folders inside `Assets/FactorioAvatarExporter`
+in the Project window, then import the new package. Importing over the old version leaves behind files the
+new one no longer has, and up to 0.30.0 Unity could keep the old scripts instead of the new ones, which
+shows as compile errors in the Console. If Unity offers to open in Safe Mode because of such errors,
+choose **Ignore**, then delete the folders and import.
+
+Updating from 0.21.0 or older: delete the whole `Assets/FactorioAvatarExporter` folder first. The package
+was renamed in 0.22.0, and Unity would otherwise keep two copies.

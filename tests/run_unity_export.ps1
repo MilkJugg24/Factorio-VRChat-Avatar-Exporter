@@ -76,6 +76,16 @@ if (-not $SkipImport) {
     # py follows a script's "#!/usr/bin/env python3" line, which can find the Microsoft Store's python3
     $pyArgs = @(if ($python -eq "py") { "-3" })
     $package = (& $python @pyArgs (PathOf $repo "tools" "make_unitypackage.py") --out $Out | Select-Object -Last 1).Trim()
+    # the installed version's scripts go first: an import never removes files the new version no longer has, and in
+    # batch mode Unity quits before importing when the old scripts don't compile (ERROR_LOGS is kept)
+    $installed = PathOf $Project "Assets" "FactorioAvatarExporter"
+    foreach ($part in @("Core", "Editor")) {
+        $folder = PathOf $installed $part
+        if (Test-Path $folder) {
+            Remove-Item -Recurse -Force $folder
+            Remove-Item -Force "$folder.meta" -ErrorAction SilentlyContinue
+        }
+    }
     Write-Host "== importing $package into $Project"
     $code = Run-Unity @("-importPackage", (Quote $package), "-quit") (PathOf $Out "unity-import.log")
     if ($code -ne 0) { throw "the import failed (exit $code); see $Out\unity-import.log" }

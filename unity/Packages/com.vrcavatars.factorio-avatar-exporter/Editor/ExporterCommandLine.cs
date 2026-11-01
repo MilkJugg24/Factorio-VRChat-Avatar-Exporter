@@ -116,11 +116,23 @@ namespace FactorioAvatarExporter.Editor
                 yield return frame;
             }
             Capture(window, output, "1-loaded");
-            foreach (string slider in new[] { "Lean", "Head tilt", "Flap", "Sway" })
+            var holds = new StringBuilder();
+            // each slider with the tuning field it should move; Stride and Lean change only some animations, so the
+            // preview should narrow to those while they are held
+            foreach ((string slider, string field) in new[]
+            {
+                ("Lean", "Lean"), ("Head tilt", "HeadTilt"), ("Stride", "Stride"), ("Flap", "WingFlap"), ("Sway", "TailSway"),
+            })
             {
                 window.CheckScrollTo(slider);
                 window.Repaint();
                 yield return 1;
+                if (!window.CheckRowShown(slider))
+                {
+                    Debug.LogError($"Window check: the {slider} row isn't on screen after scrolling to it; not dragged.");
+                    continue;
+                }
+                PoseTuning before = window.CheckTuning;
                 Vector2 from = window.CheckSliderPoint(slider, 0.5f);
                 window.SendEvent(new Event { type = EventType.MouseDown, button = 0, mousePosition = from, clickCount = 1 });
                 for (int i = 1; i <= 6; i++)
@@ -130,6 +142,13 @@ namespace FactorioAvatarExporter.Editor
                     yield return frame;
                 }
                 Capture(window, output, "2-holding-" + slider.Replace(' ', '-'));
+                holds.AppendLine($"{slider}: {window.CheckHoldState()}");
+                string[] moved = typeof(PoseTuning).GetFields()
+                    .Where(f => !Equals(f.GetValue(before), f.GetValue(window.CheckTuning))).Select(f => f.Name).ToArray();
+                if (moved.Length != 1 || moved[0] != field)
+                {
+                    Debug.LogError($"Window check: dragging {slider} moved [{string.Join(", ", moved)}], not {field}.");
+                }
                 window.SendEvent(new Event { type = EventType.MouseUp, button = 0, mousePosition = from + new Vector2(30, 0) });
                 yield return 1;
                 while (window.CheckBusy)
@@ -137,6 +156,7 @@ namespace FactorioAvatarExporter.Editor
                     yield return frame;
                 }
             }
+            File.WriteAllText(Path.Combine(output, "window-holds.txt"), holds.ToString());
             window.Check.OpenHelp = true;
             window.CheckAct();
             window.Check.OpenHelp = false;

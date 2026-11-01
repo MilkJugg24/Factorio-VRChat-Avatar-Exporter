@@ -148,9 +148,11 @@ namespace FactorioAvatarExporter.Core
         /// <summary>
         /// Whether <paramref name="other"/> poses the avatar the same way (every joint, bone turn, prop and wing and
         /// tail value within <paramref name="tolerance"/>), so a frame rendered from one needs no new render for the
-        /// other.
+        /// other. Values that move nothing are left out: the wing values for an avatar without wings
+        /// (<paramref name="wings"/> false), the tail's without a tail, a spread wing's elevation while both wings
+        /// are folded, the folded raise while both are spread, and the tail's phase while it doesn't sway.
         /// </summary>
-        public bool SameAs(PoseResult other, double tolerance = 1e-9)
+        public bool SameAs(PoseResult other, double tolerance = 1e-9, bool wings = true, bool tail = true)
         {
             if (other == null || GroundToLowestPoint != other.GroundToLowestPoint
                 || Joints.Count != other.Joints.Count || WorldDeltas.Count != other.WorldDeltas.Count
@@ -160,11 +162,24 @@ namespace FactorioAvatarExporter.Core
             }
             bool Near(double a, double b) => Math.Abs(a - b) <= tolerance;
             bool NearVec(Vec3 a, Vec3 b) => Vec3.Distance(a, b) <= tolerance;
-            if (!NearVec(HipsPosition, other.HipsPosition) || !Near(LeftGrip, other.LeftGrip) || !Near(RightGrip, other.RightGrip)
-                || !Near(LeftWingSpread, other.LeftWingSpread) || !Near(RightWingSpread, other.RightWingSpread)
-                || !Near(WingElevation, other.WingElevation) || !Near(WingFoldedRaise, other.WingFoldedRaise)
-                || !Near(WingSweep, other.WingSweep) || !Near(TailSwing, other.TailSwing)
-                || !Near(TailPhase, other.TailPhase) || !Near(TailLift, other.TailLift))
+            if (!NearVec(HipsPosition, other.HipsPosition) || !Near(LeftGrip, other.LeftGrip) || !Near(RightGrip, other.RightGrip))
+            {
+                return false;
+            }
+            if (wings)
+            {
+                double most = Math.Max(Math.Max(LeftWingSpread, RightWingSpread), Math.Max(other.LeftWingSpread, other.RightWingSpread));
+                double least = Math.Min(Math.Min(LeftWingSpread, RightWingSpread), Math.Min(other.LeftWingSpread, other.RightWingSpread));
+                if (!Near(LeftWingSpread, other.LeftWingSpread) || !Near(RightWingSpread, other.RightWingSpread)
+                    || !Near(WingSweep, other.WingSweep)
+                    || (most > 0 && !Near(WingElevation, other.WingElevation))
+                    || (least < 1 && !Near(WingFoldedRaise, other.WingFoldedRaise)))
+                {
+                    return false;
+                }
+            }
+            if (tail && (!Near(TailSwing, other.TailSwing) || !Near(TailLift, other.TailLift)
+                || (TailSwing != 0 && !Near(TailPhase, other.TailPhase))))
             {
                 return false;
             }

@@ -105,6 +105,15 @@ namespace FactorioAvatarExporter.Editor
 
             /// <summary>Where each row with a "?" button was last drawn, in the scrolled column.</summary>
             public readonly Dictionary<string, Rect> Rows = new Dictionary<string, Rect>();
+
+            /// <summary>
+            /// Where each row was last drawn in the window's own coordinates (those of mouse events), after the
+            /// column's scrolling as Unity clamped it.
+            /// </summary>
+            public readonly Dictionary<string, Rect> OnScreen = new Dictionary<string, Rect>();
+
+            /// <summary>Where the window's GUI origin is on the screen, from the last repaint.</summary>
+            public Vector2 Origin;
         }
 
         private readonly CheckRequests check = new CheckRequests();
@@ -124,14 +133,34 @@ namespace FactorioAvatarExporter.Editor
 
         internal void CheckAct() => SendEvent(new Event { type = EventType.KeyDown, keyCode = KeyCode.F15 });
 
+        /// <summary>
+        /// Asks for the column to scroll so the row is near its top. Unity may clamp the scroll (near the end of the
+        /// column), so after the next repaint use <see cref="CheckRowShown"/> and <see cref="CheckSliderPoint"/>,
+        /// which read where the row really was drawn.
+        /// </summary>
         internal void CheckScrollTo(string label) => scroll.y = Mathf.Max(0, check.Rows[label].y - 100);
 
-        /// <summary>Where a point along a row's slider is in the window, as scrolled now.</summary>
+        /// <summary>Whether the row was drawn wholly inside the window the last time it repainted.</summary>
+        internal bool CheckRowShown(string label) =>
+            check.OnScreen.TryGetValue(label, out Rect row) && row.yMin >= 0 && row.yMax <= position.height;
+
+        /// <summary>Where a point along a row's slider is in the window, as last drawn.</summary>
         internal Vector2 CheckSliderPoint(string label, float along)
         {
-            Rect row = check.Rows[label];
+            Rect row = check.OnScreen[label];
             float low = EditorGUIUtility.labelWidth + 8, high = row.width - 60;
-            return new Vector2(row.x + low + (high - low) * along - scroll.x, row.center.y - scroll.y);
+            return new Vector2(row.x + low + (high - low) * along, row.center.y);
+        }
+
+        /// <summary>A copy of the tuning, for the check to see which slider a drag moved.</summary>
+        internal PoseTuning CheckTuning => tuning.Clamped();
+
+        /// <summary>What the preview shows now, for the check's slider holds.</summary>
+        internal string CheckHoldState()
+        {
+            List<PreviewCell> shown = affected == null ? cells : cells.Where(c => affected.Contains(c.Info.Name)).ToList();
+            return $"holding: {tuningChangedAt >= 0}, part: {(activePart.HasValue ? activePart.Value.ToString() : "none")}, " +
+                $"showing {shown.Count} of {cells.Count}: {string.Join(", ", shown.Select(c => c.Info.Name))}";
         }
 
         private void Unload()
@@ -177,6 +206,10 @@ namespace FactorioAvatarExporter.Editor
 
         private void OnGUI()
         {
+            if (Event.current.type == EventType.Repaint)
+            {
+                check.Origin = GUIUtility.GUIToScreenPoint(Vector2.zero);
+            }
             using (new EditorGUILayout.HorizontalScope())
             {
                 using (var column = new EditorGUILayout.ScrollViewScope(scroll, GUILayout.Width(ControlsWidth)))
@@ -598,42 +631,48 @@ namespace FactorioAvatarExporter.Editor
             }
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.LabelField("Body", EditorStyles.miniBoldLabel);
-            tuning.Lean = Tune(GuidePart.Spine, tuning.Lean, Slider("Lean", "How far the body leans into running, sprinting and flying.", tuning.Lean, 0, 2));
-            tuning.HeadTilt = Tune(GuidePart.Head, tuning.HeadTilt, Slider("Head tilt", "Degrees; positive looks down, negative up.", tuning.HeadTilt, -30, 30));
+            tuning.Lean = Tune(GuidePart.Spine, () => Slider("Lean", "How far the body leans into running, sprinting and flying.", tuning.Lean, 0, 2));
+            tuning.HeadTilt = Tune(GuidePart.Head, () => Slider("Head tilt", "Degrees; positive looks down, negative up.", tuning.HeadTilt, -30, 30));
             EditorGUILayout.LabelField("Arms", EditorStyles.miniBoldLabel);
-            tuning.ArmSpread = Tune(GuidePart.Arms, tuning.ArmSpread, Slider("Spread", "Arms further out from the body (for wide hips, outfits or wings) or closer in.",
+            tuning.ArmSpread = Tune(GuidePart.Arms, () => Slider("Spread", "Arms further out from the body (for wide hips, outfits or wings) or closer in.",
                 tuning.ArmSpread, -1, 1));
-            tuning.ArmSwing = Tune(GuidePart.Arms, tuning.ArmSwing, Slider("Swing", "How far the arms swing while running and sprinting.", tuning.ArmSwing, 0, 2));
-            tuning.ElbowBend = Tune(GuidePart.Arms, tuning.ElbowBend, Slider("Elbow bend", "How far the elbows bend while running and sprinting: lower for " +
+            tuning.ArmSwing = Tune(GuidePart.Arms, () => Slider("Swing", "How far the arms swing while running and sprinting.", tuning.ArmSwing, 0, 2));
+            tuning.ElbowBend = Tune(GuidePart.Arms, () => Slider("Elbow bend", "How far the elbows bend while running and sprinting: lower for " +
                 "straighter arms swinging low at the sides, a more casual look.", tuning.ElbowBend, 0, 1));
             EditorGUILayout.LabelField("Legs", EditorStyles.miniBoldLabel);
-            tuning.Stride = Tune(GuidePart.Legs, tuning.Stride, Slider("Stride", "Step length of the run and the sprint. The feet stay planted in the game.",
+            tuning.Stride = Tune(GuidePart.Legs, () => Slider("Stride", "Step length of the run and the sprint. The feet stay planted in the game.",
                 tuning.Stride, 0.5f, 1.5f));
             EditorGUILayout.LabelField("Wings", EditorStyles.miniBoldLabel);
-            tuning.WingFlap = Tune(GuidePart.Wings, tuning.WingFlap, Slider("Flap", "How far the wings beat.", tuning.WingFlap, 0, 2));
-            tuning.WingRaise = Tune(GuidePart.Wings, tuning.WingRaise, Slider("Raise", "Degrees; the wings held higher or lower, folded or spread.", tuning.WingRaise, -45, 45));
-            tuning.WingSweep = Tune(GuidePart.Wings, tuning.WingSweep, Slider("Sweep", "Degrees; the wings turned back (positive) or forward.", tuning.WingSweep, -45, 45));
+            tuning.WingFlap = Tune(GuidePart.Wings, () => Slider("Flap", "How far the wings beat.", tuning.WingFlap, 0, 2));
+            tuning.WingRaise = Tune(GuidePart.Wings, () => Slider("Raise", "Degrees; the wings held higher or lower, folded or spread.", tuning.WingRaise, -45, 45));
+            tuning.WingSweep = Tune(GuidePart.Wings, () => Slider("Sweep", "Degrees; the wings turned back (positive) or forward.", tuning.WingSweep, -45, 45));
             EditorGUILayout.LabelField("Arms as wings (the flap animations)", EditorStyles.miniBoldLabel);
-            tuning.ArmWingStroke = Tune(GuidePart.Arms, tuning.ArmWingStroke, Slider("Stroke", "How far the arms stroke.", tuning.ArmWingStroke, 0, 1.5f));
-            tuning.ArmWingRoll = Tune(GuidePart.Arms, tuning.ArmWingRoll, Slider("Roll", "Degrees the arms turn from palms down, the thumb side up; turn it to keep " +
+            tuning.ArmWingStroke = Tune(GuidePart.Arms, () => Slider("Stroke", "How far the arms stroke.", tuning.ArmWingStroke, 0, 1.5f));
+            tuning.ArmWingRoll = Tune(GuidePart.Arms, () => Slider("Roll", "Degrees the arms turn from palms down, the thumb side up; turn it to keep " +
                 "the membranes from clipping.", tuning.ArmWingRoll, -60, 60));
             EditorGUILayout.LabelField("Tail", EditorStyles.miniBoldLabel);
-            tuning.TailSway = Tune(GuidePart.Tail, tuning.TailSway, Slider("Sway", "How far the tail sways.", tuning.TailSway, 0, 2));
-            tuning.TailLift = Tune(GuidePart.Tail, tuning.TailLift, Slider("Lift", "Degrees; the tail held higher or lower.", tuning.TailLift, -45, 45));
+            tuning.TailSway = Tune(GuidePart.Tail, () => Slider("Sway", "How far the tail sways.", tuning.TailSway, 0, 2));
+            tuning.TailLift = Tune(GuidePart.Tail, () => Slider("Lift", "Degrees; the tail held higher or lower.", tuning.TailLift, -45, 45));
             if (EditorGUI.EndChangeCheck())
             {
                 TuningChanged();
             }
         }
 
-        /// <summary><paramref name="now"/>, the slider's value; when it moved, its part's guide lines stand out.</summary>
-        private double Tune(GuidePart part, double before, double now)
+        /// <summary>
+        /// The value of the slider <paramref name="slider"/> draws; when the user moved it, its part's guide lines stand
+        /// out. A change check of its own, not a comparison of values: a value the float slider can't hold exactly
+        /// would look moved on every pass.
+        /// </summary>
+        private double Tune(GuidePart part, Func<double> slider)
         {
-            if (now != before)
+            EditorGUI.BeginChangeCheck();
+            double value = slider();
+            if (EditorGUI.EndChangeCheck())
             {
                 activePart = part;
             }
-            return now;
+            return value;
         }
 
         /// <summary>
@@ -663,8 +702,8 @@ namespace FactorioAvatarExporter.Editor
             var changed = new bool[cell.Frames.Length];
             for (int f = 0; f < changed.Length; f++)
             {
-                changed[f] = renderedPoses != null && !PosePreview.Pose(renderedPoses, cell.Info.Name, cell.Row, f)
-                    .SameAs(PosePreview.Pose(preview.Poses, cell.Info.Name, cell.Row, f));
+                changed[f] = renderedPoses != null && !preview.LooksSame(PosePreview.Pose(renderedPoses, cell.Info.Name, cell.Row, f),
+                    PosePreview.Pose(preview.Poses, cell.Info.Name, cell.Row, f));
             }
             return changed;
         }
@@ -716,6 +755,9 @@ namespace FactorioAvatarExporter.Editor
             if (Event.current.type == EventType.Repaint)
             {
                 check.Rows[label] = row;
+                // through the scroll view's clipping and offset, as Unity applied them
+                Rect screen = GUIUtility.GUIToScreenRect(row);
+                check.OnScreen[label] = new Rect(screen.position - check.Origin, screen.size);
             }
             T result = draw(row);
             // the text follows the state this pass was laid out with; a click shows or hides it from the next one

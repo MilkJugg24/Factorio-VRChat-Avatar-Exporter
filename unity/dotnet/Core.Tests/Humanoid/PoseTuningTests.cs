@@ -145,6 +145,26 @@ namespace FactorioAvatarExporter.Core.Tests.Humanoid
             Assert.That(pose.SameAs(null), Is.False);
         }
 
+        /// <summary>The wing and tail sliders change nothing for an avatar without wings or a tail.</summary>
+        [Test]
+        public void SameAsLeavesOutPartsTheAvatarDoesNotHave()
+        {
+            HumanoidRig rig = HumanoidRig.Measure(SyntheticRigs.Generic(1.6));
+            var plain = new HumanoidAnimations(rig);
+            var tuned = new HumanoidAnimations(rig, new PoseTuning { WingFlap = 1.5, WingRaise = 20, WingSweep = 10, TailSway = 0.5, TailLift = 20 });
+            foreach (string animation in new[] { AnimationSpec.Idle, AnimationSpec.Run })
+            {
+                PoseResult a = plain.Pose(animation, 0.25, 0), b = tuned.Pose(animation, 0.25, 0);
+                Assert.That(a.SameAs(b), Is.False, animation);
+                Assert.That(a.SameAs(b, wings: false, tail: false), Is.True, animation);
+            }
+            // folded wings (the run's) don't show how far a spread wing beats
+            var flap = new HumanoidAnimations(rig, new PoseTuning { WingFlap = 0 });
+            PoseResult run = plain.Pose(AnimationSpec.Run, 0.25, 0);
+            Assert.That(run.LeftWingSpread, Is.EqualTo(0));
+            Assert.That(run.SameAs(flap.Pose(AnimationSpec.Run, 0.25, 0)), Is.True);
+        }
+
         [Test]
         public void ValuesOutsideTheRangesAreClamped()
         {

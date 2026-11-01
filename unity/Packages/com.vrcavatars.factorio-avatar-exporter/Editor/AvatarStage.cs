@@ -94,6 +94,12 @@ namespace FactorioAvatarExporter.Editor
         }
 
         public Scene Scene { get; }
+
+        /// <summary>Whether wing bones (found or chosen) are posed; without them the wing values move nothing.</summary>
+        public bool HasWings => wings.Count > 0;
+
+        /// <summary>Whether tail bones are posed; without them the tail values move nothing.</summary>
+        public bool HasTail => tail.Count > 0;
         public Transform Pivot { get; private set; }
         public GameObject Avatar { get; private set; }
         public HumanoidRig Rig { get; private set; }

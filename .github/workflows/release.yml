@@ -92,8 +92,12 @@ jobs:
 
           **Installing the exporter:** in Unity 2022.3 (your VRChat project) choose **Assets ▸ Import Package ▸
           Custom Package...**, pick the file and click **Import**. It is installed in
-          \`Assets/FactorioAvatarExporter\`; importing a newer version updates it in place. Then open
-          **Tools ▸ Factorio Avatar Exporter**.
+          \`Assets/FactorioAvatarExporter\`. Then open **Tools ▸ Factorio Avatar Exporter**.
+
+          **Updating the exporter:** first delete the \`Core\` and \`Editor\` folders inside
+          \`Assets/FactorioAvatarExporter\` in Unity's Project window, then import the new file. Importing over
+          an older version can leave its old scripts in place (with 0.30.0 and older this shows as compile errors).
+          If Unity offers Safe Mode because of compile errors, choose **Ignore**, then delete the folders and import.
           NOTES
           title="Factorio Avatar Exporter $EXPORTER (mod $MOD)"
           if ! gh release view "$TAG" > /dev/null 2>&1; then

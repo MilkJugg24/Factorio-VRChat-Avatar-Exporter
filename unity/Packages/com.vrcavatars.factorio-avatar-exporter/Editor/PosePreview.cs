@@ -86,6 +86,12 @@ namespace FactorioAvatarExporter.Editor
             }
         }
 
+        /// <summary>
+        /// Whether a frame posed by <paramref name="a"/> looks the same as one posed by <paramref name="b"/> on this
+        /// avatar (<see cref="PoseResult.SameAs"/>, leaving out the wings or tail it doesn't have).
+        /// </summary>
+        public bool LooksSame(PoseResult a, PoseResult b) => a.SameAs(b, wings: stage.HasWings, tail: stage.HasTail);
+
         /// <summary>The poses the frames are rendered from now, to compare with those of another tuning.</summary>
         public HumanoidAnimations Poses => poses;
 
