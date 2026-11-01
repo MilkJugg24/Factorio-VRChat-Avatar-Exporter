@@ -65,10 +65,16 @@ def assets():
     return sorted(found)
 
 
+def stable_mtime(data):
+    """A file's time, from its contents: Unity gives imported files the archive's time and takes a file with
+    the same time and size as unchanged, so one fixed time could leave an update's scripts uncompiled."""
+    return 1000000000 + int(hashlib.md5(data).hexdigest()[:6], 16)
+
+
 def add(tar, name, data):
     info = tarfile.TarInfo(name)
     info.size = len(data)
-    info.mtime = 0
+    info.mtime = stable_mtime(data)
     info.mode = 0o644
     tar.addfile(info, io.BytesIO(data))
 
