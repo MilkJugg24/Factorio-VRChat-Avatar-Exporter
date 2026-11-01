@@ -70,13 +70,42 @@ namespace FactorioAvatarExporter.Editor
         /// <summary>The animation tuning the poses are made with (the window's sliders), for the preview and the export.</summary>
         public PoseTuning Tuning { get; private set; } = new PoseTuning();
 
-        /// <summary>Poses the avatar with <paramref name="tuning"/> from now on; frames rendered before are out of date.</summary>
-        public void SetTuning(PoseTuning tuning)
+        /// <summary>
+        /// Poses the avatar with <paramref name="tuning"/> from now on; frames rendered before are out of date.
+        /// <paramref name="keepCanvases"/> keeps each animation's canvas as it is (a frame that no longer fits grows it
+        /// when rendered), so the window draws again only the frames the tuning changed.
+        /// </summary>
+        public void SetTuning(PoseTuning tuning, bool keepCanvases = false)
         {
             Tuning = (tuning ?? new PoseTuning()).Clamped();
             poses = new HumanoidAnimations(stage.Rig, Tuning);
-            // the poses decide each animation's canvas
-            bounds.Clear();
+            if (!keepCanvases)
+            {
+                // the poses decide each animation's canvas
+                bounds.Clear();
+            }
+        }
+
+        /// <summary>The poses the frames are rendered from now, to compare with those of another tuning.</summary>
+        public HumanoidAnimations Poses => poses;
+
+        public static PoseResult Pose(HumanoidAnimations poses, string animation, int row, int frame) =>
+            poses.Pose(animation, AnimationSpec.FramePhase(animation, frame), AnimationSpec.Direction(animation, row).Move);
+
+        /// <summary>
+        /// The guide lines of a frame (<see cref="AvatarStage.GuideChains"/>) as the avatar is posed now, in Core's
+        /// model space; none for the corpse, which is dropped onto the ground after posing.
+        /// </summary>
+        public List<(GuidePart part, Vec3[] points)> Guides(string animation, int row, int frame)
+        {
+            PoseResult pose = Pose(animation, row, frame);
+            if (pose.GroundToLowestPoint)
+            {
+                return new List<(GuidePart, Vec3[])>();
+            }
+            stage.SetOrientation(0);
+            stage.ApplyPose(pose);
+            return stage.GuideChains();
         }
 
         /// <summary>
@@ -120,8 +149,7 @@ namespace FactorioAvatarExporter.Editor
             }
         }
 
-        public PoseResult Pose(string animation, int row, int frame) =>
-            poses.Pose(animation, AnimationSpec.FramePhase(animation, frame), AnimationSpec.Direction(animation, row).Move);
+        public PoseResult Pose(string animation, int row, int frame) => Pose(poses, animation, row, frame);
 
         /// <summary>Frame <paramref name="frame"/> of direction <paramref name="row"/> (both from 0).</summary>
         public PreviewFrame Render(string animation, int row, int frame)

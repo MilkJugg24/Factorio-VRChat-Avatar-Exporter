@@ -1122,6 +1122,60 @@ namespace FactorioAvatarExporter.Editor
         }
 
         /// <summary>
+        /// The guide lines the exporter window draws over the preview: the bones as posed now (call after
+        /// <see cref="ApplyPose"/>), each part a chain of points in Core's model space, tiles, the way
+        /// <see cref="JointError"/> reads them. The head gets a short line the way the face looks.
+        /// </summary>
+        public List<(GuidePart part, Vec3[] points)> GuideChains()
+        {
+            var chains = new List<(GuidePart, Vec3[])>();
+            Vec3 At(Vector3 world) => ToCore(Pivot.InverseTransformPoint(world)) * Rig.TilesPerMeter;
+            void Bones(GuidePart part, params HumanBone[] chain)
+            {
+                Vec3[] points = chain.Where(b => bones.ContainsKey(b)).Select(b => At(bones[b].position)).ToArray();
+                if (points.Length > 1)
+                {
+                    chains.Add((part, points));
+                }
+            }
+            Bones(GuidePart.Spine, HumanBone.Hips, HumanBone.Spine, HumanBone.Chest, HumanBone.UpperChest, HumanBone.Neck,
+                HumanBone.Head);
+            if (bones.TryGetValue(HumanBone.Head, out Transform head) && restRotations.TryGetValue(HumanBone.Head, out Quaternion headRest))
+            {
+                Quaternion turn = Quaternion.Inverse(Pivot.rotation) * head.rotation * Quaternion.Inverse(headRest);
+                Vector3 facing = Pivot.rotation * (turn * restForward);
+                Vec3 from = At(head.position);
+                chains.Add((GuidePart.Head, new[] { from, At(head.position + facing.normalized * (float)(MetersPerTile * 0.15)) }));
+            }
+            foreach (int side in new[] { -1, 1 })
+            {
+                Bones(GuidePart.Arms, HumanBoneHierarchy.Shoulder(side), HumanBoneHierarchy.UpperArm(side),
+                    HumanBoneHierarchy.LowerArm(side), HumanBoneHierarchy.Hand(side));
+                Bones(GuidePart.Legs, HumanBone.Hips, HumanBoneHierarchy.UpperLeg(side), HumanBoneHierarchy.LowerLeg(side),
+                    HumanBoneHierarchy.Foot(side), HumanBoneHierarchy.Toes(side));
+            }
+            foreach ((Transform root, _, _) in wings)
+            {
+                // the wing's longest line of bones, root to tip
+                var points = new List<Vec3>();
+                for (Transform t = root; t != null;
+                    t = t.Cast<Transform>().OrderByDescending(c => c.GetComponentsInChildren<Transform>(true).Length).FirstOrDefault())
+                {
+                    points.Add(At(t.position));
+                }
+                if (points.Count > 1)
+                {
+                    chains.Add((GuidePart.Wings, points.ToArray()));
+                }
+            }
+            if (tail.Count > 1)
+            {
+                chains.Add((GuidePart.Tail, tail.Where(t => t != null).Select(t => At(t.position)).ToArray()));
+            }
+            return chains;
+        }
+
+        /// <summary>
         /// The vertices of every enabled renderer, in the pivot's space, meters: skinned meshes as posed now.
         /// </summary>
         public List<Vector3> MeshPoints()
@@ -1432,5 +1486,16 @@ namespace FactorioAvatarExporter.Editor
                 }
             }
         }
+    }
+
+    /// <summary>The parts of the guide lines, each drawn in its own colour.</summary>
+    public enum GuidePart
+    {
+        Spine,
+        Head,
+        Arms,
+        Legs,
+        Wings,
+        Tail,
     }
 }

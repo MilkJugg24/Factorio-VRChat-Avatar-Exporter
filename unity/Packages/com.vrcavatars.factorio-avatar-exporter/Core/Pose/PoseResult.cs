@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace FactorioAvatarExporter.Core
@@ -143,6 +144,53 @@ namespace FactorioAvatarExporter.Core
         /// a longer tail shares them out over its bones, so it sways no further in all.
         /// </summary>
         public const int TailBones = 5;
+
+        /// <summary>
+        /// Whether <paramref name="other"/> poses the avatar the same way (every joint, bone turn, prop and wing and
+        /// tail value within <paramref name="tolerance"/>), so a frame rendered from one needs no new render for the
+        /// other.
+        /// </summary>
+        public bool SameAs(PoseResult other, double tolerance = 1e-9)
+        {
+            if (other == null || GroundToLowestPoint != other.GroundToLowestPoint
+                || Joints.Count != other.Joints.Count || WorldDeltas.Count != other.WorldDeltas.Count
+                || (Prop == null) != (other.Prop == null))
+            {
+                return false;
+            }
+            bool Near(double a, double b) => Math.Abs(a - b) <= tolerance;
+            bool NearVec(Vec3 a, Vec3 b) => Vec3.Distance(a, b) <= tolerance;
+            if (!NearVec(HipsPosition, other.HipsPosition) || !Near(LeftGrip, other.LeftGrip) || !Near(RightGrip, other.RightGrip)
+                || !Near(LeftWingSpread, other.LeftWingSpread) || !Near(RightWingSpread, other.RightWingSpread)
+                || !Near(WingElevation, other.WingElevation) || !Near(WingFoldedRaise, other.WingFoldedRaise)
+                || !Near(WingSweep, other.WingSweep) || !Near(TailSwing, other.TailSwing)
+                || !Near(TailPhase, other.TailPhase) || !Near(TailLift, other.TailLift))
+            {
+                return false;
+            }
+            if (Prop != null && (Prop.Kind != other.Prop.Kind || !NearVec(Prop.Base, other.Prop.Base)
+                || !NearVec(Prop.Tip, other.Prop.Tip) || !NearVec(Prop.Up, other.Prop.Up)))
+            {
+                return false;
+            }
+            foreach (KeyValuePair<string, Vec3> joint in Joints)
+            {
+                if (!other.Joints.TryGetValue(joint.Key, out Vec3 theirs) || !NearVec(joint.Value, theirs))
+                {
+                    return false;
+                }
+            }
+            foreach (KeyValuePair<HumanBone, Quat> delta in WorldDeltas)
+            {
+                // q and -q are the same turn
+                if (!other.WorldDeltas.TryGetValue(delta.Key, out Quat theirs)
+                    || 1 - Math.Abs(Quat.Dot(delta.Value, theirs)) > tolerance)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
 
     /// <summary>Timing values written to the pack (docs/vrc-avatar-format.md, "timing").</summary>

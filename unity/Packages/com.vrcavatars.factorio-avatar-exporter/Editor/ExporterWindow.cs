@@ -57,6 +57,14 @@ namespace FactorioAvatarExporter.Editor
         // the tuning or lighting sliders moved: applied once they rest, so dragging one doesn't restart the rendering
         // every step
         private double tuningChangedAt = -1;
+        private double lightingChangedAt = -1;
+        // while a tuning slider is held: the poses the frames on show were rendered from, the animations it changes,
+        // and the part of the guide lines it moves
+        private HumanoidAnimations renderedPoses;
+        private HashSet<string> affected;
+        private GuidePart? activePart;
+        // lines over the preview along the bones, wings and tail, each part in its own colour
+        [SerializeField] private bool showGuides = true;
         private Vector2 scroll;
         [SerializeField] private bool showReport;
 
@@ -191,6 +199,10 @@ namespace FactorioAvatarExporter.Editor
                 playing = GUILayout.Toggle(playing, playing ? "Pause" : "Play", "Button", GUILayout.Width(60));
             }
             EditorGUILayout.LabelField(" ", PosePreview.DirectionName(AnimationSpec.Idle, direction));
+            showGuides = Helped("Guide lines", "Lines over the preview along the spine (orange), head (white, the way the " +
+                "face looks), arms (blue), legs (green), wings (pink) and tail (red). They move as soon as you drag a tuning " +
+                "slider, before the preview is drawn again; the part the slider moves stands out.",
+                r => EditorGUI.Toggle(r, "Guide lines", showGuides));
             AnimationListGUI();
 
             EditorGUILayout.Space();
@@ -216,13 +228,19 @@ namespace FactorioAvatarExporter.Editor
             {
                 return;
             }
-            if (cells.Count == 1)
+            // while a tuning slider is held, only the animations it changes
+            List<PreviewCell> shown = affected == null ? cells : cells.Where(c => affected.Contains(c.Info.Name)).ToList();
+            if (shown.Count == 0)
             {
-                FocusedGUI(cells[0]);
+                shown = cells;
+            }
+            if (shown.Count == 1)
+            {
+                FocusedGUI(shown[0]);
             }
             else
             {
-                GridGUI();
+                GridGUI(shown);
             }
             if (pending.Count > 0)
             {
@@ -239,7 +257,7 @@ namespace FactorioAvatarExporter.Editor
         }
 
         /// <summary>The animations shown, in a grid, all drawn at the same scale.</summary>
-        private void GridGUI()
+        private void GridGUI(List<PreviewCell> cells)
         {
             Rect area = GUILayoutUtility.GetRect(200, 200, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
             const float label = 16;
@@ -280,6 +298,9 @@ namespace FactorioAvatarExporter.Editor
                     var rect = new Rect(box.center - size / 2, size);
                     GUI.DrawTexture(rect, frame, ScaleMode.StretchToFill, true);
                     DrawAnchor(new Vector2(rect.x + canvas.AnchorX * scale, rect.y + canvas.AnchorY * scale));
+                    GUI.BeginClip(box);
+                    DrawGuides(cell, rect.position - box.position, scale);
+                    GUI.EndClip();
                 }
                 GUI.Label(new Rect(box.x, box.yMax, box.width, label), cell.Info.Name, EditorStyles.centeredGreyMiniLabel);
             }
@@ -340,9 +361,72 @@ namespace FactorioAvatarExporter.Editor
                 size.x * scale, size.y * scale);
             GUI.DrawTexture(rect, frame, ScaleMode.StretchToFill, true);
             DrawAnchor(new Vector2(rect.x + canvas.AnchorX * scale, rect.y + canvas.AnchorY * scale));
+            DrawGuides(cell, rect.position, scale);
             GUI.EndClip();
             EditorGUILayout.LabelField("Scroll to zoom, drag to pan, and double-click to reset zoom.",
                 EditorStyles.wordWrappedMiniLabel);
+        }
+
+        private static readonly Dictionary<GuidePart, Color> GuideColors = new Dictionary<GuidePart, Color>
+        {
+            { GuidePart.Spine, new Color(1f, 0.55f, 0.1f) },
+            { GuidePart.Head, new Color(1f, 1f, 1f) },
+            { GuidePart.Arms, new Color(0.2f, 0.85f, 1f) },
+            { GuidePart.Legs, new Color(0.45f, 1f, 0.3f) },
+            { GuidePart.Wings, new Color(1f, 0.35f, 0.9f) },
+            { GuidePart.Tail, new Color(1f, 0.25f, 0.25f) },
+        };
+
+        /// <summary>
+        /// The guide lines of the frame <paramref name="cell"/> shows, as posed now (so they move with a tuning slider
+        /// before the frame is rendered again), drawn over the frame placed at <paramref name="origin"/> and scaled by
+        /// <paramref name="scale"/>. The part of the slider held stands out.
+        /// </summary>
+        private void DrawGuides(PreviewCell cell, Vector2 origin, float scale)
+        {
+            int frame = cell.ShownIndex();
+            if (!showGuides || preview == null || Event.current.type != EventType.Repaint || !cell.Canvas.HasValue || frame < 0)
+            {
+                return;
+            }
+            List<(GuidePart part, Vec3[] points)> chains = cell.Guides[frame];
+            if (chains == null)
+            {
+                try
+                {
+                    chains = preview.Guides(cell.Info.Name, cell.Row, frame);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                    chains = new List<(GuidePart, Vec3[])>();
+                }
+                cell.Guides[frame] = chains;
+            }
+            CanvasSpec canvas = cell.Canvas.Value;
+            double orientation = AnimationSpec.Direction(cell.Info.Name, cell.Row).Orientation;
+            Color before = Handles.color;
+            foreach ((GuidePart part, Vec3[] points) in chains)
+            {
+                Color color = GuideColors[part];
+                bool active = activePart == part;
+                if (activePart.HasValue && !active)
+                {
+                    color.a = 0.3f;
+                }
+                Vector3[] onScreen = points.Select(p =>
+                {
+                    (double x, double y) = FactorioCamera.Project(Conventions.ModelPointToWorld(p, orientation, false), canvas);
+                    return new Vector3(origin.x + (float)x * scale, origin.y + (float)y * scale, 0);
+                }).ToArray();
+                Handles.color = color;
+                Handles.DrawAAPolyLine(active ? 4f : 2.5f, onScreen);
+                foreach (Vector3 joint in onScreen)
+                {
+                    EditorGUI.DrawRect(new Rect(joint.x - 1.5f, joint.y - 1.5f, 3, 3), color);
+                }
+            }
+            Handles.color = before;
         }
 
         /// <summary>The entity position, where the character stands in the game: a small yellow cross.</summary>
@@ -473,37 +557,108 @@ namespace FactorioAvatarExporter.Editor
                 {
                     tuning = new PoseTuning();
                     GUI.FocusControl(null);
-                    tuningChangedAt = EditorApplication.timeSinceStartup;
+                    activePart = null;
+                    TuningChanged();
                 }
             }
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.LabelField("Body", EditorStyles.miniBoldLabel);
-            tuning.Lean = Slider("Lean", "How far the body leans into running, sprinting and flying.", tuning.Lean, 0, 2);
-            tuning.HeadTilt = Slider("Head tilt", "Degrees; positive looks down, negative up.", tuning.HeadTilt, -30, 30);
+            tuning.Lean = Tune(GuidePart.Spine, tuning.Lean, Slider("Lean", "How far the body leans into running, sprinting and flying.", tuning.Lean, 0, 2));
+            tuning.HeadTilt = Tune(GuidePart.Head, tuning.HeadTilt, Slider("Head tilt", "Degrees; positive looks down, negative up.", tuning.HeadTilt, -30, 30));
             EditorGUILayout.LabelField("Arms", EditorStyles.miniBoldLabel);
-            tuning.ArmSpread = Slider("Spread", "Arms further out from the body (for wide hips, outfits or wings) or closer in.",
-                tuning.ArmSpread, -1, 1);
-            tuning.ArmSwing = Slider("Swing", "How far the arms swing while running and sprinting.", tuning.ArmSwing, 0, 2);
-            tuning.ElbowBend = Slider("Elbow bend", "How far the elbows bend while running and sprinting: lower for " +
-                "straighter arms swinging low at the sides, a more casual look.", tuning.ElbowBend, 0, 1);
+            tuning.ArmSpread = Tune(GuidePart.Arms, tuning.ArmSpread, Slider("Spread", "Arms further out from the body (for wide hips, outfits or wings) or closer in.",
+                tuning.ArmSpread, -1, 1));
+            tuning.ArmSwing = Tune(GuidePart.Arms, tuning.ArmSwing, Slider("Swing", "How far the arms swing while running and sprinting.", tuning.ArmSwing, 0, 2));
+            tuning.ElbowBend = Tune(GuidePart.Arms, tuning.ElbowBend, Slider("Elbow bend", "How far the elbows bend while running and sprinting: lower for " +
+                "straighter arms swinging low at the sides, a more casual look.", tuning.ElbowBend, 0, 1));
             EditorGUILayout.LabelField("Legs", EditorStyles.miniBoldLabel);
-            tuning.Stride = Slider("Stride", "Step length of the run and the sprint. The feet stay planted in the game.",
-                tuning.Stride, 0.5f, 1.5f);
+            tuning.Stride = Tune(GuidePart.Legs, tuning.Stride, Slider("Stride", "Step length of the run and the sprint. The feet stay planted in the game.",
+                tuning.Stride, 0.5f, 1.5f));
             EditorGUILayout.LabelField("Wings", EditorStyles.miniBoldLabel);
-            tuning.WingFlap = Slider("Flap", "How far the wings beat.", tuning.WingFlap, 0, 2);
-            tuning.WingRaise = Slider("Raise", "Degrees; the wings held higher or lower, folded or spread.", tuning.WingRaise, -45, 45);
-            tuning.WingSweep = Slider("Sweep", "Degrees; the wings turned back (positive) or forward.", tuning.WingSweep, -45, 45);
+            tuning.WingFlap = Tune(GuidePart.Wings, tuning.WingFlap, Slider("Flap", "How far the wings beat.", tuning.WingFlap, 0, 2));
+            tuning.WingRaise = Tune(GuidePart.Wings, tuning.WingRaise, Slider("Raise", "Degrees; the wings held higher or lower, folded or spread.", tuning.WingRaise, -45, 45));
+            tuning.WingSweep = Tune(GuidePart.Wings, tuning.WingSweep, Slider("Sweep", "Degrees; the wings turned back (positive) or forward.", tuning.WingSweep, -45, 45));
             EditorGUILayout.LabelField("Arms as wings (the flap animations)", EditorStyles.miniBoldLabel);
-            tuning.ArmWingStroke = Slider("Stroke", "How far the arms stroke.", tuning.ArmWingStroke, 0, 1.5f);
-            tuning.ArmWingRoll = Slider("Roll", "Degrees the arms turn from palms down, the thumb side up; turn it to keep " +
-                "the membranes from clipping.", tuning.ArmWingRoll, -60, 60);
+            tuning.ArmWingStroke = Tune(GuidePart.Arms, tuning.ArmWingStroke, Slider("Stroke", "How far the arms stroke.", tuning.ArmWingStroke, 0, 1.5f));
+            tuning.ArmWingRoll = Tune(GuidePart.Arms, tuning.ArmWingRoll, Slider("Roll", "Degrees the arms turn from palms down, the thumb side up; turn it to keep " +
+                "the membranes from clipping.", tuning.ArmWingRoll, -60, 60));
             EditorGUILayout.LabelField("Tail", EditorStyles.miniBoldLabel);
-            tuning.TailSway = Slider("Sway", "How far the tail sways.", tuning.TailSway, 0, 2);
-            tuning.TailLift = Slider("Lift", "Degrees; the tail held higher or lower.", tuning.TailLift, -45, 45);
+            tuning.TailSway = Tune(GuidePart.Tail, tuning.TailSway, Slider("Sway", "How far the tail sways.", tuning.TailSway, 0, 2));
+            tuning.TailLift = Tune(GuidePart.Tail, tuning.TailLift, Slider("Lift", "Degrees; the tail held higher or lower.", tuning.TailLift, -45, 45));
             if (EditorGUI.EndChangeCheck())
             {
-                tuningChangedAt = EditorApplication.timeSinceStartup;
+                TuningChanged();
             }
+        }
+
+        /// <summary><paramref name="now"/>, the slider's value; when it moved, its part's guide lines stand out.</summary>
+        private double Tune(GuidePart part, double before, double now)
+        {
+            if (now != before)
+            {
+                activePart = part;
+            }
+            return now;
+        }
+
+        /// <summary>
+        /// A tuning slider moved: the poses follow at once, so the guide lines move with it, and the preview shows only
+        /// the animations it changes. Rendering waits until the slider is let go (<see cref="SettleTuning"/>).
+        /// </summary>
+        private void TuningChanged()
+        {
+            tuningChangedAt = EditorApplication.timeSinceStartup;
+            if (preview == null)
+            {
+                return;
+            }
+            renderedPoses = renderedPoses ?? preview.Poses;
+            preview.SetTuning(tuning, keepCanvases: true);
+            affected = new HashSet<string>(cells.Where(c => ChangedFrames(c).Any(changed => changed)).Select(c => c.Info.Name));
+            foreach (PreviewCell cell in cells)
+            {
+                cell.ClearGuides();
+            }
+            Repaint();
+        }
+
+        /// <summary>Which frames of <paramref name="cell"/> the tuning changed since they were rendered.</summary>
+        private bool[] ChangedFrames(PreviewCell cell)
+        {
+            var changed = new bool[cell.Frames.Length];
+            for (int f = 0; f < changed.Length; f++)
+            {
+                changed[f] = renderedPoses != null && !PosePreview.Pose(renderedPoses, cell.Info.Name, cell.Row, f)
+                    .SameAs(PosePreview.Pose(preview.Poses, cell.Info.Name, cell.Row, f));
+            }
+            return changed;
+        }
+
+        /// <summary>
+        /// The slider was let go: the frames the tuning changed are rendered again (first), the others are kept, and the
+        /// preview shows every ticked animation again.
+        /// </summary>
+        private void SettleTuning()
+        {
+            tuningChangedAt = -1;
+            var redo = new List<(PreviewCell, int)>();
+            foreach (PreviewCell cell in cells)
+            {
+                bool[] changed = ChangedFrames(cell);
+                for (int f = 0; f < changed.Length; f++)
+                {
+                    if (changed[f] && cell.Frames[f] != null)
+                    {
+                        redo.Add((cell, f));
+                    }
+                }
+            }
+            // the frames shown now first, then the rest in turn
+            pending.InsertRange(0, redo.OrderBy(q => q.Item2 == q.Item1.Current ? 0 : 1).ThenBy(q => q.Item2));
+            renderedPoses = null;
+            affected = null;
+            activePart = null;
+            Repaint();
         }
 
         private double Slider(string label, string help, double value, float low, float high) =>
@@ -588,8 +743,8 @@ namespace FactorioAvatarExporter.Editor
             if ((EditorGUI.EndChangeCheck() || reset) && preview != null)
             {
                 preview.SetLighting(lighting);
-                // the previews are drawn again once the sliders rest, as for the tuning
-                tuningChangedAt = EditorApplication.timeSinceStartup;
+                // the previews are drawn again once the sliders rest
+                lightingChangedAt = EditorApplication.timeSinceStartup;
             }
         }
 
@@ -823,10 +978,23 @@ namespace FactorioAvatarExporter.Editor
             }
             double now = EditorApplication.timeSinceStartup;
             bool changed = false;
-            if (tuningChangedAt >= 0 && now - tuningChangedAt > 0.3)
+            bool holding = false;
+            if (tuningChangedAt >= 0)
             {
-                tuningChangedAt = -1;
-                preview.SetTuning(tuning);
+                // nothing is rendered while a slider is held (the guide lines follow it); then the frames it changed are
+                if (GUIUtility.hotControl == 0 && now - tuningChangedAt > 0.2)
+                {
+                    SettleTuning();
+                    changed = true;
+                }
+                else
+                {
+                    holding = true;
+                }
+            }
+            if (lightingChangedAt >= 0 && now - lightingChangedAt > 0.3)
+            {
+                lightingChangedAt = -1;
                 InvalidateFrames();
                 changed = true;
             }
@@ -837,8 +1005,11 @@ namespace FactorioAvatarExporter.Editor
                     changed |= cell.Advance(now);
                 }
             }
-            // a short slice at a time, so the window stays responsive while the previews fill in
-            changed |= RenderPending(now + 0.025);
+            if (!holding)
+            {
+                // a short slice at a time, so the window stays responsive while the previews fill in
+                changed |= RenderPending(now + 0.025);
+            }
             if (changed)
             {
                 Repaint();
@@ -962,6 +1133,9 @@ namespace FactorioAvatarExporter.Editor
             }
             cells.Clear();
             pending.Clear();
+            // everything is rendered again from the poses as they are now
+            renderedPoses = null;
+            affected = null;
         }
 
         private string PreviewFolder => Path.Combine(Path.GetDirectoryName(Application.dataPath), "FactorioAvatarExport",
@@ -978,6 +1152,7 @@ namespace FactorioAvatarExporter.Editor
                 Info = info;
                 Row = row;
                 Frames = new Texture2D[info.FrameCount];
+                Guides = new List<(GuidePart, Vec3[])>[info.FrameCount];
                 this.framesPerSecond = framesPerSecond;
                 clock = now;
             }
@@ -989,6 +1164,11 @@ namespace FactorioAvatarExporter.Editor
 
             /// <summary>The rendered frames; null until rendered.</summary>
             public Texture2D[] Frames { get; }
+
+            /// <summary>Each frame's guide lines as posed now, worked out when first drawn; null until then.</summary>
+            public List<(GuidePart part, Vec3[] points)>[] Guides { get; }
+
+            public void ClearGuides() => Array.Clear(Guides, 0, Guides.Length);
 
             /// <summary>The canvas the frames are drawn on (null before the first one).</summary>
             public CanvasSpec? Canvas { get; set; }
@@ -1017,15 +1197,22 @@ namespace FactorioAvatarExporter.Editor
             /// <summary>The frame to draw: the current one, or while that is still being rendered, the latest before it.</summary>
             public Texture2D Shown()
             {
+                int index = ShownIndex();
+                return index < 0 ? null : Frames[index];
+            }
+
+            /// <summary>The index of <see cref="Shown"/>'s frame, or -1 when none is rendered yet.</summary>
+            public int ShownIndex()
+            {
                 for (int i = 0; i < Frames.Length; i++)
                 {
-                    Texture2D frame = Frames[(Current - i + Frames.Length) % Frames.Length];
-                    if (frame != null)
+                    int index = (Current - i + Frames.Length) % Frames.Length;
+                    if (Frames[index] != null)
                     {
-                        return frame;
+                        return index;
                     }
                 }
-                return null;
+                return -1;
             }
         }
 

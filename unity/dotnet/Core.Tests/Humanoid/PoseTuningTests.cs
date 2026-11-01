@@ -117,6 +117,34 @@ namespace FactorioAvatarExporter.Core.Tests.Humanoid
             Assert.That(pose.WingSweep, Is.EqualTo(-10 * Math.PI / 180).Within(1e-12));
         }
 
+        /// <summary>
+        /// The preview draws again only the frames a slider changed (<see cref="PoseResult.SameAs"/>): the stride leaves
+        /// the idle as it is and changes most frames of the run.
+        /// </summary>
+        [Test]
+        public void SameAsFindsTheFramesATuningChanges()
+        {
+            HumanoidRig rig = HumanoidRig.Measure(SyntheticRigs.Generic(1.6));
+            var plain = new HumanoidAnimations(rig);
+            var longer = new HumanoidAnimations(rig, new PoseTuning { Stride = 1.2 });
+            for (int frame = 0; frame < AnimationSpec.Get(AnimationSpec.Idle).FrameCount; frame += 7)
+            {
+                double t = AnimationSpec.FramePhase(AnimationSpec.Idle, frame);
+                Assert.That(plain.Pose(AnimationSpec.Idle, t, 0).SameAs(longer.Pose(AnimationSpec.Idle, t, 0)), Is.True, $"idle {frame}");
+            }
+            int runFrames = AnimationSpec.Get(AnimationSpec.Run).FrameCount, changed = 0;
+            for (int frame = 0; frame < runFrames; frame++)
+            {
+                double t = AnimationSpec.FramePhase(AnimationSpec.Run, frame);
+                changed += plain.Pose(AnimationSpec.Run, t, 0).SameAs(longer.Pose(AnimationSpec.Run, t, 0)) ? 0 : 1;
+            }
+            // the feet passing each other are where they were
+            Assert.That(changed, Is.GreaterThan(runFrames / 2));
+            PoseResult pose = plain.Pose(AnimationSpec.Run, 0.3, 0);
+            Assert.That(pose.SameAs(plain.Pose(AnimationSpec.Run, 0.3, 0)), Is.True);
+            Assert.That(pose.SameAs(null), Is.False);
+        }
+
         [Test]
         public void ValuesOutsideTheRangesAreClamped()
         {

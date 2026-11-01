@@ -30,10 +30,15 @@ preview keeps up while you tune (on a slower computer, keep only a few). Every a
 Tick just one to see it large: scroll to zoom, drag to pan, double-click to reset zoom. The yellow cross is
 where your character stands in the game.
 
+**Guide lines** draw the skeleton over the preview, each part in its own colour: spine orange, head white
+(pointing the way the face looks), arms blue, legs green, wings pink, tail red.
+
 ## Animation tuning
 
 Sliders that adjust the animations to your avatar while the previews play; the export uses them too.
-**Reset** puts them all back. The previews update a moment after you let go of a slider. Click the **?** at the
+**Reset** puts them all back. While you hold a slider, the preview shows only the animations it changes,
+and the guide lines move with it straight away, the part it moves drawn thicker. When you let go, only the
+frames it changed are drawn again. Click the **?** at the
 end of a row to see what it does; click it again to hide that.
 
 - **Body:** **Lean** (how far the body leans into running, sprinting and flying) and **Head tilt**.
