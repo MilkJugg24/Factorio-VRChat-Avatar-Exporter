@@ -117,40 +117,46 @@ namespace FactorioAvatarExporter.Editor
             }
             Capture(window, output, "1-loaded");
             var holds = new StringBuilder();
-            // each slider with the tuning field it should move; Stride and Lean change only some animations, so the
-            // preview should narrow to those while they are held
-            foreach ((string slider, string field) in new[]
+            // each slider with the tuning field it should move and two values to hold it at. The sliders are moved
+            // through the window's own change path in its next GUI pass (synthetic mouse events reached the window
+            // a drag late); Unity's slider control itself is left to a check by hand. Lean and Stride change only
+            // some animations, so the preview should narrow to those while they are held.
+            foreach ((string slider, string field, double first, double second) in new[]
             {
-                ("Lean", "Lean"), ("Head tilt", "HeadTilt"), ("Stride", "Stride"), ("Flap", "WingFlap"), ("Sway", "TailSway"),
+                ("Lean", "Lean", 1.3, 1.6), ("Head tilt", "HeadTilt", 10.0, 20.0), ("Stride", "Stride", 1.15, 1.3),
+                ("Flap", "WingFlap", 1.3, 1.6), ("Sway", "TailSway", 1.3, 1.6),
             })
             {
                 window.CheckScrollTo(slider);
                 window.Repaint();
                 yield return 1;
-                if (!window.CheckRowShown(slider))
-                {
-                    Debug.LogError($"Window check: the {slider} row isn't on screen after scrolling to it; not dragged.");
-                    continue;
-                }
                 PoseTuning before = window.CheckTuning;
-                Vector2 from = window.CheckSliderPoint(slider, 0.5f);
-                window.SendEvent(new Event { type = EventType.MouseDown, button = 0, mousePosition = from, clickCount = 1 });
-                for (int i = 1; i <= 6; i++)
+                window.Check.Holding = true;
+                foreach (double value in new[] { first, second })
                 {
-                    window.SendEvent(new Event { type = EventType.MouseDrag, button = 0, mousePosition = from + new Vector2(i * 5, 0), delta = new Vector2(5, 0) });
+                    window.Check.Slider = slider;
+                    window.Check.SliderValue = value;
+                    window.CheckAct();
                     window.Repaint();
                     yield return frame;
+                    if (window.Check.Slider != null)
+                    {
+                        Debug.LogError($"Window check: the {slider} slider wasn't drawn in the check pass.");
+                        window.Check.Slider = null;
+                    }
                 }
+                yield return 0.5;
                 Capture(window, output, "2-holding-" + slider.Replace(' ', '-'));
                 holds.AppendLine($"{slider}: {window.CheckHoldState()}");
                 string[] moved = typeof(PoseTuning).GetFields()
                     .Where(f => !Equals(f.GetValue(before), f.GetValue(window.CheckTuning))).Select(f => f.Name).ToArray();
                 if (moved.Length != 1 || moved[0] != field)
                 {
-                    Debug.LogError($"Window check: dragging {slider} moved [{string.Join(", ", moved)}], not {field}.");
+                    Debug.LogError($"Window check: holding {slider} moved [{string.Join(", ", moved)}], not {field}.");
                 }
-                window.SendEvent(new Event { type = EventType.MouseUp, button = 0, mousePosition = from + new Vector2(30, 0) });
+                window.Check.Holding = false;
                 yield return 1;
+                holds.AppendLine($"{slider} let go: {window.CheckHoldState()}");
                 while (window.CheckBusy)
                 {
                     yield return frame;

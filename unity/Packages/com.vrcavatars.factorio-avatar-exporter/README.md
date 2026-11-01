@@ -27,7 +27,8 @@ drawn a frame at a time when the avatar loads (and again after a change), so the
 so. **Direction** turns them all; **Pause** stops them. The ticks under **Animations shown** decide which
 animations the preview draws (all but the corpse at first): untick the ones you don't need right now, so the
 preview keeps up while you tune (on a slower computer, keep only a few). Every animation is still exported.
-Tick just one to see it large: scroll to zoom, drag to pan, double-click to reset zoom. The yellow cross is
+The preview shows four at a time, two by two; the arrows under them turn the pages, and the page on show
+is drawn first. Tick just one to see it large: scroll to zoom, drag to pan, double-click to reset zoom. The yellow cross is
 where your character stands in the game.
 
 **Guide lines** draw the skeleton over the preview, each part in its own colour: spine orange, head white

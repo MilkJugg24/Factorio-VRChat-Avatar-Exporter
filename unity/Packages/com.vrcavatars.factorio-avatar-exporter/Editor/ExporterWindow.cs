@@ -65,6 +65,9 @@ namespace FactorioAvatarExporter.Editor
         private GuidePart? activePart;
         // lines over the preview along the bones, wings and tail, each part in its own colour
         [SerializeField] private bool showGuides = true;
+        // the page of the preview chosen with its arrows, and the animations drawn now (rendered first)
+        [SerializeField] private int page;
+        private HashSet<PreviewCell> onPage = new HashSet<PreviewCell>();
         private Vector2 scroll;
         [SerializeField] private bool showReport;
 
@@ -103,17 +106,17 @@ namespace FactorioAvatarExporter.Editor
             public bool OpenHelp;
             public string ExportTo;
 
+            /// <summary>
+            /// A tuning slider to set to <see cref="SliderValue"/> in the next check pass, through the same change
+            /// path as a drag (its part stands out, the tuning changes); <see cref="Holding"/> keeps it held, as the
+            /// mouse button would, until set back to false.
+            /// </summary>
+            public string Slider;
+            public double SliderValue;
+            public bool Holding;
+
             /// <summary>Where each row with a "?" button was last drawn, in the scrolled column.</summary>
             public readonly Dictionary<string, Rect> Rows = new Dictionary<string, Rect>();
-
-            /// <summary>
-            /// Where each row was last drawn in the window's own coordinates (those of mouse events), after the
-            /// column's scrolling as Unity clamped it.
-            /// </summary>
-            public readonly Dictionary<string, Rect> OnScreen = new Dictionary<string, Rect>();
-
-            /// <summary>Where the window's GUI origin is on the screen, from the last repaint.</summary>
-            public Vector2 Origin;
         }
 
         private readonly CheckRequests check = new CheckRequests();
@@ -133,24 +136,8 @@ namespace FactorioAvatarExporter.Editor
 
         internal void CheckAct() => SendEvent(new Event { type = EventType.KeyDown, keyCode = KeyCode.F15 });
 
-        /// <summary>
-        /// Asks for the column to scroll so the row is near its top. Unity may clamp the scroll (near the end of the
-        /// column), so after the next repaint use <see cref="CheckRowShown"/> and <see cref="CheckSliderPoint"/>,
-        /// which read where the row really was drawn.
-        /// </summary>
+        /// <summary>Scrolls the column so the row is near its top (for the check's screenshots).</summary>
         internal void CheckScrollTo(string label) => scroll.y = Mathf.Max(0, check.Rows[label].y - 100);
-
-        /// <summary>Whether the row was drawn wholly inside the window the last time it repainted.</summary>
-        internal bool CheckRowShown(string label) =>
-            check.OnScreen.TryGetValue(label, out Rect row) && row.yMin >= 0 && row.yMax <= position.height;
-
-        /// <summary>Where a point along a row's slider is in the window, as last drawn.</summary>
-        internal Vector2 CheckSliderPoint(string label, float along)
-        {
-            Rect row = check.OnScreen[label];
-            float low = EditorGUIUtility.labelWidth + 8, high = row.width - 60;
-            return new Vector2(row.x + low + (high - low) * along, row.center.y);
-        }
 
         /// <summary>A copy of the tuning, for the check to see which slider a drag moved.</summary>
         internal PoseTuning CheckTuning => tuning.Clamped();
@@ -206,10 +193,6 @@ namespace FactorioAvatarExporter.Editor
 
         private void OnGUI()
         {
-            if (Event.current.type == EventType.Repaint)
-            {
-                check.Origin = GUIUtility.GUIToScreenPoint(Vector2.zero);
-            }
             using (new EditorGUILayout.HorizontalScope())
             {
                 using (var column = new EditorGUILayout.ScrollViewScope(scroll, GUILayout.Width(ControlsWidth)))
@@ -308,11 +291,12 @@ namespace FactorioAvatarExporter.Editor
             }
             if (shown.Count == 1)
             {
+                onPage = new HashSet<PreviewCell>(shown);
                 FocusedGUI(shown[0]);
             }
             else
             {
-                GridGUI(shown);
+                PagedGridGUI(shown);
             }
             if (pending.Count > 0)
             {
@@ -329,11 +313,55 @@ namespace FactorioAvatarExporter.Editor
         }
 
         /// <summary>The animations shown, in a grid, all drawn at the same scale.</summary>
-        private void GridGUI(List<PreviewCell> cells)
+        /// <summary>Animations on one page of the preview: two by two, so each is drawn large in a small window.</summary>
+        private const int PageSize = 4;
+
+        /// <summary>
+        /// The animations shown, a page at a time (<see cref="PageSize"/>), with arrows under them to turn the pages.
+        /// The page's frames are rendered before the others (<see cref="onPage"/>).
+        /// </summary>
+        private void PagedGridGUI(List<PreviewCell> shown)
+        {
+            int pages = (shown.Count + PageSize - 1) / PageSize;
+            // a held slider's shorter list keeps the page if it can; the page chosen comes back when it is let go
+            int current = Mathf.Clamp(page, 0, pages - 1);
+            List<PreviewCell> cells = shown.Skip(current * PageSize).Take(PageSize).ToList();
+            onPage = new HashSet<PreviewCell>(cells);
+            GridGUI(cells, shown, Math.Min(PageSize, shown.Count));
+            if (pages > 1)
+            {
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    GUILayout.FlexibleSpace();
+                    using (new EditorGUI.DisabledScope(current == 0))
+                    {
+                        if (GUILayout.Button("\u25C0", GUILayout.Width(40)))
+                        {
+                            page = current - 1;
+                        }
+                    }
+                    GUILayout.Label($"Page {current + 1} of {pages}", EditorStyles.centeredGreyMiniLabel, GUILayout.Width(90));
+                    using (new EditorGUI.DisabledScope(current == pages - 1))
+                    {
+                        if (GUILayout.Button("\u25B6", GUILayout.Width(40)))
+                        {
+                            page = current + 1;
+                        }
+                    }
+                    GUILayout.FlexibleSpace();
+                }
+            }
+        }
+
+        /// <summary>
+        /// <paramref name="cells"/> in a grid of <paramref name="slots"/> places, all drawn at the same scale as the
+        /// rest of <paramref name="shown"/>, so the avatar is the same size on every page.
+        /// </summary>
+        private void GridGUI(List<PreviewCell> cells, List<PreviewCell> shown, int slots)
         {
             Rect area = GUILayoutUtility.GetRect(200, 200, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
             const float label = 16;
-            int count = cells.Count, columns = 1;
+            int count = slots, columns = 1;
             float best = 0;
             for (int c = 1; c <= count; c++)
             {
@@ -352,11 +380,11 @@ namespace FactorioAvatarExporter.Editor
                 float cellWidth = area.width / columns, cellHeight = best + label;
                 // one scale for all, so the avatar is the same size in each
                 float scale = float.MaxValue;
-                foreach (PreviewCell cell in cells.Where(c => c.Canvas != null))
+                foreach (PreviewCell cell in shown.Where(c => c.Canvas != null))
                 {
                     scale = Mathf.Min(scale, Mathf.Min(cellWidth / cell.Canvas.Value.Width, best / cell.Canvas.Value.Height));
                 }
-                for (int i = 0; i < count; i++)
+                for (int i = 0; i < cells.Count; i++)
                 {
                     PreviewCell cell = cells[i];
                     var box = new Rect(area.x + (i % columns) * cellWidth, area.y + (i / columns) * cellHeight, cellWidth - 2, best);
@@ -735,8 +763,18 @@ namespace FactorioAvatarExporter.Editor
             Repaint();
         }
 
-        private double Slider(string label, string help, double value, float low, float high) =>
-            Helped(label, help, r => (double)EditorGUI.Slider(r, label, (float)value, low, high));
+        private double Slider(string label, string help, double value, float low, float high)
+        {
+            double result = Helped(label, help, r => (double)EditorGUI.Slider(r, label, (float)value, low, high));
+            if (check.Slider == label && CheckPass)
+            {
+                // the window check moves the slider as a drag would: a change inside the same change checks
+                check.Slider = null;
+                result = check.SliderValue;
+                GUI.changed = true;
+            }
+            return result;
+        }
 
         private float Slider(string label, string help, float value, float low, float high) =>
             Helped(label, help, r => EditorGUI.Slider(r, label, value, low, high));
@@ -755,9 +793,6 @@ namespace FactorioAvatarExporter.Editor
             if (Event.current.type == EventType.Repaint)
             {
                 check.Rows[label] = row;
-                // through the scroll view's clipping and offset, as Unity applied them
-                Rect screen = GUIUtility.GUIToScreenRect(row);
-                check.OnScreen[label] = new Rect(screen.position - check.Origin, screen.size);
             }
             T result = draw(row);
             // the text follows the state this pass was laid out with; a click shows or hides it from the next one
@@ -1073,7 +1108,7 @@ namespace FactorioAvatarExporter.Editor
             if (tuningChangedAt >= 0)
             {
                 // nothing is rendered while a slider is held (the guide lines follow it); then the frames it changed are
-                if (GUIUtility.hotControl == 0 && now - tuningChangedAt > 0.2)
+                if (GUIUtility.hotControl == 0 && !check.Holding && now - tuningChangedAt > 0.2)
                 {
                     SettleTuning();
                     changed = true;
@@ -1113,8 +1148,10 @@ namespace FactorioAvatarExporter.Editor
             bool any = false;
             while (pending.Count > 0 && (!any || EditorApplication.timeSinceStartup < until))
             {
-                (PreviewCell cell, int frame) = pending[0];
-                pending.RemoveAt(0);
+                // the page on show first, so turning a page soon shows it moving
+                int next = onPage.Count == 0 ? 0 : Math.Max(0, pending.FindIndex(q => onPage.Contains(q.cell)));
+                (PreviewCell cell, int frame) = pending[next];
+                pending.RemoveAt(next);
                 any = true;
                 try
                 {
@@ -1224,6 +1261,7 @@ namespace FactorioAvatarExporter.Editor
             }
             cells.Clear();
             pending.Clear();
+            onPage.Clear();
             // everything is rendered again from the poses as they are now
             renderedPoses = null;
             affected = null;
