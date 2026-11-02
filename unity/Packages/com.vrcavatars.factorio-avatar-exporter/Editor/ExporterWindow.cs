@@ -68,13 +68,8 @@ namespace FactorioAvatarExporter.Editor
         // the page of the preview chosen with its arrows, and the animations drawn now (rendered first)
         [SerializeField] private int page;
         private HashSet<PreviewCell> onPage = new HashSet<PreviewCell>();
-        // the preview's animations and the note over them, as laid out at the start of this GUI frame
+        // the preview's animations as laid out at the start of this GUI frame
         private List<PreviewCell> layoutShown;
-        private string layoutHeld;
-        // the tuning slider last moved, for that note
-        private string heldSlider;
-        // the next of the page's animations to draw again while a slider is held
-        private int liveNext;
         private Vector2 scroll;
         [SerializeField] private bool showReport;
 
@@ -308,16 +303,8 @@ namespace FactorioAvatarExporter.Editor
                 {
                     layoutShown = cells;
                 }
-                layoutHeld = affected != null && tuningChangedAt >= 0
-                    ? $"Holding {heldSlider ?? "a slider"}: showing the {layoutShown.Count} animations it changes, updating as you " +
-                      "drag. The rest come back when you let go."
-                    : null;
             }
             List<PreviewCell> shown = layoutShown;
-            if (layoutHeld != null)
-            {
-                EditorGUILayout.HelpBox(layoutHeld, MessageType.None);
-            }
             if (shown.Count == 1)
             {
                 onPage = new HashSet<PreviewCell>(shown);
@@ -411,8 +398,7 @@ namespace FactorioAvatarExporter.Editor
                 float scale = float.MaxValue;
                 foreach (PreviewCell cell in shown.Where(c => c.Canvas != null))
                 {
-                    RectInt view = cell.View;
-                    scale = Mathf.Min(scale, Mathf.Min(cellWidth / view.width, best / view.height));
+                    scale = Mathf.Min(scale, Mathf.Min(cellWidth / cell.Canvas.Value.Width, best / cell.Canvas.Value.Height));
                 }
                 for (int i = 0; i < cells.Count; i++)
                 {
@@ -422,17 +408,13 @@ namespace FactorioAvatarExporter.Editor
                     Texture2D frame = cell.Shown();
                     if (frame != null && cell.Canvas.HasValue && scale < float.MaxValue)
                     {
-                        // only the part of the canvas anything was drawn in, centred
                         CanvasSpec canvas = cell.Canvas.Value;
-                        RectInt view = cell.View;
-                        var size = new Vector2(view.width * scale, view.height * scale);
+                        var size = new Vector2(canvas.Width * scale, canvas.Height * scale);
                         var rect = new Rect(box.center - size / 2, size);
-                        GUI.DrawTextureWithTexCoords(rect, frame, TexCoords(view, canvas), true);
-                        // where the canvas's own corner falls, for the anchor and the guide lines
-                        Vector2 corner = rect.position - new Vector2(view.x, view.y) * scale;
+                        GUI.DrawTexture(rect, frame, ScaleMode.StretchToFill, true);
+                        DrawAnchor(new Vector2(rect.x + canvas.AnchorX * scale, rect.y + canvas.AnchorY * scale));
                         GUI.BeginClip(box);
-                        DrawAnchor(corner - box.position + new Vector2(canvas.AnchorX, canvas.AnchorY) * scale);
-                        DrawGuides(cell, corner - box.position, scale);
+                        DrawGuides(cell, rect.position - box.position, scale);
                         GUI.EndClip();
                     }
                     GUI.Label(new Rect(box.x, box.yMax, box.width, label), cell.Info.Name, EditorStyles.centeredGreyMiniLabel);
@@ -455,13 +437,12 @@ namespace FactorioAvatarExporter.Editor
             }
             CanvasSpec canvas = cell.Canvas.Value;
             var size = new Vector2(canvas.Width, canvas.Height);
-            // zoom 1 fits what was drawn in the box
-            RectInt drawn = cell.View;
-            float fit = Mathf.Min(box.width / drawn.width, box.height / drawn.height);
+            // zoom 1 fits the whole frame in the box
+            float fit = Mathf.Min(box.width / size.x, box.height / size.y);
             if (viewZoom <= 1)
             {
                 viewZoom = 1;
-                viewCentre = new Vector2(drawn.x + drawn.width / 2f, drawn.y + drawn.height / 2f);
+                viewCentre = size / 2;
             }
             Event e = Event.current;
             if (box.Contains(e.mousePosition))
@@ -839,18 +820,12 @@ namespace FactorioAvatarExporter.Editor
             {
                 EditorGUI.BeginChangeCheck();
                 float moved = EditorGUI.Slider(r, label, (float)value, low, high);
-                if (!EditorGUI.EndChangeCheck())
-                {
-                    return value;
-                }
-                heldSlider = label;
-                return moved;
+                return EditorGUI.EndChangeCheck() ? moved : value;
             });
             if (check.Slider == label && CheckPass)
             {
                 // the window check moves the slider as a drag would: a change inside the same change checks
                 check.Slider = null;
-                heldSlider = label;
                 result = check.SliderValue;
                 GUI.changed = true;
             }
@@ -1205,21 +1180,23 @@ namespace FactorioAvatarExporter.Editor
                 InvalidateFrames();
                 changed = true;
             }
-            if (playing)
+            foreach (PreviewCell cell in cells)
             {
-                foreach (PreviewCell cell in cells)
+                if (playing && !holding)
                 {
                     changed |= cell.Advance(now);
+                }
+                else
+                {
+                    // paused, or a slider held: the frame on show stays, so what the slider changes is easy to see
+                    // (its guide lines follow it), and the loop picks up from there afterwards
+                    cell.Hold(now);
                 }
             }
             if (!holding)
             {
                 // a short slice at a time, so the window stays responsive while the previews fill in
                 changed |= RenderPending(now + 0.025);
-            }
-            else
-            {
-                changed |= RenderLive();
             }
             if (changed)
             {
@@ -1238,85 +1215,36 @@ namespace FactorioAvatarExporter.Editor
                 (PreviewCell cell, int frame) = pending[next];
                 pending.RemoveAt(next);
                 any = true;
-                RenderOne(cell, frame);
+                try
+                {
+                    PreviewFrame rendered = preview.Render(cell.Info.Name, cell.Row, frame, Ground);
+                    if (cell.Canvas.HasValue && (cell.Canvas.Value.Width != rendered.Canvas.Width
+                        || cell.Canvas.Value.Height != rendered.Canvas.Height))
+                    {
+                        // the canvas grew to fit something: the frames already rendered are drawn again on the new one
+                        for (int f = 0; f < cell.Frames.Length; f++)
+                        {
+                            if (f != frame && cell.Frames[f] != null)
+                            {
+                                DestroyImmediate(cell.Frames[f]);
+                                cell.Frames[f] = null;
+                                pending.Insert(0, (cell, f));
+                            }
+                        }
+                    }
+                    cell.Canvas = rendered.Canvas;
+                    cell.Frames[frame] = ToTexture(rendered.Image, cell.Frames[frame]);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                    error = $"{cell.Info.Name}: {e.Message}" + ErrorLog.Note(ErrorLog.Write("Preview " + cell.Info.Name, e, preview,
+                        null, lighting, null));
+                    pending.RemoveAll(p => p.cell == cell);
+                }
             }
             return any;
         }
-
-        /// <summary>Renders one frame of <paramref name="cell"/> as posed now and keeps it, with where it drew.</summary>
-        private void RenderOne(PreviewCell cell, int frame)
-        {
-            try
-            {
-                PreviewFrame rendered = preview.Render(cell.Info.Name, cell.Row, frame, Ground);
-                if (cell.Canvas.HasValue && (cell.Canvas.Value.Width != rendered.Canvas.Width
-                    || cell.Canvas.Value.Height != rendered.Canvas.Height))
-                {
-                    // the canvas grew to fit something: the frames already rendered are drawn again on the new one
-                    cell.Drawn = null;
-                    for (int f = 0; f < cell.Frames.Length; f++)
-                    {
-                        if (f != frame && cell.Frames[f] != null)
-                        {
-                            DestroyImmediate(cell.Frames[f]);
-                            cell.Frames[f] = null;
-                            pending.Insert(0, (cell, f));
-                        }
-                    }
-                }
-                cell.Canvas = rendered.Canvas;
-                cell.Frames[frame] = ToTexture(rendered.Image, cell.Frames[frame]);
-                cell.AddDrawn(DrawnBox(rendered.Image));
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-                error = $"{cell.Info.Name}: {e.Message}" + ErrorLog.Note(ErrorLog.Write("Preview " + cell.Info.Name, e, preview,
-                    null, lighting, null));
-                pending.RemoveAll(p => p.cell == cell);
-            }
-        }
-
-        /// <summary>
-        /// While a slider is held: the next animation on the page that the slider changes, its frame on show drawn
-        /// again as posed now, one a call, so the avatar itself follows the slider (the guide lines follow at once).
-        /// </summary>
-        private bool RenderLive()
-        {
-            List<PreviewCell> live = cells.Where(c => onPage.Contains(c) && affected != null && affected.Contains(c.Info.Name)).ToList();
-            if (live.Count == 0)
-            {
-                return false;
-            }
-            PreviewCell cell = live[liveNext++ % live.Count];
-            RenderOne(cell, cell.Current);
-            return true;
-        }
-
-        /// <summary>Where anything was drawn in <paramref name="image"/> (rows from the top), or null when nothing was.</summary>
-        private static RectInt? DrawnBox(Image8 image)
-        {
-            int left = image.Width, top = image.Height, right = -1, bottom = -1;
-            for (int y = 0; y < image.Height; y++)
-            {
-                for (int x = 0; x < image.Width; x++)
-                {
-                    if (image[x, y, 3] != 0)
-                    {
-                        left = Math.Min(left, x);
-                        right = Math.Max(right, x);
-                        top = Math.Min(top, y);
-                        bottom = Math.Max(bottom, y);
-                    }
-                }
-            }
-            return right < 0 ? (RectInt?)null : new RectInt(left, top, right - left + 1, bottom - top + 1);
-        }
-
-        /// <summary>The texture coordinates of <paramref name="view"/> (canvas pixels, rows from the top).</summary>
-        private static Rect TexCoords(RectInt view, CanvasSpec canvas) =>
-            new Rect(view.x / (float)canvas.Width, 1 - (view.y + view.height) / (float)canvas.Height,
-                view.width / (float)canvas.Width, view.height / (float)canvas.Height);
 
         /// <summary>
         /// Drops every rendered frame (the direction, the lighting or the tuning changed) and queues them all again:
@@ -1435,53 +1363,13 @@ namespace FactorioAvatarExporter.Editor
 
             public void ClearGuides() => Array.Clear(Guides, 0, Guides.Length);
 
-            /// <summary>Where anything was drawn in the frames rendered so far, canvas pixels, rows from the top.</summary>
-            public RectInt? Drawn { get; set; }
-
-            public void AddDrawn(RectInt? box)
-            {
-                if (!box.HasValue)
-                {
-                    return;
-                }
-                RectInt b = box.Value;
-                if (!Drawn.HasValue)
-                {
-                    Drawn = b;
-                    return;
-                }
-                RectInt d = Drawn.Value;
-                int left = Math.Min(d.xMin, b.xMin), top = Math.Min(d.yMin, b.yMin);
-                Drawn = new RectInt(left, top, Math.Max(d.xMax, b.xMax) - left, Math.Max(d.yMax, b.yMax) - top);
-            }
-
-            /// <summary>Space kept around what was drawn, canvas pixels, so the outline isn't against the box.</summary>
-            private const int ViewPadding = 6;
-
-            /// <summary>
-            /// The part of the canvas the preview shows: what was drawn, with <see cref="ViewPadding"/> around it, or the
-            /// whole canvas before anything was. Packs are not framed this way; only the window is.
-            /// </summary>
-            public RectInt View
-            {
-                get
-                {
-                    CanvasSpec canvas = Canvas.Value;
-                    if (!Drawn.HasValue)
-                    {
-                        return new RectInt(0, 0, canvas.Width, canvas.Height);
-                    }
-                    RectInt d = Drawn.Value;
-                    int left = Math.Max(0, d.xMin - ViewPadding), top = Math.Max(0, d.yMin - ViewPadding);
-                    int right = Math.Min(canvas.Width, d.xMax + ViewPadding), bottom = Math.Min(canvas.Height, d.yMax + ViewPadding);
-                    return new RectInt(left, top, right - left, bottom - top);
-                }
-            }
-
             /// <summary>The canvas the frames are drawn on (null before the first one).</summary>
             public CanvasSpec? Canvas { get; set; }
 
             public int Current { get; private set; }
+
+            /// <summary>Stays on the frame on show: the next <see cref="Advance"/> counts from <paramref name="now"/>.</summary>
+            public void Hold(double now) => clock = now;
 
             /// <summary>Moves on as many frames as the game would have since the last call; true when it moved.</summary>
             public bool Advance(double now)

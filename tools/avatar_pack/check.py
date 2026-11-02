@@ -5,6 +5,7 @@ the graphics files can tell. Used by `tools/validate_sprites.py --pack`, or on i
     python3 tools/avatar_pack/check.py path/to/vrc-avatar-mika_1.0.0.zip [more packs...]
 
 It prints what it checked and exits with 1 when any pack has errors (or nothing could be checked).
+It needs Python 3 with Pillow (python -m pip install pillow).
 """
 
 import argparse
@@ -19,7 +20,10 @@ import zipfile
 # run as a script: the tools folder holds lua_table and the avatar_pack package
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from PIL import Image
+try:
+    from PIL import Image
+except ImportError:
+    sys.exit("check.py needs Pillow for this Python: python -m pip install pillow (or use a Python that has it)")
 
 import lua_table
 from avatar_pack import spec
