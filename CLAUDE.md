@@ -38,7 +38,7 @@ To look at poses without Unity: `dotnet run --project unity/dotnet/PackHarness -
 
 CI runs on every push. After CI passes on `main`, `.github/workflows/release.yml` publishes a full
 release, marked latest, with two files: `FactorioAvatarExporter_<v>.unitypackage` and
-`vrc-avatars_<v>.zip`. Older releases and their tags are deleted, so only the newest is offered.
+`vrc-avatars_<v>.zip`. Older releases are kept; the newest is marked latest.
 
 - A new exporter version (`package.json` and `ExporterInfo.Version` in `Editor/PackExport.cs`, kept equal)
   makes a new release.

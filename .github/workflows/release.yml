@@ -6,8 +6,8 @@
 # - a new mod version (vrc-avatars/info.json) alone swaps the new mod zip into the current
 #   release;
 # - nothing new does nothing.
-# It is a full release marked latest, so the repository's front page shows it. Older releases are then
-# removed together with their tags, so the Releases page and the tag list only offer the newest files (the commits themselves stay in the history of main).
+# It is a full release marked latest, so the repository's front page shows it. Older releases and their
+# tags are kept.
 #
 # Otherwise either push a tag exporter-v<version> matching package.json, or run this workflow by hand
 # from the Actions tab ("Run workflow").
@@ -125,23 +125,3 @@ jobs:
           if [ "$changed" = false ]; then
             echo "Release $TAG already has both files; bump a version to publish a new one."
           fi
-
-      - name: Remove older releases
-        env:
-          TAG: ${{ steps.version.outputs.tag }}
-        run: |
-          gh release view "$TAG" > /dev/null 2>&1 || { echo "no release $TAG; keeping the others"; exit 0; }
-          current="${TAG#exporter-v}"
-          gh release list --limit 200 --json tagName --jq '.[].tagName' | while read -r old; do
-            case "$old" in
-              exporter-v*)
-                version="${old#exporter-v}"
-                newest=$(printf '%s\n%s\n' "$version" "$current" | sort -V | tail -n 1)
-                [ "$old" != "$TAG" ] && [ "$newest" = "$current" ] || continue
-                ;;
-              vrc-avatars-v*) ;; # the mod's own releases, from before both shipped together
-              *) continue ;;
-            esac
-            gh release delete "$old" --yes --cleanup-tag
-            echo "removed the release $old and its tag"
-          done
