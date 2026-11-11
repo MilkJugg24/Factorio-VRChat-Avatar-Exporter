@@ -176,6 +176,24 @@ class PackCheckTests(unittest.TestCase):
         self.assertTrue(any("idle-base.png is not a readable PNG" in e for e in errors), errors)
         self.assertTrue(any("thumbnail.png is not a readable PNG" in e for e in errors), errors)
 
+    def test_extra_scripts_are_reported(self):
+        """Factorio would run them: a pack is refused when it holds any Lua file besides its two, or a migration."""
+        for extra in ("control.lua", "settings.lua", "data-final-fixes.lua", "Control.LUA", "prototypes/more.lua",
+                      "scenarios/x/control.lua", "migrations/rename.json"):
+            path = self.copy()
+            os.makedirs(os.path.dirname(os.path.join(path, extra)), exist_ok=True)
+            with open(os.path.join(path, extra), "w", encoding="utf-8") as fh:
+                fh.write("-- extra\n")
+            errors = self.errors(path)
+            self.assertTrue(any(e.startswith(extra) for e in errors), (extra, errors))
+        # in a zip too
+        bad = os.path.join(self.work, "scripted", "vrc-avatar-edge_1.0.0.zip")
+        os.makedirs(os.path.dirname(bad))
+        shutil.copy(os.path.join(self.work, "vrc-avatar-edge_1.0.0.zip"), bad)
+        with zipfile.ZipFile(bad, "a") as zf:
+            zf.writestr("vrc-avatar-edge_1.0.0/control.lua", "-- extra\n")
+        self.assertTrue(any(e.startswith("control.lua") for e in self.errors(bad)))
+
     def test_zip_with_two_folders_is_reported(self):
         bad = os.path.join(self.work, "two-folders.zip")
         with zipfile.ZipFile(bad, "w") as zf:

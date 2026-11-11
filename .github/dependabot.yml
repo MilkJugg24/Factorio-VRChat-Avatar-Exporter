@@ -1,10 +1,12 @@
-# Dependabot: weekly pull requests that update the GitHub Actions the workflows use and the NuGet
-# packages of the .NET projects that build and test the exporter (unity/dotnet). Each PR runs CI.
+# Dependabot: weekly pull requests that update the GitHub Actions the workflows use, the NuGet
+# packages of the .NET projects that build and test the exporter (unity/dotnet), and the two Python
+# packages of the tools (tools/requirements.txt). Each PR runs CI.
 #
 # The actions are pinned to commit hashes with the version in a comment
-# (uses: actions/checkout@<sha> # v7.0.1); Dependabot updates both.
-# The Unity package itself has no dependencies, and the Python tools only use numpy and Pillow,
-# which CI installs fresh on every run.
+# (uses: actions/checkout@<sha> # v7.0.1); Dependabot updates both. The NuGet packages are pinned by
+# the packages.lock.json files and the Python packages by the hashes in tools/requirements.txt;
+# Dependabot updates those too.
+# The Unity package and the mod themselves have no dependencies: none of this is in a release.
 version: 2
 
 updates:
@@ -17,6 +19,18 @@ updates:
     # one PR for all the actions that have an update the same week
     groups:
       actions:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "pip"
+    # numpy and Pillow, for the Python tools and their tests
+    directory: "/tools"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "deps"
+    groups:
+      python-tools:
         patterns:
           - "*"
 

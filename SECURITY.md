@@ -12,13 +12,13 @@ Because this project is maintained by a single developer, security fixes may be 
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability, please do **not** create a public issue immediately.
+If you discover a security vulnerability, please do **not** post its details in a public issue.
 
-Instead, report it privately through one of the following methods:
+Instead, report it privately: on this repository's **Security** tab, choose **Report a vulnerability**
+(GitHub's private vulnerability reporting). Only the maintainer sees the report.
 
-- GitHub Security Advisories (preferred)
-- GitHub Private Vulnerability Reporting
-- Direct contact with the maintainer
+If you can't use that, [open an issue](../../issues/new) that says only that you have a security report
+to make, with no details of the problem, and the maintainer will arrange a private way to send it.
 
 Please include:
 
@@ -57,6 +57,24 @@ This security policy does **not** apply to:
 ## Security Updates
 
 When a security issue is confirmed, fixes will be published through the normal project release process. Users should monitor the repository's releases page and update to the latest release when security-related updates are announced.
+
+## Checking a Download
+
+Every release lists the SHA-256 checksum of its two files in its notes. To make sure a file you were
+sent is the one published here, compare its checksum with the one in the notes (Windows PowerShell:
+`Get-FileHash <file>`; macOS: `shasum -a 256 <file>`; Linux: `sha256sum <file>`).
+
+Files published after this section was added also carry a signed build provenance attestation: proof
+that the file was built by this repository's release workflow. With the
+[GitHub CLI](https://cli.github.com):
+
+```sh
+gh attestation verify <file> --repo MilkJugg24/Factorio-VRChat-Avatar-Exporter
+```
+
+Avatar packs are made by their authors, not published here, and have no checksum or attestation. A
+pack is a Factorio mod: install packs only from people you trust, and see "Validation" in
+`docs/vrc-avatar-format.md` for the check that refuses a pack carrying scripts.
 
 ## Disclosure Policy
 

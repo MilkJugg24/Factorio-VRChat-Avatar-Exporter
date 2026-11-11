@@ -26,11 +26,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # the checks only read the repository: leave no token in .git/config for what they run
+          persist-credentials: false
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: "8.0.x"
       - name: Python packages for the cross-checks
-        run: pip install numpy pillow
+        # exact versions, each file checked against its hash (tools/requirements.txt)
+        run: pip install --require-hashes -r tools/requirements.txt
       - name: Test
         run: dotnet test unity/dotnet/Core.Tests
       - name: Unity Editor scripts compile against Unity's API
@@ -47,11 +51,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # the checks only read the repository: leave no token in .git/config for what they run
+          persist-credentials: false
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: "8.0.x"
       - name: Python packages
-        run: pip install numpy pillow
+        run: pip install --require-hashes -r tools/requirements.txt
       - name: Python tool tests
         run: python3 -m unittest discover -s tests -p "test_*.py"
       - name: Download headless Factorio

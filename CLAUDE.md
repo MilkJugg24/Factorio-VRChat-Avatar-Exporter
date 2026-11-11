@@ -28,6 +28,11 @@ tests/run_headless.sh /path/to/factorio --broken-packs
 tests/run_headless.sh /path/to/factorio --pack some-pack.zip
 ```
 
+The Python tools need numpy and Pillow: `pip install -r tools/requirements.txt` installs the versions CI
+uses (pinned with hashes; edit `tools/requirements.in` and run the `pip-compile` line in it to change them).
+The NuGet packages are pinned by the `packages.lock.json` files next to each project: after changing a
+`PackageReference`, run `dotnet restore` in `unity/dotnet` and commit them, or CI's restore fails.
+
 The headless server is a free download from factorio.com. It draws nothing, so the sprites, the avatar
 window and sounds are checked in the real game (`tests/INGAME-CHECKS.md`) or by the user.
 
@@ -39,6 +44,8 @@ To look at poses without Unity: `dotnet run --project unity/dotnet/PackHarness -
 CI runs on every push. After CI passes on `main`, `.github/workflows/release.yml` publishes a full
 release, marked latest, with two files: `FactorioAvatarExporter_<v>.unitypackage` and
 `vrc-avatars_<v>.zip`. Older releases are kept; the newest is marked latest.
+When `main` gets another push before CI finishes, the release waits for the newest commit's CI run:
+only the head of `main` is ever released.
 
 - A new exporter version (`package.json` and `ExporterInfo.Version` in `Editor/PackExport.cs`, kept equal)
   makes a new release.
@@ -47,6 +54,13 @@ release, marked latest, with two files: `FactorioAvatarExporter_<v>.unitypackage
 - When the pack format gains something the mod must understand, raise `PackFormat.MinMainModVersion`
   so packs depend on the new mod, and document it in
   `docs/vrc-avatar-format.md`.
+
+The release workflow keeps the right to write away from anything downloaded: one job tests (the only
+one that fetches packages), one builds the two files with Python's standard library alone, and a third,
+which checks out no code and runs only `gh`, publishes them. Keep it that way: don't install packages
+in the build job or run repository code in the publish job. A file a release already has is never
+replaced (bump the version instead). The release notes list both files' SHA-256, and each uploaded
+file gets a build provenance attestation (`SECURITY.md` says how to check one).
 
 ## Conventions
 
