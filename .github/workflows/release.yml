@@ -39,21 +39,24 @@ concurrency:
   group: release
   cancel-in-progress: false
 
+# The commit that is built and released is always the one this workflow itself runs at: the pushed tag, or
+# the head of main. After CI, that is released only when it is the very commit CI passed on (the jobs'
+# "if"); when main has moved on meanwhile, this run does nothing and the newer commit's CI run releases.
+# So the workflow never checks out a commit named by another workflow's run.
 env:
-  COMMIT: ${{ github.event.workflow_run.head_sha || github.sha }}
+  COMMIT: ${{ github.sha }}
 
 jobs:
   test:
     name: Test the exporter Core
-    # after CI, only when it passed on a push to main
-    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    # after CI, only when it passed on a push to main and main is still at that commit
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_sha == github.sha)
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ env.COMMIT }}
           persist-credentials: false
 
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
@@ -65,7 +68,7 @@ jobs:
 
   build:
     name: Build the two files
-    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_sha == github.sha)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -76,7 +79,6 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ env.COMMIT }}
           persist-credentials: false
 
       - name: Work out the versions
