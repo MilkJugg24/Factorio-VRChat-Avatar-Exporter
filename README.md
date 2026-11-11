@@ -107,6 +107,9 @@ server**, same versions too. Each avatar is its own zip, and you can install as 
 the old one of an updated avatar) and shares it; everyone does the same.
 Nobody loses their character or items.
 
+**Only install packs from people you trust.** An avatar pack is a Factorio mod, so it can do in your game
+whatever any other mod can.
+
 **If you can't join** ("your active mods don't match the server's"): some of your zips aren't the same
 as the server's (an avatar may have been updated). The game's **Synchronize** button can't fetch these mods; get the current zips from the
 server owner.

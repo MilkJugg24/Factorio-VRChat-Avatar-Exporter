@@ -1,0 +1,4 @@
+# The Python tools and their tests (tools/, tests/) need only these two packages.
+# After changing this file: pip-compile --generate-hashes --output-file tools/requirements.txt tools/requirements.in
+numpy
+pillow

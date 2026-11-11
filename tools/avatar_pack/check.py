@@ -178,6 +178,16 @@ class Checker:
         if not self.files.exists("README.txt"):
             self.warn("README.txt is missing (source avatar, its author and permission to use it)")
 
+    def check_scripts(self, allowed):
+        """A pack is pictures and their description. Factorio runs any other Lua file a mod holds (control.lua,
+        settings.lua, data-final-fixes.lua, ...) and applies its migrations, so a pack with either is refused."""
+        for name in sorted(self.files.names):
+            if name.lower().endswith(".lua") and name not in allowed:
+                self.error(f"{name} is a script the pack format does not have; a pack holds only pictures and"
+                           " their description")
+            elif name.lower().startswith("migrations/"):
+                self.error(f"{name}: packs have no migrations")
+
     # -- the description -------------------------------------------------------------------
 
     def file(self, path, what):
@@ -454,6 +464,7 @@ class Checker:
             self.run_bundle(mod_name)
             return
         self.check_data_lua()
+        self.check_scripts({"data.lua", "prototypes/avatar-pack.lua"})
         self.check_extras()
         if mod_name:
             self.check_description(mod_name)
@@ -466,6 +477,7 @@ class Checker:
         if not ids:
             self.error("the bundle has no characters (characters/<id>/avatar-pack.lua)")
             return
+        self.check_scripts({"data.lua"} | {f"characters/{pack_id}/avatar-pack.lua" for pack_id in ids})
         if not self.files.exists("data.lua"):
             self.error("data.lua is missing")
         else:

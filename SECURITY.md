@@ -58,6 +58,24 @@ This security policy does **not** apply to:
 
 When a security issue is confirmed, fixes will be published through the normal project release process. Users should monitor the repository's releases page and update to the latest release when security-related updates are announced.
 
+## Checking a Download
+
+Every release lists the SHA-256 checksum of its two files in its notes. To make sure a file you were
+sent is the one published here, compare its checksum with the one in the notes (Windows PowerShell:
+`Get-FileHash <file>`; macOS: `shasum -a 256 <file>`; Linux: `sha256sum <file>`).
+
+Files published after this section was added also carry a signed build provenance attestation: proof
+that the file was built by this repository's release workflow. With the
+[GitHub CLI](https://cli.github.com):
+
+```sh
+gh attestation verify <file> --repo MilkJugg24/Factorio-VRChat-Avatar-Exporter
+```
+
+Avatar packs are made by their authors, not published here, and have no checksum or attestation. A
+pack is a Factorio mod: install packs only from people you trust, and see "Validation" in
+`docs/vrc-avatar-format.md` for the check that refuses a pack carrying scripts.
+
 ## Disclosure Policy
 
 Please allow a reasonable amount of time for investigation and remediation before publicly disclosing a vulnerability. Coordinated disclosure helps protect users while fixes are being developed and tested.

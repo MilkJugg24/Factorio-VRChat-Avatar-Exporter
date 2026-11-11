@@ -351,6 +351,20 @@ problem) when a pack:
 Refusing to load is deliberate: skipping a broken pack would make Factorio
 delete every character using it, together with the items they carry.
 
+A pack is a Factorio mod, and Factorio runs any script a mod holds. The game
+can't show `vrc-avatars` what other files a pack has, so check a pack you were
+sent before installing it, above all on a server:
+
+```sh
+python3 tools/avatar_pack/check.py vrc-avatar-<id>_<version>.zip
+```
+
+Besides everything above, it refuses a pack that holds any Lua file other
+than the standard `data.lua` and `prototypes/avatar-pack.lua` (a
+`control.lua`, `settings.lua`, `data-final-fixes.lua`, ...), a
+`migrations/` folder, or a description that is not a plain table. The
+exporter never writes those.
+
 ## Removing a pack
 
 Characters and corpses using a pack's look stop existing when the pack is

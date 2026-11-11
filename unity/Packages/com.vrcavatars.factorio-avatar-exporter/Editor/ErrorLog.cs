@@ -17,7 +17,9 @@ namespace FactorioAvatarExporter.Editor
     /// exporter's folder (Assets/FactorioAvatarExporter/ERROR_LOGS), one text file per failure, for the user to
     /// attach to a report: the error and where it happened, the exporter, Unity, system and graphics versions, the
     /// pack settings and lighting, the avatar report, and the warnings and errors Unity logged meanwhile. It holds
-    /// no images and no author name, and the user's home folder and name are blanked out of paths.
+    /// no images and no author name, and the project's folder and the user's home folder and name are blanked
+    /// out of paths. It does name the avatar and the pack, and Unity's messages can name other assets of the
+    /// project; the file says so, since it is meant to be attached to a public report.
     /// </summary>
     internal static class ErrorLog
     {
@@ -32,6 +34,8 @@ namespace FactorioAvatarExporter.Editor
                 var text = new StringBuilder();
                 text.AppendLine("Factorio Avatar Exporter error log");
                 text.AppendLine("Attach this file when you report the problem. It contains no images.");
+                text.AppendLine("It names your avatar and pack, and Unity's messages below can name other files of your");
+                text.AppendLine("project. Reports are public: read it through, and remove anything you'd rather not share.");
                 text.AppendLine();
                 text.AppendLine("What failed:   " + what);
                 text.AppendLine("When (UTC):    " + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
@@ -134,9 +138,19 @@ namespace FactorioAvatarExporter.Editor
             return safe.Length > 0 ? safe.ToString() : "export";
         }
 
-        /// <summary>Blanks the user's home folder and name out of the text (paths in stack traces and messages).</summary>
+        /// <summary>
+        /// Blanks the project's folder and the user's home folder and name out of the text (paths in stack traces
+        /// and messages). The project first: it is often inside the home folder, and on another drive it would
+        /// otherwise stay whole.
+        /// </summary>
         private static string Private(string text)
         {
+            string project = Path.GetDirectoryName(Application.dataPath);
+            if (!string.IsNullOrEmpty(project))
+            {
+                // Unity writes paths with forward slashes, Windows' own messages with backslashes
+                text = text.Replace(project.Replace('\\', '/'), "<project>").Replace(project.Replace('/', '\\'), "<project>");
+            }
             string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             if (!string.IsNullOrEmpty(home))
             {
