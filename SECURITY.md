@@ -12,13 +12,13 @@ Because this project is maintained by a single developer, security fixes may be 
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability, please do **not** create a public issue immediately.
+If you discover a security vulnerability, please do **not** post its details in a public issue.
 
-Instead, report it privately through one of the following methods:
+Instead, report it privately: on this repository's **Security** tab, choose **Report a vulnerability**
+(GitHub's private vulnerability reporting). Only the maintainer sees the report.
 
-- GitHub Security Advisories (preferred)
-- GitHub Private Vulnerability Reporting
-- Direct contact with the maintainer
+If you can't use that, [open an issue](../../issues/new) that says only that you have a security report
+to make, with no details of the problem, and the maintainer will arrange a private way to send it.
 
 Please include:
 
